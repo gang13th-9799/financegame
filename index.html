@@ -906,13 +906,13 @@ body.fs #gameView:not(.mapmin)>section:last-child>.panel{flex:1;min-height:0;ove
 #panel{container:panel/inline-size}
 @media (min-width:900px){
  .layout{max-width:1680px}
- .layout:not(.mapmin){grid-template-columns:minmax(260px,1fr) minmax(380px,1.5fr)!important}
+ .layout:not(.mapmin){grid-template-columns:minmax(312px,1.2fr) minmax(380px,1.5fr)!important}
 }
 @media (orientation:landscape) and (max-height:620px){
- .layout:not(.mapmin){grid-template-columns:minmax(200px,1fr) minmax(0,1.5fr)!important}
+ .layout:not(.mapmin){grid-template-columns:minmax(240px,1.2fr) minmax(0,1.5fr)!important}
  .board{width:min(100%,calc(100dvh - 84px))}
 }
-body.fs #gameView:not(.mapmin){grid-template-columns:minmax(240px,1fr) minmax(340px,1.5fr)!important}
+body.fs #gameView:not(.mapmin){grid-template-columns:minmax(288px,1.2fr) minmax(340px,1.5fr)!important}
 @media (orientation:portrait){body.fs #gameView:not(.mapmin){grid-template-columns:minmax(0,1fr)!important;grid-template-rows:minmax(0,1fr) minmax(0,1.15fr)!important}}
 /* เนื้อหาในแผง: ไม่ล้น ไม่ซ้อน ปรับตามความกว้างจริง (รวมขนาดตัวอักษร A−/A+) */
 .tiles{grid-template-columns:repeat(auto-fit,minmax(min(100%,150px),1fr))}
@@ -930,9 +930,9 @@ body.fs #gameView:not(.mapmin){grid-template-columns:minmax(240px,1fr) minmax(34
  .fin>.fhead,.fin>.stp,.fin>.tiles,.fin>.fgrid,.fin>.fld{grid-column:1/-1}
 }
 /* โหมด 3D จอแนวนอน: แท็บข้อมูลกว้างขึ้นอีก (แผนที่ 3D เลื่อน/ซูมดูได้อยู่แล้ว) */
-@media (min-width:900px){.layout:not(.mapmin):has(.bwrap.v3d){grid-template-columns:minmax(260px,1fr) minmax(420px,1.9fr)!important}}
-@media (orientation:landscape) and (max-height:620px){.layout:not(.mapmin):has(.bwrap.v3d){grid-template-columns:minmax(200px,1fr) minmax(0,1.9fr)!important}}
-@media (orientation:landscape){body.fs #gameView:not(.mapmin):has(.bwrap.v3d){grid-template-columns:minmax(240px,1fr) minmax(340px,1.9fr)!important}}
+@media (min-width:900px){.layout:not(.mapmin):has(.bwrap.v3d){grid-template-columns:minmax(312px,1.2fr) minmax(420px,1.9fr)!important}}
+@media (orientation:landscape) and (max-height:620px){.layout:not(.mapmin):has(.bwrap.v3d){grid-template-columns:minmax(240px,1.2fr) minmax(0,1.9fr)!important}}
+@media (orientation:landscape){body.fs #gameView:not(.mapmin):has(.bwrap.v3d){grid-template-columns:minmax(288px,1.2fr) minmax(340px,1.9fr)!important}}
 .mi1{flex-wrap:wrap}
 </style>
 </head>
