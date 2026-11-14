@@ -2729,7 +2729,7 @@ function beMock(){
     get:async p=>getP(L(),p),set:async(p,v)=>W(d=>setP(d,p,v)),remove:async p=>W(d=>setP(d,p,null)),
     update:async(p,v)=>W(d=>{for(const k in v)setP(d,p+'/'+k,v[k])}),
     on:(p,cb)=>{const s={p,cb,last:undefined};subs.add(s);setTimeout(fire);return ()=>subs.delete(s)},
-    tx:async(p,f)=>{let ok=false,val;W(d=>{const cur=getP(d,p),nv=f(cur==null?null:JSON.parse(JSON.stringify(cur)));if(nv!==undefined){setP(d,p,nv);ok=true}val=getP(d,p)});return {ok,val}},
+    tx:async(p,f)=>{let ok=false,val;W(d=>{const cur=getP(d,p);let nv=f(null);if(nv===undefined&&cur==null)return;if(cur!=null)nv=f(JSON.parse(JSON.stringify(cur)));if(nv!==undefined){setP(d,p,nv);ok=true}val=getP(d,p)});return {ok,val}},
     onDisc:(p,v)=>disc.push([p,v]),now:()=>Date.now()
   }}
 
@@ -2806,7 +2806,7 @@ async function onCreate(){
   const uid=ON.user.uid;let code=null;
   for(let t=0;t<12&&!code;t++){const c=String(10000+Math.floor(Math.random()*90000));
     const seats={0:{t:'h',uid,name:ON.name},1:{t:'h'},2:{t:'b'},3:{t:'b'},4:{t:'b'},5:{t:'b'}};
-    const r=await ON.be.tx('rooms/'+c,cur=>cur?undefined:{code:c,host:uid,status:'lobby',n:4,seats,mem:{[uid]:0},created:ON.be.now()});if(r.ok)code=c}
+    const r=await ON.be.tx('rooms/'+c,cur=>cur?undefined:{code:c,host:uid,status:'lobby',n:4,seats,mem:{[uid]:0},created:ON.be.now()});if(r.ok&&r.val&&r.val.host===uid)code=c}
   if(!code){toast('สร้างห้องไม่สำเร็จ ลองใหม่');return}
   await ON.be.update('users/'+uid,{room:code});onEnter(code)}
 async function onJoin(code){
@@ -2817,7 +2817,8 @@ async function onJoin(code){
   if(r.status==='end'){toast(`ห้อง ${code} จบเกมไปแล้ว`);onHome();return}
   if(r.status!=='lobby'){toast(`ห้อง ${code} เริ่มเล่นไปแล้ว`);onHome();return}
   let got=-1;
-  for(let i=1;i<(r.n||6)&&got<0;i++){const x=await ON.be.tx(`rooms/${code}/seats/${i}`,s=>(s&&s.t==='h'&&!s.uid)?{t:'h',uid,name:ON.name}:undefined);if(x.ok)got=i}
+  for(let i=1;i<(r.n||6)&&got<0;i++){/* Firebase เรียกฟังก์ชันครั้งแรกด้วยค่าแคช (มักเป็น null) ต้องคืนค่าเพื่อให้มันไปอ่านค่าจริงจากเซิร์ฟเวอร์แล้วเรียกซ้ำ ห้ามยกเลิกตอนเป็น null */
+    const x=await ON.be.tx(`rooms/${code}/seats/${i}`,s=>s==null?null:(s.t==='h'&&!s.uid)?{t:'h',uid,name:ON.name}:undefined);if(x.ok&&x.val&&x.val.uid===uid)got=i}
   if(got<0){toast(`ห้อง ${code} เต็มแล้ว`);onHome();return}
   await ON.be.set(`rooms/${code}/mem/${uid}`,got);await ON.be.update('users/'+uid,{room:code});onEnter(code)}
 function onEnter(code){
