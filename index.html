@@ -934,6 +934,26 @@ body.fs #gameView:not(.mapmin){grid-template-columns:minmax(288px,1.2fr) minmax(
 @media (orientation:landscape) and (max-height:620px){.layout:not(.mapmin):has(.bwrap.v3d){grid-template-columns:minmax(240px,1.2fr) minmax(0,1.9fr)!important}}
 @media (orientation:landscape){body.fs #gameView:not(.mapmin):has(.bwrap.v3d){grid-template-columns:minmax(288px,1.2fr) minmax(340px,1.9fr)!important}}
 .mi1{flex-wrap:wrap}
+
+/* ===== แท็บธนาคาร ===== */
+.bank{display:flex;flex-direction:column;gap:12px}
+.bkhead{display:flex;align-items:center;gap:10px}.bkhead img{width:46px;height:46px;object-fit:cover;object-position:top;border-radius:50%;background:#fff3d9;border:2px solid #efe0b6;flex:none}
+.bkhead div{display:flex;flex-direction:column;min-width:0}.bkhead .muted{font-size:12px}
+.bkgrid{display:grid;grid-template-columns:1fr;gap:12px}
+.bank>.tiles{grid-template-columns:repeat(auto-fit,minmax(min(100%,9.5em),1fr))}
+@container panel (min-width:700px){.bkgrid{grid-template-columns:1fr 1fr}.bank>.tiles{grid-template-columns:repeat(4,1fr)}}
+.bkc h3{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
+.bkrate{font-size:13px;font-weight:700}
+.bkc .kv{grid-template-columns:auto 1fr;margin:4px 0 8px}.bkc .kv b{text-align:right}
+.bkbar{height:8px;border-radius:5px;background:#eee6d2;overflow:hidden;margin:2px 0 4px}.bkbar i{display:block;height:100%;background:#e0a030}.bkbar i.hi{background:#d9534f}
+.bknote{font-size:12px;color:var(--muted);margin:4px 0 8px;line-height:1.45}
+.bkrow{display:grid;grid-template-columns:4.6em minmax(0,1fr) auto;gap:8px;align-items:center;margin-top:8px}
+.bkrow label{font-weight:600;font-size:13px}
+.bkrow input{width:100%;min-width:0;font-size:16px;padding:8px 10px;text-align:right;font-variant-numeric:tabular-nums}
+.bkrow button{min-width:4.4em}
+.bkq{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 2px 5.1em}
+.bkq .bkall{margin-left:auto;border-color:#e0b25a;background:#fff4dc}
+@container panel (max-width:360px){.bkrow{grid-template-columns:minmax(0,1fr) auto}.bkrow label{grid-column:1/-1}.bkq{margin-left:0}}
 </style>
 </head>
 <body>
@@ -963,6 +983,7 @@ body.fs #gameView:not(.mapmin){grid-template-columns:minmax(288px,1.2fr) minmax(
       <button id="t-fin" class="on" data-tab="fin">งบการเงิน</button>
       <button id="t-net" data-tab="net">ธุรกิจ A</button>
       <button id="t-mkt" data-tab="mkt">ตลาดหุ้นและสินค้า</button>
+      <button id="t-bank" data-tab="bank">ธนาคาร</button>
       <button id="t-log" data-tab="log">บันทึกเกม</button>
     </div>
     <div class="panel" id="panel"></div>
@@ -1037,8 +1058,23 @@ const ASSETS=[
  {s:'GOLD',n:'ทองคำ (บาท)',k:'com',p:20000,v:.05,div:0},
  {s:'OIL',n:'น้ำมันดิบ (สัญญา)',k:'com',p:6000,v:.12,div:0},
  {s:'RICE',n:'ข้าวหอมมะลิ (ตัน)',k:'com',p:3000,v:.08,div:0},
+ /* กองทุนรวม (ซื้อขายที่แท็บธนาคาร) · d = ผลตอบแทนเฉลี่ยต่อเดือน */
+ {s:'MMF',n:'กองทุนตลาดเงิน',k:'fund',p:10,v:.002,d:.0015,div:0,risk:1},
+ {s:'BOND',n:'กองทุนตราสารหนี้',k:'fund',p:10,v:.008,d:.0025,div:0,risk:2},
+ {s:'DIVF',n:'กองทุนหุ้นปันผล',k:'fund',p:10,v:.035,d:.002,div:.04,risk:4},
+ {s:'SET50',n:'กองทุนดัชนี SET50',k:'fund',p:10,v:.045,d:.005,div:0,risk:5},
+ {s:'GLOB',n:'กองทุนหุ้นโลก',k:'fund',p:10,v:.055,d:.006,div:0,risk:6},
+ {s:'GOLDF',n:'กองทุนทองคำ',k:'fund',p:10,v:.04,d:.003,div:0,risk:5},
 ];
-const LOT=a=>a.k==='stock'?1000:1;
+const LOT=a=>a.k==='com'?1:1000;
+/* ธนาคาร: ดอกเบี้ยต่อเดือน */
+const LOAN_R=.02,DEP_R=.0025,LOAN_TXT='2%',DEP_TXT='0.25%';
+const loanLim=p=>Math.max(400000,p.salary*12);
+const UNIT=a=>a.k==='stock'?'หุ้น':'หน่วย';
+const roundP=(a,np)=>a.k==='stock'?Math.max(.5,Math.round(np*10)/10):a.k==='fund'?Math.max(1,Math.round(np*100)/100):Math.max(500,Math.round(np));
+const fmtP=(a,pr)=>a.k==='fund'?'฿'+pr.toFixed(2):a.k==='stock'?'฿'+pr.toFixed(1):B(pr);
+const fmtAvg=(a,v)=>a.k==='com'?B(v):'฿'+v.toFixed(2);
+const RISK=['','ต่ำมาก','ต่ำ','ปานกลางค่อนต่ำ','ปานกลางค่อนสูง','สูง','สูงมาก'];
 
 
 
@@ -1283,18 +1319,20 @@ function fin(p){
   let deals=0;for(const d of p.deals)if(d.ty!=='scam')deals+=dealCf(p,d);
   let div=0;for(const a of ASSETS){const h=p.stocks[a.s];if(h&&h.q&&a.div)div+=h.q*a.div*(1+skV(p,'stock')/100)}
   const net=netIncome(p);let act=p.active||0;for(const d of p.deals)if(d.ty!=='scam'&&d.act)act+=Math.round(d.act*(d.ty==='biz'?kidBoost(p):1));
-  const passive=Math.round(board+deals+div+net);
+  const depI=Math.round((p.dep||0)*DEP_R);
+  const passive=Math.round(board+deals+div+net+depI);
   const ex=[
     ['ภาษี',Math.round(p.exp.tax*Math.max(0,1-skV(p,'tax')/100))],['ผ่อนบ้าน',p.exp.home],['ผ่อนรถ',p.exp.car],['บัตรเครดิต',p.exp.card],
-    [`ค่าครองชีพ (${RINGN[p.ring]} ×${LIVING[p.ring]})`,Math.round(p.exp.living*LIVING[p.ring]/10)*10],['ค่าเลี้ยงดูบุตร',p.kids*p.kidCost],['ดอกเบี้ยเงินกู้ธนาคาร',Math.round(p.loan*.1)],['ค่าใช้จ่ายรายเดือนอื่น ๆ',p.exp.extra||0]];
+    [`ค่าครองชีพ (${RINGN[p.ring]} ×${LIVING[p.ring]})`,Math.round(p.exp.living*LIVING[p.ring]/10)*10],['ค่าเลี้ยงดูบุตร',p.kids*p.kidCost],['ดอกเบี้ยเงินกู้ธนาคาร',Math.round(p.loan*LOAN_R)],['ค่าใช้จ่ายรายเดือนอื่น ๆ',p.exp.extra||0]];
   const expenses=ex.reduce((a,b)=>a+b[1],0);
-  return {board:Math.round(board),deals:Math.round(deals),div:Math.round(div),net:Math.round(net),passive,ex,expenses,salary:p.salary,act,flow:p.salary+act+passive-expenses};
+  return {board:Math.round(board),deals:Math.round(deals),div:Math.round(div),net:Math.round(net),depI,passive,ex,expenses,salary:p.salary,act,flow:p.salary+act+passive-expenses};
 }
 function settle(p){
   if(p.cash>=0)return;
+  if(p.dep>0){const w=Math.min(p.dep,-p.cash);p.dep-=w;p.cash+=w;log(`🏦 ${esc(p.name)} เงินสดไม่พอ ถอนเงินฝากประจำอัตโนมัติ ${B(w)}`);ruleNote(p,'ถอนเงินฝากอัตโนมัติ',`เงินสดติดลบ ระบบถอนเงินฝากประจำมาจ่าย ${B(w)} ก่อนกู้ธนาคาร · เงินฝากเหลือ ${B(p.dep)}`);if(p.cash>=0)return}
   const need=Math.ceil(-p.cash/1000)*1000;p.loan+=need;p.cash+=need;
-  log(`🏦 ${esc(p.name)} เงินไม่พอ กู้ธนาคารอัตโนมัติ ${B(need)}`);ruleNote(p,'กู้ธนาคารอัตโนมัติ',`เงินสดติดลบ ระบบกู้ให้ ${B(need)} (ดอกเบี้ย 10% ต่อเดือน = ${B(Math.round(need*.1))}/เดือน) · หนี้ธนาคารรวม ${B(p.loan)} · ถ้าเกิน ${B(Math.max(400000,p.salary*12))} จะล้มละลาย`);
-  if(p.loan>Math.max(400000,p.salary*12))bankrupt(p);
+  log(`🏦 ${esc(p.name)} เงินไม่พอ กู้ธนาคารอัตโนมัติ ${B(need)}`);ruleNote(p,'กู้ธนาคารอัตโนมัติ',`เงินสดติดลบ ระบบกู้ให้ ${B(need)} (ดอกเบี้ย ${LOAN_TXT} ต่อเดือน = ${B(Math.round(need*LOAN_R))}/เดือน) · หนี้ธนาคารรวม ${B(p.loan)} · ถ้าเกิน ${B(loanLim(p))} จะล้มละลาย`);
+  if(p.loan>loanLim(p))bankrupt(p);
 }
 function pay(p,a){p.cash-=a;settle(p)}
 const STN={h:'หัวใจ',t:'เวลา',k:'ความรู้'},STI={h:'❤',t:'⏳',k:'📚'};
@@ -1316,7 +1354,7 @@ function titleAmt(t,a){const n=Math.round(a);return new RegExp('(^|[^\\d,])('+n.
 function payS(p,a){const x=rnd100(a*Math.max(1,p.salary/40000));pay(p,x);return `จ่าย ${B(x)}`}
 function bankrupt(p){
   for(const k in S.props)if(S.props[k].o===p.id)delete S.props[k];
-  p.deals=[];p.stocks={};p.loan=0;p.net=netNew();p.active=0;p.cash=S.jobs[p.job].cash;
+  p.deals=[];p.stocks={};p.loan=0;p.dep=0;p.net=netNew();p.active=0;p.cash=S.jobs[p.job].cash;
   log(`💀 <b>${esc(p.name)} ล้มละลาย</b> ทรัพย์สินถูกยึดทั้งหมด เริ่มใหม่จากอาชีพเดิม`);ruleNote(p,'ล้มละลาย','หนี้ธนาคารเกิน 12 เท่าของเงินเดือน (หรือ ฿400,000) ทรัพย์สินทั้งหมดถูกยึด และเริ่มใหม่ด้วยเงินสดตั้งต้นของอาชีพ');
 }
 
@@ -1409,7 +1447,7 @@ function newGame(speed){
   const S0jobs=JSON.parse(JSON.stringify(JOBS));const jobs=shuffle(JOBS.map((_,i)=>i));
   S={jobs:S0jobs,listings:[],round:1,cur:0,phase:'roll',speed,props:{},prices:{},hist:{},decks:{},log:[],dice:[1],winner:null,freeComm:false,view:0,
     players:seats.map((s,i)=>{const j=S0jobs[jobs[i]];return {id:i,name:s.n,bot:s.bot,color:COLORS[i],job:jobs[i],salary:j.sal,cash:j.cash,
-      exp:{...j.e,extra:0},active:0,debt:{home:j.e.home*100,car:j.e.car*25,card:j.e.card*20},kids:0,kidCost:j.kc||rnd100(j.sal*.06),loan:0,deals:[],stocks:{},skills:[],
+      exp:{...j.e,extra:0},active:0,debt:{home:j.e.home*100,car:j.e.car*25,card:j.e.card*20},kids:0,kidCost:j.kc||rnd100(j.sal*.06),loan:0,dep:0,deals:[],stocks:{},skills:[],
       net:netNew(),ring:'o',pos:0,jobless:0,charity:0,st:{h:j.h,t:j.t,k:j.k}}})};
   S.turnEnd=Date.now()+TURN_MS;
   for(const a of ASSETS){S.prices[a.s]=a.p;S.hist[a.s]=[a.p]}
@@ -1421,6 +1459,7 @@ function newGame(speed){
 }
 function startView(){$('#setupView').hidden=true;$('#gameView').hidden=false;render()}
 function resume(){
+  for(const a of ASSETS)if(S.prices[a.s]==null){S.prices[a.s]=a.p;S.hist[a.s]=[a.p]}for(const q of S.players)q.dep=q.dep||0;
   if(S.winner!=null){render();return}
   if(S.phase==='busy')S.phase='card';
   S.autoPilot=false;S.turnEnd=Date.now()+TURN_MS;
@@ -1549,8 +1588,8 @@ function endRound(){
   const moves=[];
   for(const a of ASSETS){
     const r=(Math.random()+Math.random()+Math.random()-1.5)/1.5;
-    let np=S.prices[a.s]*(1+r*a.v*2+.004);
-    np=a.k==='stock'?Math.max(.5,Math.round(np*10)/10):Math.max(500,Math.round(np));
+    let np=S.prices[a.s]*(1+r*a.v*2+(a.d??.004));
+    np=roundP(a,np);
     if(a.s==='GROW'&&np<=.6){delist();np=5}
     S.prices[a.s]=np;S.hist[a.s].push(np);if(S.hist[a.s].length>20)S.hist[a.s].shift();
   }
@@ -1778,7 +1817,7 @@ async function forcedPay(p,amt,title){
 }
 async function newsCard(p){
   const n=draw('news');const parts=[];
-  for(const s in n.e){const a=AS(s),old=S.prices[s];let np=old*(1+n.e[s]/100);np=a.k==='stock'?Math.max(.5,Math.round(np*10)/10):Math.max(500,Math.round(np));S.prices[s]=np;S.hist[s].push(np);if(S.hist[s].length>20)S.hist[s].shift();
+  for(const s in n.e){const a=AS(s),old=S.prices[s];let np=old*(1+n.e[s]/100);np=roundP(a,np);S.prices[s]=np;S.hist[s].push(np);if(S.hist[s].length>20)S.hist[s].shift();
     parts.push(`<div class="ln"><span>${a.n} <span class="muted">${s}</span></span><span class="num ${n.e[s]>0?'pos':'neg'}">${n.e[s]>0?'+':''}${n.e[s]}% → ${a.k==='stock'?'฿'+np.toFixed(1):B(np)}</span></div>`)}
   log(`📰 ข่าว: ${n.t}`);render();
   await choose({actor:p,kind:'news',title:n.t,body:parts.join('')+`<p class="muted">เปิดแท็บตลาดเพื่อซื้อขายได้ระหว่างเทิร์นของคุณ</p>`,opts:[{v:'ok',l:'รับทราบ',c:'pri'}],bot:'ok'});
@@ -1878,18 +1917,18 @@ async function oppCard(p,c,src){
 function addHold(p,s,q,cost){const h=p.stocks[s]||(p.stocks[s]={q:0,c:0});h.q+=q;h.c+=cost}
 function commission(p,v){return S.freeComm||skHas(p,'stock')?0:Math.round(v*.01)}
 async function trade(s,dir,lots){
-  if(!canAct())return;const p=cp(),a=AS(s),pr=S.prices[s],unit=a.k==='stock'?'หุ้น':'หน่วย',hd=p.stocks[s];
+  if(!canAct())return;const p=cp(),a=AS(s),pr=S.prices[s],unit=UNIT(a),hd=p.stocks[s];
   let q=LOT(a)*lots;
   if(dir<0){if(!hd||!hd.q){toast('ยังไม่มีให้ขาย');return}q=Math.min(q,hd.q)}
-  const v=pr*q,fee=commission(p,v),prS=a.k==='stock'?'฿'+pr.toFixed(2):B(pr);
+  const v=pr*q,fee=commission(p,v),prS=a.k==='com'?B(pr):'฿'+pr.toFixed(2);
   const row=(k,val,cls='')=>`<b>${k}</b><span class="num ${cls}">${val}</span>`;
   let body=`<div class="kv">${row('สินทรัพย์',`${a.n} (${a.s})`)}${row('ราคาตอนนี้',`${prS} ต่อ${unit}`)}${row('จำนวน',`${q.toLocaleString()} ${unit}`)}${row('มูลค่า',B(v))}${row('ค่าคอม',fee?B(fee):'ฟรี',fee?'neg':'')}`;
   let opts;
   if(dir>0){
     const total=v+fee,after=p.cash-total,L=Math.ceil(Math.max(0,-after)/1000)*1000;
     const nq=(hd?hd.q:0)+q,nc=(hd?hd.c:0)+total;
-    body+=`${row('รวมจ่าย',B(total),'neg')}${row('เงินสดก่อน → หลัง',`${B(p.cash)} → ${B(after)}`,after<0?'neg':'')}${row('ถือหลังซื้อ',`${nq.toLocaleString()} ${unit} · ทุนเฉลี่ย ${a.k==='stock'?'฿'+(nc/nq).toFixed(2):B(nc/nq)}`)}${a.div?row('ปันผลต่อเดือน (หลังซื้อ)','+'+B(nq*a.div*(1+skV(p,'stock')/100)),'pos'):''}</div>`;
-    if(after<0)body+=`<p class="lack">เงินสดขาด ${B(-after)} · กดกู้เพื่อซื้อได้ (ดอกเบี้ย 10% ต่อเดือน)</p>`;
+    body+=`${row('รวมจ่าย',B(total),'neg')}${row('เงินสดก่อน → หลัง',`${B(p.cash)} → ${B(after)}`,after<0?'neg':'')}${row('ถือหลังซื้อ',`${nq.toLocaleString()} ${unit} · ทุนเฉลี่ย ${fmtAvg(a,nc/nq)}`)}${a.div?row('ปันผลต่อเดือน (หลังซื้อ)','+'+B(nq*a.div*(1+skV(p,'stock')/100)),'pos'):''}</div>`;
+    if(after<0)body+=`<p class="lack">เงินสดขาด ${B(-after)} · กดกู้เพื่อซื้อได้ (ดอกเบี้ย ${LOAN_TXT} ต่อเดือน)</p>`;
     opts=[after<0?{v:'loan',l:`กู้ ${B(L)} แล้วซื้อ`,c:'pri'}:{v:'ok',l:`ยืนยันซื้อ ${B(total)}`,c:'pri'},{v:'no',l:'ยกเลิก'}];
     const r=await choose({title:`ซื้อ ${a.n}`,body,opts});
     if(r==='no')return;
@@ -1897,7 +1936,7 @@ async function trade(s,dir,lots){
     p.cash-=total;addHold(p,s,q,total);log(`${esc(p.name)} ซื้อ ${a.n} ${q.toLocaleString()} ${unit} @ ${prS} รวม ${B(total)}`);
   }else{
     const avg=hd.c/hd.q,cost=avg*q,get=v-fee,pl=get-cost;
-    body+=`${row('ได้รับสุทธิ',B(get))}${row('ทุนเฉลี่ย',`${a.k==='stock'?'฿'+avg.toFixed(2):B(avg)} ต่อ${unit}`)}${row('ทุนของส่วนที่ขาย',B(cost))}${row('กำไร/ขาดทุน',`${pl>=0?'+':'−'}${B(Math.abs(pl))} (${pl>=0?'+':''}${(pl/cost*100).toFixed(1)}%)`,pl>=0?'pos':'neg')}${row('เงินสดก่อน → หลัง',`${B(p.cash)} → ${B(p.cash+get)}`)}${row('เหลือถือ',`${(hd.q-q).toLocaleString()} ${unit}`)}</div>`;
+    body+=`${row('ได้รับสุทธิ',B(get))}${row('ทุนเฉลี่ย',`${fmtAvg(a,avg)} ต่อ${unit}`)}${row('ทุนของส่วนที่ขาย',B(cost))}${row('กำไร/ขาดทุน',`${pl>=0?'+':'−'}${B(Math.abs(pl))} (${pl>=0?'+':''}${(pl/cost*100).toFixed(1)}%)`,pl>=0?'pos':'neg')}${row('เงินสดก่อน → หลัง',`${B(p.cash)} → ${B(p.cash+get)}`)}${row('เหลือถือ',`${(hd.q-q).toLocaleString()} ${unit}`)}</div>`;
     if(q<LOT(a)*lots)body+=`<p class="muted">มีอยู่ ${hd.q.toLocaleString()} ${unit} จึงขายได้เท่านี้</p>`;
     const r=await choose({title:`ขาย ${a.n}`,body,opts:[{v:'ok',l:`ยืนยันขาย ${B(get)}`,c:'pri'},{v:'no',l:'ยกเลิก'}]});
     if(r==='no')return;
@@ -1944,7 +1983,7 @@ function botWants(p,cost,cf){
   const f=fin(p);if(cf<0)return false;
   if(p.cash-cost>=f.expenses*.5)return cf>0||Math.random()<.5;
   const L=Math.ceil(Math.max(0,cost-p.cash)/1000)*1000;
-  return cf>0&&cf>L*.1&&f.flow>0&&p.loan+L<p.salary*6;
+  return cf>0&&cf>L*LOAN_R*2&&f.flow>0&&p.loan+L<p.salary*6;
 }
 function botRoad(p,into){const f=fin(p);if(into)return p.cash>150000&&f.flow>15000&&Math.random()<.7?'go':'stay';return p.cash<80000||Math.random()<.35?'go':'stay'}
 function botPile(p){const f=fin(p),r=Math.random();if(p.net.on&&r<.25)return 'net';if(!p.net.on&&r<.08)return 'net';if(p.skills.length<4&&p.cash>f.expenses*1.5&&r<.3)return 'learn';if(r<.75)return 'opp';return 'life'}
@@ -2059,7 +2098,7 @@ function render(){
   $('#legend').innerHTML=Object.entries(ZONES).map(([z,v])=>`<span><i style="background:${v.c}"></i>${v.n}</span>`).join('')+`<span><i style="background:#9da3a8"></i>ถนนคอนกรีต เข้า/ออกเมือง</span><span><i style="background:#ffd338"></i>เงินเดือน</span><span><i style="background:#46206a"></i>ตกงาน</span><span><i style="background:#f5862a"></i>บริจาค</span>`;
 
   document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.tab===TAB));
-  $('#panel').innerHTML=TAB==='pl'?renderPlayers():TAB==='sk'?renderSkills():TAB==='fin'?renderFin():TAB==='net'?renderNet():TAB==='mkt'?renderMkt():`<div class="log">${S.log.map(l=>`<div>${l}</div>`).join('')}</div>`;
+  $('#panel').innerHTML=TAB==='pl'?renderPlayers():TAB==='sk'?renderSkills():TAB==='fin'?renderFin():TAB==='net'?renderNet():TAB==='mkt'?renderMkt():TAB==='bank'?renderBank():`<div class="log">${S.log.map(l=>`<div>${l}</div>`).join('')}</div>`;
 }
 function renderSkills(){
   const desc=k=>(EFFTXT[SKILLDB[k].eff]||(()=>''))(SKILLDB[k].val);
@@ -2112,15 +2151,16 @@ function renderFin(){
   const line=(n,v,cls='',sub='')=>`<tr><td>${n}${sub?`<div class="fsub">${sub}</div>`:''}</td><td class="r num ${cls}">${v}</td></tr>`;
   const exMap={'ผ่อนบ้าน':'home','ผ่อนรถ':'car','บัตรเครดิต':'card'};
   // assets grouped
-  const grp={board:[],deal:[],stk:[],net:[]};
+  const grp={board:[],deal:[],stk:[],fund:[],bank:[],net:[]};
   for(const k in S.props)if(S.props[k].o===q.id){const pr=S.props[k];grp.board.push(`<tr><td>${esc(SQ(k).n)} ${pr.l?'<span class="lvs">'+'★'.repeat(pr.l)+'</span>':''}<div class="fsub">${ZONES[SQ(k).z].n}${fullZone(q.id,SQ(k).z)?' · ครบเขต ×1.5':''}</div></td><td class="r num">${B(pr.inv)}</td><td class="r num pos">+${B(propCf(k))}</td><td class="r"><button class="sm" ${dis} onclick="sellBank('p','${k}')">ขาย ${B(pr.inv*.8)}</button></td></tr>`)}
   for(const d of q.deals)grp.deal.push(`<tr><td>${esc(d.t)}<div class="fsub">${OPP_TY[d.ty]||d.ty}${d.ty==='scam'?' · <span class="neg">ไม่นับ เสี่ยงล่ม</span>':''}${d.act?` · Active +${B(d.act)} (รวมในรายได้เสริม)`:''}</div></td><td class="r num">${B(d.cost)}</td><td class="r num pos">${d.cf||!d.act?'+'+B(d.ty==='scam'?d.cf:dealCf(q,d)):'—'}</td><td class="r"><button class="sm" ${dis} onclick="sellBank('d',${d.id})">ขาย ${B(d.ty==='scam'?0:d.cost*.8)}</button></td></tr>`);
-  for(const a of ASSETS){const hd=q.stocks[a.s];if(hd&&hd.q){const v=hd.q*S.prices[a.s],pl=v-hd.c;grp.stk.push(`<tr><td>${a.n}<div class="fsub">${hd.q.toLocaleString()} ${a.k==='stock'?'หุ้น':'หน่วย'} · ทุน ${B(hd.c)} · <span class="${pl>=0?'pos':'neg'}">${pl>=0?'+':'−'}${B(Math.abs(pl))}</span></div></td><td class="r num">${B(v)}</td><td class="r num ${a.div?'pos':'muted'}">${a.div?'+'+B(hd.q*a.div*(1+skV(q,'stock')/100)):'—'}</td><td class="r"><button class="sm" onclick="TAB='mkt';render()">ตลาด</button></td></tr>`)}}
+  for(const a of ASSETS){const hd=q.stocks[a.s];if(hd&&hd.q){const v=hd.q*S.prices[a.s],pl=v-hd.c;grp[a.k==='fund'?'fund':'stk'].push(`<tr><td>${a.n}<div class="fsub">${hd.q.toLocaleString()} ${a.k==='stock'?'หุ้น':'หน่วย'} · ทุน ${B(hd.c)} · <span class="${pl>=0?'pos':'neg'}">${pl>=0?'+':'−'}${B(Math.abs(pl))}</span></div></td><td class="r num">${B(v)}</td><td class="r num ${a.div?'pos':'muted'}">${a.div?'+'+B(hd.q*a.div*(1+skV(q,'stock')/100)):'—'}</td><td class="r"><button class="sm" onclick="TAB='mkt';render()">ตลาด</button></td></tr>`)}}
   if(q.net.on)grp.net.push(`<tr><td>ธุรกิจ A · ${NET_RANKS[q.net.rank].n}<div class="fsub">ยอดกลุ่ม ${netGV(q).toLocaleString()} PV · ขั้นโบนัส ${Math.round(netEff(q)*100)}%</div></td><td class="r num muted">—</td><td class="r num pos">+${B(f.net)}</td><td class="r"><button class="sm" onclick="TAB='net';render()">ดู</button></td></tr>`);
-  const gname={board:'อสังหาฯ บนกระดาน',deal:'ดีลและธุรกิจ',stk:'หุ้นและสินค้า',net:'ธุรกิจเครือข่าย'};
+  if(q.dep>0)grp.bank.push(`<tr><td>เงินฝากประจำ<div class="fsub">ดอกเบี้ย ${DEP_TXT} ต่อเดือน</div></td><td class="r num">${B(q.dep)}</td><td class="r num pos">+${B(f.depI)}</td><td><button class="sm" onclick="TAB='bank';render()">ธนาคาร</button></td></tr>`);
+  const gname={board:'อสังหาฯ บนกระดาน',deal:'ดีลและธุรกิจ',stk:'หุ้นและสินค้า',fund:'กองทุนรวม',bank:'เงินฝากธนาคาร',net:'ธุรกิจเครือข่าย'};
   const assetRows=Object.entries(grp).filter(([,v])=>v.length).map(([g,v])=>`<tr class="gh"><td colspan="4">${gname[g]}</td></tr>${v.join('')}`).join('');
   const debtRows=[['home','หนี้บ้าน'],['car','หนี้รถ'],['card','หนี้บัตรเครดิต']].filter(([k])=>q.debt[k]>0).map(([k,n])=>`<div class="dli"><div class="dlt"><b>${n}</b></div><div class="dlv"><span class="num">${B(q.debt[k])}</span><small class="num neg">จ่าย ${B(q.exp[k])}/ด.</small></div><div class="dlb"><button class="sm" ${dis} onclick="payDebt('${k}')">ปิดหนี้</button></div></div>`).join('');
-  const passRows=[['ค่าเช่าอสังหาฯ บนกระดาน',f.board],['ธุรกิจและดีล',f.deals],['ปันผลหุ้น',f.div],['ธุรกิจ A',f.net]].filter(x=>x[1]).map(([n,v])=>line(n,B(v),'pos')).join('');
+  const passRows=[['ค่าเช่าอสังหาฯ บนกระดาน',f.board],['ธุรกิจและดีล',f.deals],['ปันผลหุ้นและกองทุน',f.div],['ดอกเบี้ยเงินฝากประจำ',f.depI],['ธุรกิจ A',f.net]].filter(x=>x[1]).map(([n,v])=>line(n,B(v),'pos')).join('');
   return `<div class="fin">
    <div class="fhead"><div><b>${esc(q.name)}</b>${badges(q)} · ${S.jobs[q.job].n}${q.jobless?` <span class="jl">ตกงานอีก ${q.jobless} เดือน</span>`:''}</div></div>${statPanel(q)}
    <div class="tiles">
@@ -2141,7 +2181,7 @@ function renderFin(){
     ${assetRows?`<div class="tw"><table class="ft at"><tr class="th"><td>รายการ</td><td class="r">ทุน/มูลค่า</td><td class="r">รายได้/เดือน</td><td></td></tr>${assetRows}</table></div>`:'<p class="muted">ยังไม่มีทรัพย์สิน · จั่วการ์ดโอกาสชีวิต ซื้ออสังหาฯ บนกระดาน หรือซื้อหุ้นปันผลเพื่อเริ่มสร้างรายได้</p>'}</section>
    <section class="fcard"><h3>หนี้สิน <span class="num">${B(Object.values(q.debt).reduce((a,b)=>a+b,0)+q.loan)}</span></h3>
     <div class="dlist">${debtRows}
-     <div class="dli"><div class="dlt"><b>เงินกู้ธนาคาร</b><span class="fsub">ดอกเบี้ย 10% ต่อเดือน</span></div><div class="dlv"><span class="num">${B(q.loan)}</span><small class="num neg">จ่าย ${B(Math.round(q.loan*.1))}/ด.</small></div><div class="dlb"><button class="sm" ${dis} onclick="loan(1)">กู้ +10k</button><button class="sm" ${dis} onclick="loan(-1)">คืน 10k</button></div></div></div>
+     <div class="dli"><div class="dlt"><b>เงินกู้ธนาคาร</b><span class="fsub">ดอกเบี้ย ${LOAN_TXT} ต่อเดือน</span></div><div class="dlv"><span class="num">${B(q.loan)}</span><small class="num neg">จ่าย ${B(Math.round(q.loan*LOAN_R))}/ด.</small></div><div class="dlb"><button class="sm" onclick="TAB='bank';render()">🏦 กู้ / ชำระ</button></div></div></div>
     ${q.kids?`<p class="muted" style="font-size:12px;margin:6px 0 0">บุตร ${q.kids} คน · ค่าเลี้ยงดู <span class="neg">${B(q.kids*q.kidCost)}</span> ต่อเดือน</p>`:''}</section>
    ${skillBox(q)}
   </div>${q.id!==S.cur?'<p class="muted" style="margin:10px 0 0">กำลังดูงบของผู้เล่นอื่น ปุ่มจัดการใช้ได้เฉพาะในเทิร์นของตัวเอง</p>':''}`;
@@ -2174,22 +2214,85 @@ function renderNet(){
 function spark(arr){const w=64,h=20,mn=Math.min(...arr),mx=Math.max(...arr),sp=mx-mn||1;const pts=arr.map((v,i)=>`${(i/(Math.max(1,arr.length-1)))*w},${h-2-((v-mn)/sp)*(h-4)}`).join(' ');const up=arr[arr.length-1]>=arr[0];
   return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" aria-hidden="true"><polyline points="${pts}" fill="none" stroke="${up?'var(--good)':'var(--bad)'}" stroke-width="1.5"/></svg>`}
 let LOTS=1;
+/* แถวสินทรัพย์ในตาราง (ใช้ร่วม: ตลาดหุ้นและสินค้า / กองทุนในแท็บธนาคาร) acc สะสมทุน-มูลค่าพอร์ต */
+const ICO=a=>a.k==='fund'?(a.s==='MMF'||a.s==='BOND'?'as-saving':a.s==='GOLDF'?'as-gold':'as-stock'):a.k==='stock'?(a.s==='REIT'?'as-estate':'as-stock'):a.s==='GOLD'?'as-gold':'as-commod';
+function mrow(a,p,dis,acc){
+  const pr=S.prices[a.s],hs=S.hist[a.s],prev=hs.length>1?hs[hs.length-2]:pr,ch=(pr-prev)/prev*100,h=p.stocks[a.s];
+  const pl=h&&h.q?(()=>{const avg=h.c/h.q,val=h.q*pr,pl=val-h.c;acc.tc+=h.c;acc.tv+=val;return `<span class="mk">ทุน ${fmtAvg(a,avg)}</span><span class="mk ${pl>=0?'pos':'neg'}">${pl>=0?'+':'−'}${B(Math.abs(pl)).replace('−','')} (${pl>=0?'+':''}${(pl/h.c*100).toFixed(1)}%)</span>`})():'';
+  return `<div class="mi"><div class="mi1"><img class="mico" src="img/${ICO(a)}.webp" alt=""><div class="mname"><b>${a.s}</b><span class="muted">${a.n}</span></div>${spark(hs)}<div class="mprice"><b class="num">${fmtP(a,pr)}</b><span class="num ${ch>=0?'pos':'neg'}">${ch>=0?'+':''}${ch.toFixed(1)}%</span></div></div>
+    <div class="mi2"><div class="mtags">${a.risk?`<span class="mk">เสี่ยง${RISK[a.risk]}</span>`:''}${a.div?`<span class="mk">ปันผล ฿${a.k==='fund'?a.div.toFixed(2):a.div.toFixed(1)}/${UNIT(a)}</span>`:''}<span class="mk">ถือ ${h&&h.q?h.q.toLocaleString():0}</span>${pl}</div><div class="mbtn"><button class="sm" ${dis} onclick="trade('${a.s}',1,LOTS)">ซื้อ</button><button class="sm" ${dis} onclick="trade('${a.s}',-1,LOTS)">ขาย</button></div></div></div>`;
+}
 function renderMkt(){
   const act=canAct(),p=act?cp():P(S.view),dis=act?'':'disabled';
-  let tc=0,tv=0;
+  const acc={tc:0,tv:0};
   return `<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
     <span class="muted">ซื้อขายครั้งละ</span><div class="seg">${[1,5,10].map(n=>`<button class="${LOTS===n?'on':''}" onclick="LOTS=${n};render()">${n} ล็อต</button>`).join('')}</div>
     <span class="muted" style="font-size:12px">หุ้น 1 ล็อต = 1,000 หุ้น · สินค้า 1 ล็อต = 1 หน่วย · ค่าคอม 1%${S.freeComm?' <b class="pos">(เทิร์นนี้ฟรี)</b>':''}</span></div>
   <div class="mlist">
-  ${ASSETS.map(a=>{const pr=S.prices[a.s],hs=S.hist[a.s],prev=hs.length>1?hs[hs.length-2]:pr,ch=(pr-prev)/prev*100,h=p.stocks[a.s];
-    const pl=h&&h.q?(()=>{const avg=h.c/h.q,val=h.q*pr,pl=val-h.c;tc+=h.c;tv+=val;return `<span class="mk">ทุน ${a.k==='stock'?'฿'+avg.toFixed(2):B(avg)}</span><span class="mk ${pl>=0?'pos':'neg'}">${pl>=0?'+':'−'}${B(Math.abs(pl)).replace('−','')} (${pl>=0?'+':''}${(pl/h.c*100).toFixed(1)}%)</span>`})():'';
-    return `<div class="mi"><div class="mi1"><img class="mico" src="img/${a.k==='stock'?(a.s==='REIT'?'as-estate':'as-stock'):a.s==='GOLD'?'as-gold':'as-commod'}.webp" alt=""><div class="mname"><b>${a.s}</b><span class="muted">${a.n}</span></div>${spark(hs)}<div class="mprice"><b class="num">${a.k==='stock'?'฿'+pr.toFixed(1):B(pr)}</b><span class="num ${ch>=0?'pos':'neg'}">${ch>=0?'+':''}${ch.toFixed(1)}%</span></div></div>
-    <div class="mi2"><div class="mtags">${a.div?`<span class="mk">ปันผล ฿${a.div.toFixed(1)}/หุ้น</span>`:''}<span class="mk">ถือ ${h&&h.q?h.q.toLocaleString():0}</span>${pl}</div><div class="mbtn"><button class="sm" ${dis} onclick="trade('${a.s}',1,LOTS)">ซื้อ</button><button class="sm" ${dis} onclick="trade('${a.s}',-1,LOTS)">ขาย</button></div></div></div>`}).join('')}</div>
-  ${tc?`<div class="ln" style="margin-top:6px"><span><b>รวมพอร์ต ${esc(p.name)}</b><br><span class="muted" style="font-size:12px">ทุน ${B(tc)} · มูลค่าตอนนี้ ${B(tv)}</span></span><b class="num ${tv>=tc?'pos':'neg'}">${tv>=tc?'+':'−'}${B(Math.abs(tv-tc)).replace('−','')} (${tv>=tc?'+':''}${((tv-tc)/tc*100).toFixed(1)}%)</b></div>`:''}
+  ${ASSETS.filter(a=>a.k!=='fund').map(a=>mrow(a,p,dis,acc)).join('')}</div>
+  ${acc.tc?`<div class="ln" style="margin-top:6px"><span><b>รวมพอร์ต ${esc(p.name)}</b><br><span class="muted" style="font-size:12px">ทุน ${B(acc.tc)} · มูลค่าตอนนี้ ${B(acc.tv)}</span></span><b class="num ${acc.tv>=acc.tc?'pos':'neg'}">${acc.tv>=acc.tc?'+':'−'}${B(Math.abs(acc.tv-acc.tc)).replace('−','')} (${acc.tv>=acc.tc?'+':''}${((acc.tv-acc.tc)/acc.tc*100).toFixed(1)}%)</b></div>`:''}
   <p class="muted" style="font-size:12px;margin:4px 0 0">ทุนเฉลี่ยรวมค่าคอมมิชชันแล้ว</p>
   <h3 style="margin:14px 0 6px;font-size:14px">🪧 ป้ายประกาศขายในตลาดกลาง</h3>
   ${(cleanListings(),S.listings.length)?S.listings.map(l=>{const s=P(l.seller),a=findAsset(s,l.key);return `<div class="ln"><span><span class="tok pic" style="display:inline-block;${tokStyle(s)}"></span> ${esc(s.name)} · ${esc(a.n)} <span class="muted">(+${B(a.cf)}/เดือน)</span></span><b class="num">${B(l.price)}</b></div>`}).join(''):'<p class="muted">ยังไม่มีป้ายขาย</p>'}
   <p class="muted" style="font-size:12px">ซื้อได้เมื่อหยุดที่ช่องตลาดกลาง · ราคาขยับทุกครั้งที่จบรอบ และเมื่อมีข่าวตลาด หุ้นที่มีปันผลนับเป็นรายได้จากทรัพย์สินทุกเดือน ${act?'':'· ซื้อขายได้เฉพาะในเทิร์นของผู้เล่นที่เป็นคน'}</p>`;
+}
+
+/* ===================== ธนาคาร: เงินกู้ · ฝากประจำ · กองทุนรวม ===================== */
+function bankAmt(id){const el=$('#'+id);const v=Math.round(+String(el?el.value:'').replace(/[^\d.]/g,''));return v>0?v:0}
+function bankFill(id,v){const el=$('#'+id);if(el){el.value=v>0?v:'';el.focus()}}
+function bankDo(kind){
+  if(!canAct())return;const p=cp();p.dep=p.dep||0;const nm=esc(p.name),lim=loanLim(p);let v=0;
+  if(kind==='borrow'){v=bankAmt('bkLoan');if(!v){toast('กรอกจำนวนเงินที่ต้องการกู้');return}const room=lim-p.loan;if(v>room){toast(`กู้ได้อีกไม่เกิน ${B(Math.max(0,room))} (เพดานหนี้ ${B(lim)})`);return}
+    p.loan+=v;p.cash+=v;log(`🏦 ${nm} กู้ธนาคาร ${B(v)} · หนี้รวม ${B(p.loan)}`);toast(`กู้ ${B(v)} แล้ว`)}
+  else if(kind==='repay'||kind==='payall'){if(!p.loan){toast('ไม่มีหนี้ธนาคาร');return}v=kind==='payall'?p.loan:Math.min(bankAmt('bkPay'),p.loan);if(!v){toast('กรอกจำนวนเงินที่ต้องการชำระ');return}if(v>p.cash){toast(`เงินสดไม่พอ (มี ${B(p.cash)})`);return}
+    p.loan-=v;p.cash-=v;log(p.loan?`🏦 ${nm} ชำระหนี้ธนาคาร ${B(v)} · เหลือ ${B(p.loan)}`:`✅ ${nm} ปิดหนี้ธนาคาร ${B(v)} หมดแล้ว`);toast(p.loan?`ชำระ ${B(v)} แล้ว`:'ปิดหนี้ธนาคารแล้ว')}
+  else if(kind==='dep'){v=bankAmt('bkDep');if(!v){toast('กรอกจำนวนเงินที่ต้องการฝาก');return}if(v>p.cash){toast(`เงินสดไม่พอ (มี ${B(p.cash)})`);return}
+    p.dep+=v;p.cash-=v;log(`💰 ${nm} ฝากประจำ ${B(v)} · เงินฝากรวม ${B(p.dep)}`);toast(`ฝาก ${B(v)} แล้ว`)}
+  else if(kind==='wd'||kind==='wdall'){if(!p.dep){toast('ไม่มีเงินฝาก');return}v=kind==='wdall'?p.dep:Math.min(bankAmt('bkWd'),p.dep);if(!v){toast('กรอกจำนวนเงินที่ต้องการถอน');return}
+    p.dep-=v;p.cash+=v;log(`💰 ${nm} ถอนเงินฝาก ${B(v)} · เหลือ ${B(p.dep)}`);toast(`ถอน ${B(v)} แล้ว`)}
+  render();save();checkWin();
+}
+function renderBank(){
+  const act=canAct(),p=act?cp():P(S.view),dis=act?'':'disabled',dep=p.dep||0,lim=loanLim(p),room=Math.max(0,lim-p.loan);
+  const li=Math.round(p.loan*LOAN_R),di=Math.round(dep*DEP_R),net=di-li,acc={tc:0,tv:0};
+  const quick=(id,arr)=>arr.filter(x=>x[1]>0).map(([l,v])=>`<button class="sm" ${dis} onclick="bankFill('${id}',${v})">${l}</button>`).join('');
+  const inp=(id,ph)=>`<input id="${id}" type="text" inputmode="numeric" autocomplete="off" placeholder="${ph}" ${dis} oninput="this.value=this.value.replace(/[^0-9]/g,'')" onkeydown="if(event.key==='Enter')this.closest('.bkrow').querySelector('button.pri').click()">`;
+  const usage=Math.min(100,p.loan/lim*100);
+  return `<div class="bank">
+  <div class="bkhead"><img src="img/npc-wave.webp" alt=""><div><b>ธนาคาร · ${esc(p.name)}</b><span class="muted">กู้เพิ่ม ชำระคืน ฝากประจำ และซื้อขายกองทุนรวม · ดอกเบี้ยคิดทุกครั้งที่รับเงินเดือน</span></div></div>
+  <div class="tiles">
+   <div class="tile"><span>เงินสด</span><b class="num">${B(p.cash)}</b></div>
+   <div class="tile"><span>หนี้ธนาคาร</span><b class="num ${p.loan?'neg':''}">${B(p.loan)}</b></div>
+   <div class="tile"><span>เงินฝากประจำ</span><b class="num">${B(dep)}</b></div>
+   <div class="tile"><span>ดอกเบี้ยสุทธิต่อเดือน</span><b class="num ${net>=0?'pos':'neg'}">${net>=0?'+':'−'}${B(Math.abs(net)).replace('−','')}</b></div>
+  </div>
+  <div class="bkgrid">
+  <section class="fcard bkc"><h3>🏦 เงินกู้ <span class="bkrate neg">ดอกเบี้ย ${LOAN_TXT} ต่อเดือน</span></h3>
+   <div class="kv"><span>ยอดหนี้คงเหลือ</span><b class="num ${p.loan?'neg':''}">${B(p.loan)}</b><span>ดอกเบี้ยที่ต้องจ่าย</span><b class="num ${li?'neg':''}">${B(li)} / เดือน</b><span>กู้ได้อีก</span><b class="num">${B(room)} <small class="muted">จากเพดาน ${B(lim)}</small></b></div>
+   <div class="bkbar" title="ใช้วงเงิน ${usage.toFixed(0)}%"><i style="width:${usage}%" class="${usage>75?'hi':''}"></i></div>
+   <p class="bknote">หนี้เกินเพดาน (12 เท่าของเงินเดือน หรือ ${B(400000)}) = ล้มละลาย</p>
+   <div class="bkrow"><label for="bkLoan">กู้เพิ่ม</label>${inp('bkLoan','จำนวนเงิน (บาท)')}<button class="pri" ${dis} onclick="bankDo('borrow')">กู้</button></div>
+   <div class="bkq">${quick('bkLoan',[['10,000',Math.min(10000,room)],['50,000',room>=50000?50000:0],['100,000',room>=100000?100000:0],['สูงสุด',room]])}</div>
+   <div class="bkrow"><label for="bkPay">ชำระคืน</label>${inp('bkPay','จำนวนเงิน (บาท)')}<button class="pri" ${dis||(!p.loan?'disabled':'')} onclick="bankDo('repay')">ชำระ</button></div>
+   <div class="bkq">${quick('bkPay',[['10,000',p.loan>=10000?10000:0],['ครึ่งหนึ่ง',p.loan>=2000?Math.round(p.loan/2):0],['เท่าเงินสดที่มี',Math.min(p.loan,Math.max(0,p.cash))]])}<button class="sm bkall" ${dis||(!p.loan?'disabled':'')} onclick="bankDo('payall')">ปิดหนี้ทั้งหมด ${B(p.loan)}</button></div>
+  </section>
+  <section class="fcard bkc"><h3>💰 ฝากประจำ <span class="bkrate pos">ดอกเบี้ย ${DEP_TXT} ต่อเดือน</span></h3>
+   <div class="kv"><span>ยอดเงินฝาก</span><b class="num">${B(dep)}</b><span>ดอกเบี้ยรับ</span><b class="num ${di?'pos':''}">+${B(di)} / เดือน</b><span>ต่อปีประมาณ</span><b class="num">${(DEP_R*1200).toFixed(1)}% <small class="muted">(กู้ ${(LOAN_R*1200).toFixed(0)}%)</small></b></div>
+   <p class="bknote">ดอกเบี้ยเงินฝากนับเป็นรายได้จากทรัพย์สิน (Passive) · ถ้าเงินสดติดลบ ระบบถอนเงินฝากมาจ่ายก่อนกู้</p>
+   <div class="bkrow"><label for="bkDep">ฝาก</label>${inp('bkDep','จำนวนเงิน (บาท)')}<button class="pri" ${dis} onclick="bankDo('dep')">ฝาก</button></div>
+   <div class="bkq">${quick('bkDep',[['10,000',p.cash>=10000?10000:0],['50,000',p.cash>=50000?50000:0],['เงินสดทั้งหมด',Math.max(0,p.cash)]])}</div>
+   <div class="bkrow"><label for="bkWd">ถอน</label>${inp('bkWd','จำนวนเงิน (บาท)')}<button class="pri" ${dis||(!dep?'disabled':'')} onclick="bankDo('wd')">ถอน</button></div>
+   <div class="bkq">${quick('bkWd',[['10,000',dep>=10000?10000:0]])}<button class="sm bkall" ${dis||(!dep?'disabled':'')} onclick="bankDo('wdall')">ถอนทั้งหมด ${B(dep)}</button></div>
+  </section>
+  </div>
+  <section class="fcard bkc bkfund"><h3>📊 กองทุนรวม <span class="muted" style="font-size:12px;font-weight:500">1 ล็อต = 1,000 หน่วย · ค่าธรรมเนียม 1%${S.freeComm?' <b class="pos">(เทิร์นนี้ฟรี)</b>':''}</span></h3>
+   <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px"><span class="muted">ซื้อขายครั้งละ</span><div class="seg">${[1,5,10].map(n=>`<button class="${LOTS===n?'on':''}" onclick="LOTS=${n};render()">${n} ล็อต</button>`).join('')}</div></div>
+   <div class="mlist">${ASSETS.filter(a=>a.k==='fund').map(a=>mrow(a,p,dis,acc)).join('')}</div>
+   ${acc.tc?`<div class="ln" style="margin-top:6px"><span><b>รวมกองทุนของ ${esc(p.name)}</b><br><span class="muted" style="font-size:12px">ทุน ${B(acc.tc)} · มูลค่าตอนนี้ ${B(acc.tv)}</span></span><b class="num ${acc.tv>=acc.tc?'pos':'neg'}">${acc.tv>=acc.tc?'+':'−'}${B(Math.abs(acc.tv-acc.tc)).replace('−','')} (${acc.tv>=acc.tc?'+':''}${((acc.tv-acc.tc)/acc.tc*100).toFixed(1)}%)</b></div>`:''}
+   <p class="bknote">ราคา (NAV) ขยับทุกครั้งที่จบรอบ · ความเสี่ยงต่ำ = ราคานิ่งแต่โตช้า · กองทุนปันผลนับเป็นรายได้จากทรัพย์สินทุกเดือน</p>
+  </section>
+  ${act?'':'<p class="muted" style="margin:10px 0 0">ทำธุรกรรมได้เฉพาะในเทิร์นของผู้เล่นที่เป็นคน</p>'}
+  </div>`;
 }
 
 /* ===================== SETTINGS: edit database (list + form CRUD) ===================== */
