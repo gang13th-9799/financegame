@@ -1,0 +1,31 @@
+{
+  "rules": {
+    "users": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && auth.uid === $uid"
+      }
+    },
+    "rooms": {
+      "$code": {
+        ".read": "auth != null",
+        ".write": "auth != null && (!data.exists() || data.child('host').val() === auth.uid)",
+        ".validate": "$code.matches(/^[0-9]{5}$/)",
+        "seats": {
+          "$i": {
+            ".write": "auth != null && data.parent().parent().child('status').val() === 'lobby' && ((data.child('t').val() === 'h' && !data.child('uid').exists() && newData.child('uid').val() === auth.uid) || data.child('uid').val() === auth.uid)"
+          }
+        },
+        "mem":  { "$uid": { ".write": "auth != null && auth.uid === $uid" } },
+        "on":   { "$uid": { ".write": "auth != null && auth.uid === $uid" } },
+        "left": { "$uid": { ".write": "auth != null && auth.uid === $uid" } },
+        "st":     { ".write": "auth != null && data.parent().child('mem').child(auth.uid).exists()" },
+        "status": { ".write": "auth != null && data.parent().child('mem').child(auth.uid).exists() && newData.val() === 'end'" },
+        "win":    { ".write": "auth != null && data.parent().child('mem').child(auth.uid).exists()" },
+        "q":      { ".write": "auth != null && data.parent().child('mem').child(auth.uid).exists()" },
+        "a":      { ".write": "auth != null && data.parent().child('mem').child(auth.uid).exists()" },
+        "voice":  { ".write": "auth != null && data.parent().child('mem').child(auth.uid).exists()" }
+      }
+    }
+  }
+}

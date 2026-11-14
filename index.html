@@ -1004,6 +1004,29 @@ body.fs #gameView:not(.mapmin){grid-template-columns:minmax(288px,1.2fr) minmax(
 @media (orientation:portrait){
  body.fs #gameView:not(.mapmin){grid-template-rows:minmax(0,min(calc(100vw + 30px),64dvh)) minmax(0,1fr)!important}
 }
+
+/* ===== โหมดออนไลน์ ===== */
+.setup.onl{max-width:520px}
+.ol-btns{display:grid;gap:10px;margin:14px 0}
+.ol-btns>button{display:flex;align-items:center;justify-content:center;gap:10px;min-height:48px;font-size:16px}
+.ol-ic{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:50%;font-weight:800}
+.ol-g .ol-ic{background:#fff;color:#4285f4;border:1px solid #dadce0}
+.ol-f{background:#1877f2!important;color:#fff!important;border-color:#1877f2!important}.ol-f .ol-ic{background:#fff;color:#1877f2}
+.ol-mail{border:1px solid var(--line);border-radius:12px;padding:8px 12px;background:var(--surface)}
+.ol-mail summary{cursor:pointer;font-weight:600;min-height:32px;display:flex;align-items:center}
+.ol-card{border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin:12px 0;background:rgba(255,255,255,.5)}
+.ol-card h3{margin:0 0 4px;font-size:16px}.ol-card p{margin:0 0 10px}
+.ol-entry{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}.ol-entry p{margin:0}
+.ol-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.ol-row input{flex:1;min-width:0}
+#olCode{font-size:22px;letter-spacing:.25em;text-align:center;max-width:12ch}
+.ol-code{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.ol-code b{font-size:clamp(30px,9vw,44px);letter-spacing:.18em;font-variant-numeric:tabular-nums;color:var(--ink,#2b3a2b)}
+.ol-n{margin:4px 0 8px}.ol-n span{margin-right:4px}
+.seat.lb{grid-template-columns:14px 1fr auto;min-height:40px}
+.lb-n{overflow-wrap:anywhere}
+#gameView[hidden],#setupView[hidden]{display:none!important}
+#olCode:placeholder-shown{letter-spacing:normal;font-size:16px}
+.roomtag{margin-left:8px;font-size:12px;padding:2px 8px;border-radius:999px;background:#fff3c4;border:1px solid #e8d48a;white-space:nowrap}
 </style>
 </head>
 <body>
@@ -1359,7 +1382,7 @@ const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()
 const AS=s=>ASSETS.find(a=>a.s===s);
 const EXP=new Set();
 /* แท็บข้อมูล: ตาคน → ดูคนนั้น · ตาบอท → คงที่เดิม (ถ้ากำลังดูบอทที่ไม่ได้เลือกเอง ให้กลับไปที่ผู้เล่นคน) */
-function viewFollow(){const c=S.players[S.cur];if(c&&!c.bot){S.view=S.cur;S.viewPick=0;return}const v=S.players.find(q=>q.id===S.view);if(!v||(v.bot&&!S.viewPick)){const h=S.players.find(q=>!q.bot);if(h)S.view=h.id}}
+function viewFollow(){if(ON.play){viewFollowOnline();return}const c=S.players[S.cur];if(c&&!c.bot){S.view=S.cur;S.viewPick=0;return}const v=S.players.find(q=>q.id===S.view);if(!v||(v.bot&&!S.viewPick)){const h=S.players.find(q=>!q.bot);if(h)S.view=h.id}}
 function togglePc(id){S.view=id;S.viewPick=1;if(id!==S.cur){EXP.has(id)?EXP.delete(id):EXP.add(id)}render()}
 function toggleAll(){const o=S.players.filter(q=>q.id!==S.cur);if(o.every(q=>EXP.has(q.id)))o.forEach(q=>EXP.delete(q.id));else o.forEach(q=>EXP.add(q.id));render()}
 let S=null, TAB='fin', MODAL=false, MODAL_CANCEL=null;
@@ -1373,7 +1396,7 @@ function log(t){S.log.unshift(`<b class="num">ร${S.round}</b> ${t}`);if(S.log.
 const GRULE={sickAtZeroHeart:false};
 function ruleNote(p,title,why){if(!p||p.bot||(S&&S.autoPilot))return;const box=$('#rnotes');if(!box)return;const d=document.createElement('div');d.className='rnote';d.innerHTML=`<b>📌 ${title}</b><span>${why}</span><i>แตะเพื่อปิด</i>`;d.onclick=()=>d.remove();box.appendChild(d);setTimeout(()=>d.classList.add('out'),9000);setTimeout(()=>d.remove(),9600)}
 function toast(t){if(S&&S.players&&S.winner==null&&cp().bot)return;const el=$('#toast');el.textContent=t;el.classList.add('on');clearTimeout(toast.h);toast.h=setTimeout(()=>el.classList.remove('on'),2200)}
-function save(){try{localStorage.setItem('ffgame-v8',JSON.stringify(S))}catch(e){}}
+function save(){if(ON.play){onSave();return}try{localStorage.setItem('ffgame-v8',JSON.stringify(S))}catch(e){}}
 function loadSaved(){try{const s=localStorage.getItem('ffgame-v8');return s?JSON.parse(s):null}catch(e){return null}}
 function draw(k){const DEF={life:LIFE,learn:LEARN,opp:OPP,news:NEWS,netc:NETDB}[k];if(!S.decks[k]||S.decks[k].some(i=>i>=DEF.length))S.decks[k]=[];if(!S.decks[k]||!S.decks[k].length)S.decks[k]=shuffle(DEF.map((_,i)=>i));return DEF[S.decks[k].pop()]}
 
@@ -1486,7 +1509,7 @@ function ask({actor=null,kind='',title,body='',opts=[{v:'ok',l:'ตกลง',c:
     else{MODAL_CANCEL=()=>done(lastOk());m.querySelectorAll('.mf button').forEach(b=>b.onclick=()=>done(opts[+b.dataset.i].v));m.querySelectorAll('.mb [data-v]').forEach(b=>b.onclick=()=>done(b.dataset.v));const f=m.querySelector('.mf button.pri')||m.querySelector('.mf button');if(f)f.focus()}
   });
 }
-async function choose(o){return (await ask(o)).v}
+async function choose(o){if(ON.play&&o.actor&&!o.actor.bot&&o.actor.uid&&o.actor.uid!==ON.user.uid)return onRemoteChoose(o);return (await ask(o)).v}
 
 
 /* ===================== FX ===================== */
@@ -1509,9 +1532,11 @@ const ZICO={o0:'🌾',o1:'🏭',o2:'🏖️',o3:'🏘️',i0:'🏙️',i1:'🛍�
 /* ===================== SETUP ===================== */
 let seats=[{n:'ผู้เล่น 1',bot:false},{n:'บอท 2',bot:true},{n:'บอท 3',bot:true},{n:'บอท 4',bot:true},{n:'บอท 5',bot:true},{n:'บอท 6',bot:true}];
 function showSetup(){
+  if(localStorage.getItem('fg-online')==='1'&&ON.user&&onAvail()){if(ON.code)ON.be.remove('users/'+ON.user.uid+'/room');onHome();return}
   $('#gameView').hidden=true;const v=$('#setupView');v.hidden=false;const saved=loadSaved();
   v.innerHTML=`<div class="setup">
     <div class="hero"><i class="logo hero-logo"></i><div><div class="hero-t">เกมอิสรภาพทางการเงิน</div><div class="muted">Financial Freedom Board Game</div></div></div>
+    ${onAvail()?`<div class="ol-card ol-entry"><div><h3>🌐 เล่นออนไลน์กับเพื่อน</h3><p class="muted">เข้าสู่ระบบ สร้างห้อง แล้วส่งเลขห้องให้เพื่อน</p></div><button class="pri" onclick="onBoot()">เล่นออนไลน์</button></div>`:''}
     <h2>ตั้งค่าเกม 6 ผู้เล่น</h2>
     <p class="muted">ทุกคนจะสุ่มได้อาชีพจำลอง พร้อมเงินเดือน เงินเก็บ รายจ่าย และหนี้สิน ใครมีรายได้จากทรัพย์สินมากกว่ารายจ่ายรวมก่อนเป็นผู้ชนะ เล่นผลัดกันบนเครื่องนี้ ช่องที่ตั้งเป็นบอทจะเล่นเอง</p>
     ${seats.map((s,i)=>`<div class="seat"><span class="tok" style="background:${COLORS[i]}"></span>
@@ -1549,7 +1574,7 @@ const RULES=`<ol class="rules">
 function newGame(speed){
   const S0jobs=JSON.parse(JSON.stringify(JOBS));const jobs=shuffle(JOBS.map((_,i)=>i));
   S={jobs:S0jobs,listings:[],round:1,cur:0,phase:'roll',speed,props:{},prices:{},hist:{},decks:{},log:[],dice:[1],winner:null,freeComm:false,view:Math.max(0,seats.findIndex(x=>!x.bot)),
-    players:seats.map((s,i)=>{const j=S0jobs[jobs[i]];return {id:i,name:s.n,bot:s.bot,color:COLORS[i],job:jobs[i],salary:j.sal,cash:j.cash,
+    players:seats.map((s,i)=>{const j=S0jobs[jobs[i]];return {id:i,uid:s.uid||null,name:s.n,bot:s.bot,color:COLORS[i],job:jobs[i],salary:j.sal,cash:j.cash,
       exp:{...j.e,extra:0},active:0,debt:{home:j.e.home*100,car:j.e.car*25,card:j.e.card*20},kids:0,kidCost:j.kc||rnd100(j.sal*.06),loan:0,dep:0,warn:0,deals:[],stocks:{},skills:[],
       net:netNew(),ring:'o',pos:0,jobless:0,charity:0,st:{h:j.h,t:j.t,k:j.k}}})};
   S.turnEnd=Date.now()+TURN_MS;
@@ -1579,7 +1604,7 @@ function resume(){
 async function confirmEndTurn(){const p=cp();const early=Date.now()<S.turnEnd;const nx=S.players[(S.cur+1)%S.players.length];
   const v=await choose({actor:p,pose:'wave',title:'จบเทิร์นใช่ไหม?',body:`<p>ยืนยันจบเทิร์นของ <b>${esc(p.name)}</b> จบแล้วย้อนกลับมาซื้อขายหรือทำรายการในเทิร์นนี้ไม่ได้</p>${S.phase==='card'?`<p class="neg">ยังจั่วการ์ดไม่ครบ (${S.picks||0}/${picksMax()} ใบ) สิทธิ์ที่เหลือจะหายไป</p>`:''}<div class="kv"><b>เงินสดตอนนี้</b><span class="num">${B(p.cash)}</span><b>คนถัดไป</b><span>${esc(nx.name)}${nx.bot?' (บอท)':''}</span></div>${early&&p.st.t<10?'<p class="pos">⏱ จบก่อนหมดเวลา ได้ ⏳ เวลา +1</p>':''}`,opts:[{v:'y',l:'✅ ยืนยัน จบเทิร์น',c:'pri'},{v:'n',l:'ยังก่อน'}],bot:'y'});
   if(v==='y'&&canAct()&&(S.phase==='free'||S.phase==='card')){if(S.phase==='card')log(`${esc(p.name)} หยุดจั่วการ์ดที่ ${S.picks||0}/${picksMax()} ใบ`);endTurn(true)}}
-function canAct(){return S&&S.winner==null&&!cp().bot&&!MODAL&&['roll','card','free'].includes(S.phase)}
+function canAct(){return S&&S.winner==null&&!cp().bot&&onMine()&&!MODAL&&['roll','card','free'].includes(S.phase)}
 const CHARITY_TURNS=3;
 async function rollTurn(n){
   if(!S||S.phase!=='roll'||S.winner!=null)return;
@@ -1672,7 +1697,7 @@ function endTurn(early){
   S.cur=(S.cur+1)%S.players.length;if(S.cur===0)endRound();
   S.phase='roll';viewFollow();S.turnEnd=Date.now()+TURN_MS;render();save();
   if(!cp().bot)fxBanner(cp());
-  if(cp().bot)botTurn();
+  if(cp().bot&&iDrive()){ON.turnKey=S.round+':'+S.cur;botTurn()}
 }
 function timeUp(){
   const p=cp();S.autoPilot=true;S.timeoutNote={name:p.name,picks:S.picks||0,phase:S.phase};log(`⏰ ${esc(p.name)} หมดเวลา 3 นาที จบเทิร์นอัตโนมัติ (จั่วการ์ดไป ${S.picks||0}/${PICKS} ใบ)`);toast(`⏰ ${p.name} หมดเวลา! จบเทิร์นอัตโนมัติ`);
@@ -1686,7 +1711,7 @@ setInterval(()=>{
   if(!$('#setov').hidden){S.turnEnd+=500;return}
   const ms=S.turnEnd-Date.now(),s=Math.max(0,Math.ceil(ms/1000));
   if(el){el.textContent=`⏱ ${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`;el.classList.toggle('low',s<=30)}
-  if(ms<=0&&!S.autoPilot)timeUp();
+  if(ms<=0&&!S.autoPilot&&iDrive())timeUp();
 },500);
 async function botTurn(){await sleep(S.speed*.7);if(S.winner==null&&cp().bot&&S.phase==='roll')rollTurn(cp().charity>0?2:1)}
 function endRound(){
@@ -2236,6 +2261,7 @@ function render(){
     <div class="dice">${S.dice.map(v=>`<div class="die">${pips(v)}</div>`).join('')}</div></div>${p.charity>0?`<div class="prompt">💝 สิทธิ์ทอย 2 ลูกเหลือ ${p.charity} เทิร์น</div>`:''}`;
   if(S.winner!=null)ctr+=`<div class="prompt">🏁 จบเกม · อันดับ 1 ${esc(standings()[0][0].name)} ${badges(standings()[0][0])}</div><button class="sm" onclick="endGame()">ดูสรุปผล</button><button class="pri" onclick="showSetup()">เกมใหม่</button>`;
   else if(p.bot)ctr+=`<div class="prompt">บอทกำลังเล่น…</div>`;
+  else if(!onMine())ctr+=`<div class="prompt">⏳ ตาของ ${esc(p.name)} กำลังเล่น…${ON.pres[p.uid]?'':' (หลุดการเชื่อมต่อ)'}</div>`;
   else if(S.phase==='roll')ctr+=`<div class="prompt">ตาของ ${esc(p.name)} จัดการเงินก่อนทอยได้</div>${p.charity>0?`<div class="btnrow"><button ${act?'':'disabled'} onclick="canAct()&&rollTurn(1)">ทอย 1 ลูก</button><button class="pri rollbtn" ${act?'':'disabled'} onclick="canAct()&&rollTurn(2)">ทอย 2 ลูก</button></div>`:`<button class="pri rollbtn" ${act?'':'disabled'} onclick="canAct()&&rollTurn(1)">🎲 ทอยลูกเต๋า</button>`}<div class="btnrow subact">${skillPanelBtn(p,act)}</div>`;
   else if(S.phase==='card')ctr+=`${cardInfo(p)}<div class="prompt">จั่วการ์ดใบที่ <b class="num">${(S.picks||0)+1}/${picksMax()}</b> เลือกกองไหนก็ได้</div><div class="piles">
       <button class="pile life deck" style="--bk:url(img/back-life.webp)" title="ดำเนินชีวิต" aria-label="จั่วการ์ดดำเนินชีวิต" ${act?'':'disabled'} onclick="canAct()&&previewPile('life')"><img class="pimg" src="img/back-life.webp" alt=""><span class="ptag" style="--tc:#2f8f86">ดำเนินชีวิต</span></button>
@@ -2253,6 +2279,7 @@ function render(){
     let act2;
     if(S.winner!=null)act2=`<button class="sm pri" onclick="showSetup()">เกมใหม่</button>`;
     else if(p.bot)act2=`<span class="muted">บอทกำลังเล่น…</span>`;
+    else if(!onMine())act2=`<span class="muted">⏳ ตาของ ${esc(p.name)}</span>`;
     else if(S.phase==='roll')act2=p.charity>0?`<button class="sm" ${act?'':'disabled'} onclick="canAct()&&rollTurn(1)">ทอย 1 ลูก</button><button class="sm pri" ${act?'':'disabled'} onclick="canAct()&&rollTurn(2)">ทอย 2 ลูก</button>`:`<button class="sm pri" ${act?'':'disabled'} onclick="canAct()&&rollTurn(1)">ทอยลูกเต๋า</button>`;
     else if(S.phase==='card')act2=`<span class="muted">จั่ว ${(S.picks||0)+1}/${picksMax()}</span>${[['life','ชีวิต'],['learn','เรียนรู้'],['opp','โอกาส'],['net','ธุรกิจ A']].map(([kk,l])=>`<button class="sm mpile ${kk==='net'?'netp':kk}" ${act?'':'disabled'} onclick="canAct()&&previewPile('${kk}')">${l}</button>`).join('')}<button class="sm endbtn mini" ${act?'':'disabled'} onclick="canAct()&&confirmEndTurn()">✅ จบเทิร์น</button>`;
     else if(S.phase==='free')act2=`<button class="sm" ${act?'':'disabled'} onclick="tradeUI()">ซื้อขายกับผู้เล่น</button><button class="sm endbtn mini" ${act?'':'disabled'} onclick="canAct()&&confirmEndTurn()">✅ จบเทิร์น</button>`;
@@ -2634,9 +2661,255 @@ function dbImport(){
 document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{TAB=b.dataset.tab;render()});
 $('#btnSet').onclick=openSettings;
 $('#btnRules').onclick=()=>{if(!MODAL)ask({npc:'wave',title:'กติกาเกม',body:RULES})};
-$('#btnNew').onclick=async()=>{if(MODAL)return;if(!S||$('#gameView').hidden){showSetup();return}const v=await choose({title:'เริ่มเกมใหม่?',body:'<p>เกมปัจจุบันจะถูกแทนที่</p>',opts:[{v:'y',l:'เริ่มใหม่',c:'pri'},{v:'n',l:'ยกเลิก'}]});if(v==='y')showSetup()};
+$('#btnNew').onclick=async()=>{if(MODAL)return;if(ON.play){onLeave();return}if(!S||$('#gameView').hidden){showSetup();return}const v=await choose({title:'เริ่มเกมใหม่?',body:'<p>เกมปัจจุบันจะถูกแทนที่</p>',opts:[{v:'y',l:'เริ่มใหม่',c:'pri'},{v:'n',l:'ยกเลิก'}]});if(v==='y')showSetup()};
 loadDB();
-showSetup();
+
+/* ===================== ONLINE MODE (Firebase) =====================
+   ล็อกอิน · ล็อบบี้ (เลขห้อง 5 หลัก, 2–6 ที่นั่ง คน/บอท) · กลับเข้าห้องเดิม · ซิงก์เกม
+   หลักการซิงก์: เครื่องที่ "ถือตา" (ผู้เล่นคนที่ถึงตา ถ้าออนไลน์อยู่ / ไม่งั้นเจ้าของห้อง) เป็นคนรันกติกา
+   แล้วส่งสถานะเกม (S, บีบอัด) ขึ้น rooms/{code}/st · เครื่องอื่นรับมาแสดงผลอย่างเดียว · บอทรันที่เจ้าของห้อง */
+const FB_CONFIG=null;          /* ← วางค่า firebaseConfig จาก Firebase console (มี databaseURL ด้วย) */
+const FB_FACEBOOK=false;       /* ← เปิดเป็น true หลังตั้งค่า Facebook ใน Firebase แล้ว */
+const FBV='13.3.0';
+const ON={be:null,user:null,code:null,room:null,play:false,ver:0,pres:{},unsub:[],kick:'',pushT:0,qSeen:{},view:'home'};
+const onMock=()=>/[?&]mock=1/.test(location.search)||localStorage.getItem('fg-mock')==='1';
+const onAvail=()=>!!FB_CONFIG||onMock();
+function onWanted(){return onAvail()&&(localStorage.getItem('fg-online')==='1'||/[?&]room=\d{5}/.test(location.search))}
+
+/* ---------- backend: Firebase จริง ---------- */
+async function beFirebase(){
+  const B=`https://www.gstatic.com/firebasejs/${FBV}/`;
+  const [A,AU,D]=await Promise.all([import(B+'firebase-app.js'),import(B+'firebase-auth.js'),import(B+'firebase-database.js')]);
+  const app=A.initializeApp(FB_CONFIG),auth=AU.getAuth(app),db=D.getDatabase(app),r=p=>D.ref(db,p);
+  const U=u=>u&&{uid:u.uid,name:u.displayName||(u.email||'').split('@')[0]||'',anon:u.isAnonymous,email:u.email||''};
+  return {
+    onAuth:cb=>AU.onAuthStateChanged(auth,u=>cb(U(u))),
+    google:()=>AU.signInWithPopup(auth,new AU.GoogleAuthProvider()),
+    facebook:()=>AU.signInWithPopup(auth,new AU.FacebookAuthProvider()),
+    email:async(e,p,reg,name)=>{const c=reg?await AU.createUserWithEmailAndPassword(auth,e,p):await AU.signInWithEmailAndPassword(auth,e,p);if(reg&&name)await AU.updateProfile(c.user,{displayName:name})},
+    reset:e=>AU.sendPasswordResetEmail(auth,e),
+    guest:()=>AU.signInAnonymously(auth),
+    link:()=>AU.linkWithPopup(auth.currentUser,new AU.GoogleAuthProvider()),
+    out:()=>AU.signOut(auth),
+    get:async p=>(await D.get(r(p))).val(),
+    set:(p,v)=>D.set(r(p),v),update:(p,v)=>D.update(r(p),v),remove:p=>D.remove(r(p)),
+    on:(p,cb)=>D.onValue(r(p),s=>cb(s.val())),
+    tx:async(p,f)=>{try{const x=await D.runTransaction(r(p),f);return {ok:x.committed,val:x.snapshot.val()}}catch(e){return {ok:false,err:e}}},
+    onDisc:(p,v)=>v==null?D.onDisconnect(r(p)).remove():D.onDisconnect(r(p)).set(v),
+    now:()=>D.serverTimestamp()
+  }}
+/* ---------- backend จำลอง (?mock=1) ใช้ทดสอบหลายแท็บในเครื่องเดียว ---------- */
+function beMock(){
+  const K='fgmock-db',L=()=>{try{return JSON.parse(localStorage.getItem(K)||'{}')}catch(e){return {}}};
+  const seg=p=>p.split('/').filter(Boolean),getP=(d,p)=>seg(p).reduce((o,k)=>o==null?null:(o[k]??null),d);
+  const setP=(d,p,v)=>{const s=seg(p);let o=d;for(let i=0;i<s.length-1;i++){if(o[s[i]]==null||typeof o[s[i]]!=='object')o[s[i]]={};o=o[s[i]]}if(v==null)delete o[s[s.length-1]];else o[s[s.length-1]]=JSON.parse(JSON.stringify(v))};
+  const subs=new Set(),fire=()=>{const d=L();subs.forEach(s=>{const v=JSON.stringify(getP(d,s.p));if(v!==s.last){s.last=v;s.cb(JSON.parse(v))}})};
+  const W=f=>{const d=L();f(d);localStorage.setItem(K,JSON.stringify(d));setTimeout(fire)};
+  addEventListener('storage',e=>{if(e.key===K)fire()});
+  let user=JSON.parse(sessionStorage.getItem('fgmock-user')||'null'),acb=null;const disc=[];
+  addEventListener('pagehide',()=>disc.forEach(([p,v])=>W(d=>setP(d,p,v))));
+  const login=(n,anon)=>{user={uid:'u'+Math.random().toString(36).slice(2,8),name:n,anon:!!anon};sessionStorage.setItem('fgmock-user',JSON.stringify(user));acb&&acb(user)};
+  return {
+    onAuth:cb=>{acb=cb;setTimeout(()=>cb(user))},
+    google:async()=>login('ทดสอบ '+Math.floor(Math.random()*90+10)),facebook:async()=>login('เฟซ '+Math.floor(Math.random()*90+10)),
+    email:async(e,p,reg,name)=>login(name||e.split('@')[0]),reset:async()=>{},guest:async()=>login('',true),link:async()=>{user.anon=false},
+    out:async()=>{user=null;sessionStorage.removeItem('fgmock-user');acb&&acb(null)},
+    get:async p=>getP(L(),p),set:async(p,v)=>W(d=>setP(d,p,v)),remove:async p=>W(d=>setP(d,p,null)),
+    update:async(p,v)=>W(d=>{for(const k in v)setP(d,p+'/'+k,v[k])}),
+    on:(p,cb)=>{const s={p,cb,last:undefined};subs.add(s);setTimeout(fire);return ()=>subs.delete(s)},
+    tx:async(p,f)=>{let ok=false,val;W(d=>{const cur=getP(d,p),nv=f(cur==null?null:JSON.parse(JSON.stringify(cur)));if(nv!==undefined){setP(d,p,nv);ok=true}val=getP(d,p)});return {ok,val}},
+    onDisc:(p,v)=>disc.push([p,v]),now:()=>Date.now()
+  }}
+
+/* ---------- บีบอัดสถานะเกม ---------- */
+async function zEnc(str){if(typeof CompressionStream==='undefined')return 'J'+str;
+  const b=await new Response(new Blob([str]).stream().pipeThrough(new CompressionStream('gzip'))).arrayBuffer();
+  let s='';const u=new Uint8Array(b);for(let i=0;i<u.length;i+=8192)s+=String.fromCharCode.apply(null,u.subarray(i,i+8192));return 'Z'+btoa(s)}
+async function zDec(z){if(z[0]==='J')return z.slice(1);const bin=atob(z.slice(1)),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);
+  return await new Response(new Blob([u]).stream().pipeThrough(new DecompressionStream('gzip'))).text()}
+
+/* ---------- เริ่มระบบ ---------- */
+async function onBoot(){
+  localStorage.setItem('fg-online','1');
+  const v=$('#setupView');$('#gameView').hidden=true;v.hidden=false;v.innerHTML=`<div class="setup onl"><p class="muted">กำลังเชื่อมต่อ…</p></div>`;
+  try{if(!ON.be)ON.be=onMock()?beMock():await beFirebase()}
+  catch(e){v.innerHTML=`<div class="setup onl"><h2>เชื่อมต่อไม่ได้</h2><p class="neg">${esc(e.message||String(e))}</p><div class="btnrow"><button onclick="onBoot()">ลองใหม่</button><button onclick="onExit()">เล่นเครื่องนี้แทน</button></div></div>`;return}
+  if(!ON.authOn){ON.authOn=1;ON.be.onAuth(onAuthed)}
+}
+function onExit(){localStorage.removeItem('fg-online');onStop();ON.play=false;showSetup()}
+function onStop(){ON.unsub.forEach(f=>{try{f()}catch(e){}});ON.unsub=[];ON.room=null;ON.code=null;ON.play=false;ON.subbed=0;ON.turnKey='';ON.ver=0;onTag()}
+async function onAuthed(u){
+  ON.user=u;if(!u){onStop();onLogin();return}
+  let me=await ON.be.get('users/'+u.uid)||{};
+  if(!me.name){me.name=u.name||('แขก '+u.uid.slice(-4).toUpperCase());await ON.be.update('users/'+u.uid,{name:me.name})}
+  ON.name=me.name;
+  const q=location.search.match(/[?&]room=(\d{5})/);
+  if(me.room){const r=await ON.be.get('rooms/'+me.room);
+    if(r&&r.status!=='end'&&onSeatOf(r,u.uid)>=0){onEnter(me.room);return}
+    if(r&&r.status==='end'&&onSeatOf(r,u.uid)>=0){await ON.be.remove('users/'+u.uid+'/room');onHome();
+      ask({npc:'happy',title:`🏁 ห้อง ${me.room} จบเกมแล้ว`,body:`<p>เกมที่คุณเล่นค้างไว้จบแล้ว${r.win?` · อันดับ 1 คือ <b>${esc(r.win.name)}</b> (${esc(r.win.job||'')})`:''}</p>${r.win&&r.win.rank?`<ol>${r.win.rank.map(x=>`<li>${esc(x)}</li>`).join('')}</ol>`:''}`});return}
+    await ON.be.remove('users/'+u.uid+'/room')}
+  if(q){history.replaceState(null,'',location.pathname+location.search.replace(/[?&]room=\d{5}/,'').replace(/^&/,'?'));onJoin(q[1]);return}
+  onHome()}
+function onSeatOf(r,uid){const s=r&&r.seats;if(!s)return -1;for(let i=0;i<(r.n||6);i++)if(s[i]&&s[i].uid===uid)return i;return -1}
+const onErr=e=>{const m=String(e&&(e.code||e.message)||e);toast('⚠ '+({'auth/popup-closed-by-user':'ปิดหน้าต่างล็อกอินก่อนเสร็จ','auth/invalid-credential':'อีเมลหรือรหัสผ่านไม่ถูกต้อง','auth/email-already-in-use':'อีเมลนี้สมัครไว้แล้ว ลองเข้าสู่ระบบ','auth/weak-password':'รหัสผ่านต้องยาวอย่างน้อย 6 ตัว','auth/invalid-email':'รูปแบบอีเมลไม่ถูกต้อง','auth/popup-blocked':'เบราว์เซอร์บล็อกหน้าต่างล็อกอิน','auth/account-exists-with-different-credential':'อีเมลนี้เคยล็อกอินด้วยวิธีอื่น ลองใช้วิธีเดิม'}[m]||m))};
+
+/* ---------- หน้าล็อกอิน ---------- */
+function onLogin(mode){
+  const v=$('#setupView');$('#gameView').hidden=true;v.hidden=false;
+  v.innerHTML=`<div class="setup onl">
+   <div class="hero"><i class="logo hero-logo"></i><div><div class="hero-t">เกมอิสรภาพทางการเงิน</div><div class="muted">เล่นออนไลน์กับเพื่อน · เข้าสู่ระบบเพื่อจำห้องเกมไว้</div></div></div>
+   <div class="ol-btns">
+    <button class="ol-g" onclick="onSign('google')"><b class="ol-ic">G</b> เข้าสู่ระบบด้วย Google</button>
+    ${FB_FACEBOOK?`<button class="ol-f" onclick="onSign('facebook')"><b class="ol-ic">f</b> เข้าสู่ระบบด้วย Facebook</button>`:''}
+    <details class="ol-mail" ${mode?'open':''}><summary>✉️ ใช้อีเมลและรหัสผ่าน</summary>
+      <div class="fld"><label for="olE">อีเมล</label><input id="olE" type="email" autocomplete="email"></div>
+      <div class="fld"><label for="olP">รหัสผ่าน (อย่างน้อย 6 ตัว)</label><input id="olP" type="password" autocomplete="current-password"></div>
+      <div class="fld" id="olNw" ${mode==='reg'?'':'hidden'}><label for="olN">ชื่อที่แสดงในเกม</label><input id="olN" maxlength="16"></div>
+      <div class="btnrow" style="justify-content:flex-start">${mode==='reg'?`<button class="pri" onclick="onMail(1)">สมัครสมาชิก</button><button onclick="onLogin('in')">มีบัญชีแล้ว</button>`:`<button class="pri" onclick="onMail(0)">เข้าสู่ระบบ</button><button onclick="onLogin('reg')">สมัครใหม่</button><button class="sm" onclick="onReset()">ลืมรหัสผ่าน</button>`}</div>
+    </details>
+    <button class="ol-guest" onclick="onSign('guest')">👤 เล่นแบบแขก (ไม่ต้องสมัคร)</button>
+   </div>
+   <p class="muted" style="font-size:12px">แขก: ถ้าล้างข้อมูลเบราว์เซอร์หรือเปลี่ยนเครื่อง จะกลับเข้าห้องเดิมไม่ได้ ผูกบัญชี Google ทีหลังได้ในหน้าถัดไป</p>
+   <div class="btnrow" style="justify-content:flex-start"><button class="sm" onclick="onExit()">← เล่นบนเครื่องนี้ (ออฟไลน์)</button></div></div>`}
+async function onSign(k){try{await ON.be[k]()}catch(e){onErr(e)}}
+async function onMail(reg){const e=$('#olE').value.trim(),p=$('#olP').value,n=reg?$('#olN').value.trim():'';if(!e||!p){toast('กรอกอีเมลและรหัสผ่าน');return}
+  try{await ON.be.email(e,p,!!reg,n);if(reg&&n&&ON.user)await ON.be.update('users/'+ON.user.uid,{name:n})}catch(x){onErr(x)}}
+async function onReset(){const e=$('#olE').value.trim();if(!e){toast('กรอกอีเมลก่อน');return}try{await ON.be.reset(e);toast('ส่งลิงก์ตั้งรหัสผ่านใหม่ไปที่อีเมลแล้ว')}catch(x){onErr(x)}}
+
+/* ---------- หน้าหลักออนไลน์ ---------- */
+function onHome(){
+  onStop();const v=$('#setupView');$('#gameView').hidden=true;v.hidden=false;const u=ON.user;
+  v.innerHTML=`<div class="setup onl">
+   <div class="hero"><i class="logo hero-logo"></i><div><div class="hero-t">เล่นออนไลน์</div><div class="muted">สวัสดี <b>${esc(ON.name)}</b>${u.anon?' · บัญชีแขก':''}</div></div></div>
+   <div class="fld"><label for="olMe">ชื่อที่แสดงในเกม</label><div class="ol-row"><input id="olMe" maxlength="16" value="${esc(ON.name)}"><button class="sm" onclick="onRename()">บันทึก</button></div></div>
+   <div class="ol-card"><h3>สร้างห้องใหม่</h3><p class="muted">ได้เลขห้อง 5 หลักไว้ส่งให้เพื่อน แล้วเลือกได้ว่าที่นั่งไหนเป็นคนหรือบอท (2–6 ที่)</p><button class="pri" onclick="onCreate()">＋ สร้างห้อง</button></div>
+   <div class="ol-card"><h3>เข้าห้องเพื่อน</h3><div class="ol-row"><input id="olCode" inputmode="numeric" maxlength="5" placeholder="เลขห้อง 5 หลัก" oninput="this.value=this.value.replace(/[^0-9]/g,'')"><button class="pri" onclick="onJoin($('#olCode').value)">เข้าห้อง</button></div></div>
+   <div class="btnrow" style="justify-content:flex-start">${u.anon?`<button class="sm" onclick="onLink()">🔗 ผูกบัญชี Google (กันข้อมูลหาย)</button>`:''}<button class="sm" onclick="ON.be.out()">ออกจากระบบ</button><button class="sm" onclick="onExit()">← เล่นบนเครื่องนี้ (ออฟไลน์)</button></div></div>`}
+async function onRename(){const n=$('#olMe').value.trim().slice(0,16);if(!n)return;ON.name=n;await ON.be.update('users/'+ON.user.uid,{name:n});toast('บันทึกชื่อแล้ว')}
+async function onLink(){try{await ON.be.link();ON.user.anon=false;toast('ผูกบัญชี Google แล้ว');onHome()}catch(e){onErr(e)}}
+
+/* ---------- ห้อง ---------- */
+async function onCreate(){
+  const uid=ON.user.uid;let code=null;
+  for(let t=0;t<12&&!code;t++){const c=String(10000+Math.floor(Math.random()*90000));
+    const seats={0:{t:'h',uid,name:ON.name},1:{t:'h'},2:{t:'b'},3:{t:'b'},4:{t:'b'},5:{t:'b'}};
+    const r=await ON.be.tx('rooms/'+c,cur=>cur?undefined:{code:c,host:uid,status:'lobby',n:4,seats,mem:{[uid]:0},created:ON.be.now()});if(r.ok)code=c}
+  if(!code){toast('สร้างห้องไม่สำเร็จ ลองใหม่');return}
+  await ON.be.update('users/'+uid,{room:code});onEnter(code)}
+async function onJoin(code){
+  code=String(code||'').trim();if(!/^\d{5}$/.test(code)){toast('เลขห้องต้องเป็นตัวเลข 5 หลัก');return}
+  const uid=ON.user.uid,r=await ON.be.get('rooms/'+code);
+  if(!r){toast(`ไม่พบห้อง ${code}`);onHome();return}
+  if(onSeatOf(r,uid)>=0){await ON.be.update('users/'+uid,{room:code});onEnter(code);return}
+  if(r.status==='end'){toast(`ห้อง ${code} จบเกมไปแล้ว`);onHome();return}
+  if(r.status!=='lobby'){toast(`ห้อง ${code} เริ่มเล่นไปแล้ว`);onHome();return}
+  let got=-1;
+  for(let i=1;i<(r.n||6)&&got<0;i++){const x=await ON.be.tx(`rooms/${code}/seats/${i}`,s=>(s&&s.t==='h'&&!s.uid)?{t:'h',uid,name:ON.name}:undefined);if(x.ok)got=i}
+  if(got<0){toast(`ห้อง ${code} เต็มแล้ว`);onHome();return}
+  await ON.be.set(`rooms/${code}/mem/${uid}`,got);await ON.be.update('users/'+uid,{room:code});onEnter(code)}
+function onEnter(code){
+  onStop();ON.code=code;const uid=ON.user.uid;
+  ON.be.set(`rooms/${code}/on/${uid}`,true);ON.be.onDisc(`rooms/${code}/on/${uid}`,null);
+  ON.unsub.push(ON.be.on('rooms/'+code,r=>onRoom(r)));onTag()}
+function onTag(){let t=$('#roomTag');if(!ON.code){if(t)t.remove();return}
+  if(!t){t=document.createElement('span');t.id='roomTag';t.className='roomtag';const h=document.querySelector('header .logo')?.parentElement||document.querySelector('header');h.appendChild(t)}
+  t.textContent='ห้อง '+ON.code}
+async function onRoom(r){
+  if(!r){toast('ห้องนี้ถูกลบแล้ว');await ON.be.remove('users/'+ON.user.uid+'/room');onHome();return}
+  ON.room=r;ON.pres=r.on||{};const me=onSeatOf(r,ON.user.uid);
+  if(me<0){toast('คุณไม่ได้อยู่ในห้องนี้แล้ว');await ON.be.remove('users/'+ON.user.uid+'/room');onHome();return}
+  if(r.status==='lobby'){ON.play=false;onLobby(r);return}
+  ON.play=true;if(S&&!$('#gameView').hidden&&ON.lastDrv==null)ON.lastDrv=iDrive();
+  if(!ON.subbed){ON.subbed=1;ON.unsub.push(ON.be.on(`rooms/${ON.code}/st`,onState));ON.unsub.push(ON.be.on(`rooms/${ON.code}/q`,onQ))}
+  onDrive()}
+function onLobby(r){
+  const v=$('#setupView');$('#gameView').hidden=true;v.hidden=false;const host=r.host===ON.user.uid,n=r.n||4;
+  const seat=i=>{const s=(r.seats||{})[i]||{t:'h'},bot=s.t==='b',on=s.uid&&ON.pres[s.uid];
+    return `<div class="seat lb"><span class="tok" style="background:${COLORS[i]}"></span>
+     <span class="lb-n">${bot?`🤖 บอท ${i+1}`:s.uid?`${on?'🟢':'⚪'} ${esc(s.name||'ผู้เล่น')}${s.uid===r.host?' <small class="muted">(เจ้าของห้อง)</small>':''}${s.uid===ON.user.uid?' <small class="pos">(คุณ)</small>':''}`:'<span class="muted">ว่าง · รอเพื่อนเข้าห้อง</span>'}</span>
+     ${host&&i>0?`<div class="seg"><button class="${!bot?'on':''}" onclick="onSeatT(${i},'h')">คน</button><button class="${bot?'on':''}" onclick="onSeatT(${i},'b')">บอท</button></div>`:''}</div>`};
+  const open=[...Array(n).keys()].filter(i=>{const s=(r.seats||{})[i]||{t:'h'};return s.t==='h'&&!s.uid}).length;
+  v.innerHTML=`<div class="setup onl">
+   <div class="ol-code"><span class="muted">เลขห้อง</span><b>${r.code}</b><button class="sm" onclick="onShare()">📤 ส่งให้เพื่อน</button></div>
+   <h2 style="margin:6px 0">ล็อบบี้ · ${n} ที่นั่ง</h2>
+   ${host?`<div class="ol-row ol-n"><span>จำนวนผู้เล่น</span>${[2,3,4,5,6].map(k=>`<button class="sm ${k===n?'pri':''}" onclick="onSetN(${k})">${k}</button>`).join('')}</div>`:`<p class="muted">รอเจ้าของห้องกดเริ่มเกม…</p>`}
+   ${[...Array(n).keys()].map(seat).join('')}
+   <div class="btnrow" style="justify-content:flex-start;margin-top:12px">
+    ${host?`<button class="pri" onclick="onStart()">เริ่มเกม${open?` (ที่ว่าง ${open} ที่ → บอท)`:''}</button>`:''}
+    <button onclick="onLeave()">${host?'ยกเลิกห้อง':'ออกจากห้อง'}</button></div>
+   <p class="muted" style="font-size:12px">ถ้าเผลอปิดหน้าจอหรือรีเฟรช ให้เปิดเว็บแล้วเข้าสู่ระบบบัญชีเดิม ระบบจะพากลับเข้าห้องนี้เอง</p></div>`}
+async function onSetN(k){const r=ON.room;if(!r||r.host!==ON.user.uid)return;const up={n:k};
+  for(let i=k;i<6;i++){const s=(r.seats||{})[i];if(s&&s.uid){up[`mem/${s.uid}`]=null;up[`seats/${i}`]={t:'h'}}}
+  await ON.be.update('rooms/'+ON.code,up)}
+async function onSeatT(i,t){const r=ON.room;if(!r||r.host!==ON.user.uid)return;const s=(r.seats||{})[i]||{};const up={[`seats/${i}`]:{t}};if(s.uid&&t==='b')up[`mem/${s.uid}`]=null;else if(s.uid)return;await ON.be.update('rooms/'+ON.code,up)}
+async function onShare(){const url=location.origin+location.pathname+'?room='+ON.code,txt=`มาเล่นเกมอิสรภาพทางการเงินกัน ห้อง ${ON.code}`;
+  try{if(navigator.share){await navigator.share({title:'เกมอิสรภาพทางการเงิน',text:txt,url});return}}catch(e){return}
+  try{await navigator.clipboard.writeText(txt+' '+url);toast('คัดลอกลิงก์ห้องแล้ว')}catch(e){toast(url)}}
+async function onLeave(){const r=ON.room,uid=ON.user.uid,code=ON.code;if(!r)return;
+  if(r.host===uid&&r.status==='lobby'){if(await choose({title:'ยกเลิกห้อง?',body:`<p>ห้อง ${code} จะถูกลบ ทุกคนในห้องจะออกจากห้อง</p>`,opts:[{v:'n',l:'ไม่'},{v:'y',l:'ยกเลิกห้อง',c:'pri'}]})!=='y')return;
+    onStop();await ON.be.remove('rooms/'+code)}
+  else if(r.status==='lobby'){const i=onSeatOf(r,uid);onStop();if(i>=0)await ON.be.set(`rooms/${code}/seats/${i}`,{t:'h'});await ON.be.remove(`rooms/${code}/mem/${uid}`);await ON.be.remove(`rooms/${code}/on/${uid}`)}
+  else{if(await choose({title:'ออกจากเกม?',body:'<p>ตัวละครของคุณจะให้บอทเล่นต่อแทน และกลับเข้าห้องนี้อีกไม่ได้</p>',opts:[{v:'n',l:'เล่นต่อ'},{v:'y',l:'ออกจากเกม',c:'pri'}]})!=='y')return;
+    await ON.be.set(`rooms/${code}/left/${uid}`,true);onStop();await ON.be.remove(`rooms/${code}/on/${uid}`)}
+  await ON.be.remove('users/'+uid+'/room');onHome()}
+async function onStart(){const r=ON.room;if(!r||r.host!==ON.user.uid)return;const n=r.n||4;
+  seats=[...Array(n).keys()].map(i=>{const s=(r.seats||{})[i]||{t:'h'};return s.uid?{n:s.name||('ผู้เล่น '+(i+1)),bot:false,uid:s.uid}:{n:'บอท '+(i+1),bot:true}});
+  ON.play=true;ON.ver=0;newGame(900);await onPush(true);
+  await ON.be.update('rooms/'+ON.code,{status:'play',started:ON.be.now()})}
+
+/* ---------- ซิงก์เกม ---------- */
+function onMine(){return !ON.play||!S||(cp()&&cp().uid===ON.user.uid)}
+function onDriverUid(){const r=ON.room;if(!r||!S)return null;const c=cp();if(c&&!c.bot&&c.uid&&ON.pres[c.uid])return c.uid;
+  if(ON.pres[r.host])return r.host;const h=S.players.find(q=>!q.bot&&q.uid&&ON.pres[q.uid]);return h?h.uid:null}
+function iDrive(){return !ON.play||onDriverUid()===ON.user.uid}
+/* ส่งขึ้นเมื่อเราถือตาอยู่ · หรือเป็นครั้งสุดท้ายตอนส่งตาต่อให้คนอื่น */
+function onSave(){if(!ON.play||!ON.code)return;const d=iDrive();if(!d&&!ON.lastDrv)return;ON.lastDrv=d;clearTimeout(ON.pushT);ON.pushT=setTimeout(onPush,d?250:0)}
+async function onPush(now){clearTimeout(ON.pushT);if(!S||!ON.code)return;
+  const o={...S};delete o.view;delete o.viewPick;o.log=(S.log||[]).slice(0,40);
+  const z=await zEnc(JSON.stringify(o));ON.ver++;
+  await ON.be.set(`rooms/${ON.code}/st`,{z,v:ON.ver,by:ON.user.uid});
+  if(S.winner!=null&&ON.room&&ON.room.status!=='end'){const st=standings();
+    await ON.be.update('rooms/'+ON.code,{status:'end',win:{name:st[0][0].name,job:S.jobs[st[0][0].job].n,rank:st.map(x=>x[0].name)}})}}
+async function onState(st){
+  if(!st||!st.z)return;
+  const fresh=!S||$('#gameView').hidden;if(!fresh&&st.by===ON.user.uid)return;
+  if(!fresh&&iDrive()&&(MODAL||S.phase==='busy'))return;
+  let o;try{o=JSON.parse(await zDec(st.z))}catch(e){return}
+  const first=!S||$('#gameView').hidden,prevCur=S&&S.cur,view=S&&!first?S.view:null,pick=S&&S.viewPick;
+  const lg=o.log||[];o.log=first?lg:lg.concat((S.log||[]).filter(x=>!lg.includes(x))).slice(0,200);
+  S=o;ON.ver=Math.max(ON.ver,st.v||0);ON.lastDrv=iDrive();
+  const mi=S.players.findIndex(q=>q.uid===ON.user.uid);
+  if(view!=null&&S.players[view]){S.view=view;S.viewPick=pick}else S.view=mi>=0?mi:0;
+  viewFollowOnline();
+  if(first&&S.phase==='busy'&&onMine())S.phase='card';
+  if(first){startView();$('#setupView').hidden=true}else render();
+  if(prevCur!==S.cur&&onMine()&&S.winner==null)fxBanner(cp());
+  onDrive()}
+function viewFollowOnline(){const c=cp();if(c&&c.uid===ON.user.uid){S.view=S.cur;S.viewPick=0}}
+/* เครื่องที่ถือตา: รันบอท / ผู้เล่นที่หลุด / ผู้เล่นที่ออกจากเกม */
+function onDrive(){if(!ON.play||!S||S.winner!=null||$('#gameView').hidden||!iDrive())return;
+  const left=(ON.room&&ON.room.left)||{};let ch=false;
+  for(const q of S.players)if(!q.bot&&q.uid&&left[q.uid]){q.bot=true;q.name+=' 🤖';log(`🚪 ${esc(q.name)} ออกจากเกม บอทเล่นแทน`);ch=true}
+  if(ch){render();save()}
+  const p=cp(),key=S.round+':'+S.cur;
+  /* ขับแทนผู้เล่นที่หลุด: ถ้าค้างกลางการ์ด ปลดล็อกให้หมดเวลาจบเทิร์นได้ */
+  if(!p.bot){if(p.uid!==ON.user.uid&&S.phase==='busy'&&!MODAL){S.phase='card';render();save()}return}
+  if(ON.turnKey===key||MODAL)return;ON.turnKey=key;if(S.phase==='busy')S.phase='card';
+  if(S.phase==='roll')botTurn();else if(S.phase==='card')sleep(S.speed).then(()=>pickPile(botPile(p)));else if(S.phase==='free')sleep(S.speed).then(()=>endTurn(true))}
+/* ถามผู้เล่นอีกเครื่อง (เช่น ข้อเสนอซื้อขายระหว่างผู้เล่น) */
+async function onRemoteChoose(o){
+  const to=o.actor.uid,opts=o.opts||[{v:'ok',l:'ตกลง'}];const fb=(opts.find(x=>['n','no','skip','cancel','x'].includes(x.v))||opts[opts.length-1]).v;
+  if(!ON.pres[to]){toast(`${o.actor.name} ออฟไลน์อยู่ ระบบตอบแทนว่า "${(opts.find(x=>x.v===fb)||{}).l||fb}"`);return fb}
+  const id=Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+  await ON.be.set(`rooms/${ON.code}/q/${id}`,{to,title:o.title||'',body:o.body||'',opts,kind:o.kind||'',actor:o.actor.id,pose:o.pose||'',at:Date.now()});
+  toast(`⏳ รอ ${o.actor.name} ตอบ…`);
+  return await new Promise(res=>{let done=false;const fin=v=>{if(done)return;done=true;try{un()}catch(e){}ON.be.remove(`rooms/${ON.code}/a/${id}`);ON.be.remove(`rooms/${ON.code}/q/${id}`);res(v)};
+    const un=ON.be.on(`rooms/${ON.code}/a/${id}`,v=>{if(v!=null)fin(v)});setTimeout(()=>fin(fb),90000)})}
+function onQ(qs){if(!qs)return;for(const id in qs){const q=qs[id];if(q.to!==ON.user.uid||ON.qSeen[id])continue;ON.qSeen[id]=1;
+  (async()=>{const v=(await ask({actor:S&&S.players[q.actor]||null,kind:q.kind,title:q.title,body:q.body,opts:q.opts,pose:q.pose||undefined})).v;await ON.be.set(`rooms/${ON.code}/a/${id}`,v)})()}}
+
+if(onWanted())onBoot();else showSetup();
 
 /* ===== เต็มจอ ===== */
 function fsEl(){return document.fullscreenElement||document.webkitFullscreenElement}
