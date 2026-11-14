@@ -959,7 +959,8 @@ body.fs #gameView:not(.mapmin){grid-template-columns:minmax(288px,1.2fr) minmax(
 .trhint{font-size:13px;margin:0 0 8px;color:var(--ink);background:#fff8e4;border:1px dashed #e8d39f;border-radius:10px;padding:6px 10px}
 .mi1.tap{cursor:pointer;border-radius:10px;margin:-4px -6px;padding:4px 6px;transition:background .15s}
 .mi1.tap:hover,.mi1.tap:focus-visible{background:#fff6dd;outline:none}
-.mi1 .mgo{font-size:22px;color:#c9a75a;font-weight:700;line-height:1;flex:none;margin-left:2px}
+.mi1.tap{position:relative;padding-right:20px}
+.mi1 .mgo{position:absolute;right:2px;top:50%;transform:translateY(-50%);font-size:22px;color:#c9a75a;font-weight:700;line-height:1}
 .trbox{display:flex;flex-direction:column;gap:10px}
 .trhead{display:flex;gap:10px;align-items:center}.trhead .mico{width:40px;height:40px}
 .trdir{align-self:stretch}.trdir button{flex:1;font-size:16px;font-weight:700;padding:10px}
@@ -975,6 +976,19 @@ body.fs #gameView:not(.mapmin){grid-template-columns:minmax(288px,1.2fr) minmax(
 .bkpad{border:1.5px solid #efe5cf;border-radius:12px;padding:10px;margin-top:10px;background:#fffdf7;display:flex;flex-direction:column;gap:8px}
 .bkpt{display:flex;justify-content:space-between;align-items:baseline;gap:8px}.bkpt span{font-weight:700}.bkpt b{font-size:22px;font-family:var(--display)}
 .bkpf{display:flex;justify-content:space-between;gap:8px;align-items:center}
+
+/* ===== คริปโต + หัวกลุ่มในแท็บเทรด ===== */
+.cico{display:inline-grid;place-items:center;border-radius:50%;background:radial-gradient(circle at 35% 30%,color-mix(in srgb,var(--cc) 60%,#fff),var(--cc));color:#fff;font-weight:800;font-size:20px;box-shadow:inset 0 -3px 0 rgba(0,0,0,.18),0 1px 2px rgba(0,0,0,.15);flex:none}
+.mi1 .cico{width:34px;height:34px}.trhead .cico{width:40px;height:40px;font-size:22px}
+.mgh{grid-column:1/-1;margin:8px 0 0;font-size:14px;color:#6b5a3a}
+.mlist>.mgh:first-child{margin-top:0}
+.crydate{font-size:12px;font-weight:500;color:var(--muted);margin-left:6px}
+.mi1.tap .mk{white-space:nowrap}
+.mi1{flex-wrap:nowrap!important}
+.mi1>svg{flex:0 1 64px;min-width:0;width:64px;height:auto;overflow:hidden}
+.mi1 .mname{min-width:0;flex:1 1 0}.mi1 .mname>*{overflow-wrap:break-word}
+@container panel (max-width:340px){.mi1>svg{display:none}}
+.mprice b{white-space:nowrap}
 </style>
 </head>
 <body>
@@ -1079,22 +1093,39 @@ const ASSETS=[
  {s:'GOLD',n:'ทองคำ (บาท)',k:'com',p:20000,v:.05,div:0},
  {s:'OIL',n:'น้ำมันดิบ (สัญญา)',k:'com',p:6000,v:.12,div:0},
  {s:'RICE',n:'ข้าวหอมมะลิ (ตัน)',k:'com',p:3000,v:.08,div:0},
- /* กองทุนรวม (ซื้อขายที่แท็บธนาคาร) · d = ผลตอบแทนเฉลี่ยต่อเดือน */
- {s:'MMF',n:'กองทุนตลาดเงิน',k:'fund',p:10,v:.002,d:.0015,div:0,risk:1},
- {s:'BOND',n:'กองทุนตราสารหนี้',k:'fund',p:10,v:.008,d:.0025,div:0,risk:2},
- {s:'DIVF',n:'กองทุนหุ้นปันผล',k:'fund',p:10,v:.035,d:.002,div:.04,risk:4},
- {s:'SET50',n:'กองทุนดัชนี SET50',k:'fund',p:10,v:.045,d:.005,div:0,risk:5},
- {s:'GLOB',n:'กองทุนหุ้นโลก',k:'fund',p:10,v:.055,d:.006,div:0,risk:6},
- {s:'GOLDF',n:'กองทุนทองคำ',k:'fund',p:10,v:.04,d:.003,div:0,risk:5},
+ {s:'STEEL',n:'เหล็ก (ตัน)',k:'com',p:22000,v:.07,div:0},
+ /* คริปโต: ราคาเดินตามของจริงย้อนหลัง 10 ปี (CRY) · สุ่มช่วงเวลา 1 รอบเกม = ราคา 1 เดือน · st = ปุ่มจำนวน (เหรียญ) */
+ {s:'BTC',n:'บิตคอยน์',k:'cry',p:0,v:.12,d:.006,div:0,risk:6,st:[1,.1,.01,.001],c:'#f7931a',g:'₿'},
+ {s:'ETH',n:'อีเธอเรียม',k:'cry',p:0,v:.15,d:.006,div:0,risk:6,st:[10,1,.1,.01],c:'#627eea',g:'Ξ'},
+ {s:'SOL',n:'โซลานา',k:'cry',p:0,v:.2,d:.006,div:0,risk:6,st:[100,10,1,.1],c:'#9945ff',g:'S'},
+ {s:'DOGE',n:'โดจคอยน์',k:'cry',p:0,v:.25,d:.004,div:0,risk:6,st:[100000,10000,1000,100],c:'#c2a633',g:'Ð'},
 ];
 const LOT=a=>a.k==='com'?1:1000;
+/* ===== ราคาคริปโตอ้างอิงของจริง: ราคาปิดสิ้นเดือน (USD) ต.ค. 2016 → ต.ค. 2026 (121 เดือน) × CRY_FX บาท
+   แหล่ง: digrin.com (BTC/ETH/SOL), DOGE = ผลตอบแทนรายเดือน PortfoliosLab + ราคาย้อนหลังโดยประมาณ · null = ยังไม่เข้าตลาด
+   เริ่มเกม สุ่มเดือนเริ่ม S.cm0 (ให้มีข้อมูลจริงอย่างน้อย CRY_RUN เดือน) · จบรอบ S.cmo+1 = เดือนถัดไป · ข้อมูลหมดแล้วสุ่มเดินต่อ · ไม่บอกปีจริงจนจบเกม */
+const CRY_FX=35,CRY_M0=[2016,10],CRY_RUN=60;
+const CRY={
+ BTC:[701.0,745.7,963.7,970.4,1180.0,1072.0,1348.0,2286.0,2481.0,2875.0,4703.0,4339.0,6468.0,10230.0,14160.0,10220.0,10400.0,6974.0,9241.0,7494.0,6404.0,7780.0,7038.0,6626.0,6318.0,4017.0,3743.0,3458.0,3855.0,4105.0,5351.0,8575.0,10820.0,10090.0,9631.0,8294.0,9200.0,7570.0,7194.0,9351.0,8600.0,6439.0,8659.0,9461.0,9138.0,11320.0,11680.0,10780.0,13780.0,19630.0,29000.0,33110.0,45140.0,58920.0,57750.0,37330.0,35040.0,41630.0,47170.0,43790.0,61320.0,57000.0,46310.0,38480.0,43190.0,45540.0,37710.0,31790.0,19780.0,23340.0,20050.0,19430.0,20500.0,17170.0,16550.0,23140.0,23150.0,28480.0,29270.0,27220.0,30480.0,29230.0,25930.0,26970.0,34670.0,37710.0,42270.0,42580.0,61200.0,71330.0,60640.0,67490.0,62680.0,64620.0,58970.0,63330.0,70220.0,96450.0,93430.0,102400.0,84370.0,82550.0,94210.0,104600.0,107100.0,115800.0,108200.0,114100.0,109600.0,90390.0,87510.0,78620.0,67000.0,68230.0,76300.0,73580.0,58560.0,62810.0,78550.0,83550.0,77430.0],
+ ETH:[11.0,8.59,7.97,10.73,15.82,50.04,79.02,230.7,294.9,203.9,383.0,301.5,305.9,447.1,756.7,1118.0,855.2,396.5,669.9,577.6,455.2,433.9,283.0,232.9,197.4,113.2,133.4,107.1,136.8,141.5,162.2,268.1,290.7,218.7,172.5,179.9,184.0,152.5,129.6,180.2,219.9,133.6,207.6,231.0,226.3,345.6,435.1,359.9,386.6,614.8,737.8,1315.0,1416.0,1918.0,2773.0,2715.0,2275.0,2536.0,3434.0,3002.0,4288.0,4631.0,3683.0,2688.0,2919.0,3282.0,2730.0,1942.0,1067.0,1682.0,1554.0,1328.0,1573.0,1296.0,1197.0,1587.0,1606.0,1822.0,1877.0,1874.0,1933.0,1856.0,1646.0,1671.0,1816.0,2053.0,2281.0,2283.0,3342.0,3648.0,3012.0,3760.0,3433.0,3231.0,2513.0,2603.0,2516.0,3706.0,3333.0,3298.0,2238.0,1823.0,1794.0,2529.0,2486.0,3697.0,4390.0,4146.0,3847.0,2992.0,2967.0,2445.0,1965.0,2105.0,2256.0,2004.0,1570.0,1860.0,2467.0,2684.0,2253.0],
+ SOL:[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,0.69,0.57,0.86,1.54,4.78,2.9,1.54,1.97,1.51,4.26,13.09,19.46,42.96,32.82,35.56,36.83,108.5,141.1,202.4,208.7,170.3,99.74,99.52,122.7,85.1,45.77,33.59,42.4,31.47,33.21,32.61,14.12,9.96,23.95,21.92,21.17,22.83,20.82,18.9,23.72,19.74,21.4,38.52,59.24,101.5,97.03,125.7,202.9,126.9,165.6,146.5,171.8,135.4,152.6,168.4,237.7,189.3,231.6,148.0,124.7,147.6,156.6,154.7,172.4,200.9,208.7,187.2,133.6,124.5,105.4,84.37,83.11,83.02,82.3,73.52,72.79,103.0,118.0,95.35],
+ DOGE:[0.00023,0.00022,0.00023,0.00022,0.00026,0.00041,0.00067,0.0031,0.0027,0.0018,0.0022,0.0011,0.0011,0.0021,0.0089,0.006,0.0045,0.0026,0.0045,0.0035,0.0025,0.0025,0.0026,0.0058,0.0043,0.003,0.0023,0.002,0.002,0.0019,0.0026,0.0031,0.0031,0.0029,0.0024,0.0024,0.0026,0.0022,0.002,0.0024,0.0024,0.0018,0.0023,0.0025,0.0025,0.0033,0.0034,0.0026,0.0026,0.0033,0.004671,0.03711,0.04795,0.05356,0.3369,0.3251,0.2536,0.2074,0.2778,0.2039,0.2797,0.2146,0.1699,0.1414,0.133,0.1377,0.127,0.08544,0.06613,0.06778,0.06107,0.06144,0.1264,0.1064,0.06991,0.09571,0.08049,0.07663,0.07916,0.0714,0.06619,0.07757,0.06353,0.06182,0.068,0.08309,0.08916,0.07837,0.1169,0.219,0.1327,0.1582,0.1239,0.1214,0.1009,0.1138,0.1609,0.4204,0.3144,0.328,0.201,0.1661,0.1717,0.192,0.1647,0.2092,0.2132,0.2323,0.1859,0.1455,0.1169,0.1038,0.09371,0.09184,0.106,0.09983,0.074,0.0745,0.084,0.097,0.076]};
+const CRY_N=CRY.BTC.length,TH_MON=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+const cryFrom=s=>CRY[s].findIndex(v=>v!=null);
+const cryP=(s,i)=>{const d=CRY[s];const k=Math.max(cryFrom(s),Math.min(i,d.length-1));return d[k]*CRY_FX};
+const cryLbl=i=>{const t=CRY_M0[1]-1+i;return `${TH_MON[t%12]} ${CRY_M0[0]+Math.floor(t/12)}`};
+const cryIdx=()=>(S.cm0??0)+(S.cmo??0);
+const cryLive=(a,S0)=>a.k!=='cry'||((S0.cm0??0)+(S0.cmo??0))>=cryFrom(a.s);
+function cryInit(){S.cm0=Math.floor(Math.random()*(CRY_N-CRY_RUN+1));S.cmo=0;S.cryBase={};for(const a of ASSETS)if(a.k==='cry'){const v=cryP(a.s,S.cm0);S.prices[a.s]=v;S.hist[a.s]=[v];if(S.cm0>=cryFrom(a.s))S.cryBase[a.s]=v}}
+function cryReveal(){const a=S.cm0??0,b=Math.min(cryIdx(),CRY_N-1);return `🪙 เฉลย: ราคาคริปโตเกมนี้ใช้ช่วงจริง ${cryLbl(a)} → ${cryLbl(b)}${cryIdx()>=CRY_N?' (หลังจากนั้นสุ่มต่อ)':''}`}
 /* ธนาคาร: ดอกเบี้ยต่อเดือน */
 const LOAN_R=.02,DEP_R=.0025,LOAN_TXT='2%',DEP_TXT='0.25%';
 const loanLim=p=>Math.max(400000,p.salary*12);
-const UNIT=a=>a.k==='stock'?'หุ้น':'หน่วย';
-const roundP=(a,np)=>a.k==='stock'?Math.max(.5,Math.round(np*10)/10):a.k==='fund'?Math.max(1,Math.round(np*100)/100):Math.max(500,Math.round(np));
-const fmtP=(a,pr)=>a.k==='fund'?'฿'+pr.toFixed(2):a.k==='stock'?'฿'+pr.toFixed(1):B(pr);
-const fmtAvg=(a,v)=>a.k==='com'?B(v):'฿'+v.toFixed(2);
+const UNIT=a=>a.k==='stock'?'หุ้น':a.k==='cry'?'เหรียญ':a.s==='GOLD'?'บาท':/\(ตัน\)/.test(a.n)?'ตัน':'หน่วย';
+const QR=q=>Math.round(q*1e6)/1e6;
+const roundP=(a,np)=>a.k==='stock'?Math.max(.5,Math.round(np*10)/10):a.k==='fund'?Math.max(1,Math.round(np*100)/100):a.k==='cry'?(np>=100?Math.round(np):+np.toPrecision(4)):Math.max(500,Math.round(np));
+const fmtP=(a,pr)=>a.k==='cry'?(pr>=100?B(pr):pr>=1?'฿'+pr.toFixed(2):'฿'+(+pr.toPrecision(3))):a.k==='fund'?'฿'+pr.toFixed(2):a.k==='stock'?'฿'+pr.toFixed(1):B(pr);
+const fmtAvg=(a,v)=>a.k==='com'||(a.k==='cry'&&v>=100)?B(v):a.k==='cry'&&v<1?'฿'+(+v.toPrecision(3)):'฿'+v.toFixed(2);
 const RISK=['','ต่ำมาก','ต่ำ','ปานกลางค่อนต่ำ','ปานกลางค่อนสูง','สูง','สูงมาก'];
 
 
@@ -1471,7 +1502,7 @@ function newGame(speed){
       exp:{...j.e,extra:0},active:0,debt:{home:j.e.home*100,car:j.e.car*25,card:j.e.card*20},kids:0,kidCost:j.kc||rnd100(j.sal*.06),loan:0,dep:0,deals:[],stocks:{},skills:[],
       net:netNew(),ring:'o',pos:0,jobless:0,charity:0,st:{h:j.h,t:j.t,k:j.k}}})};
   S.turnEnd=Date.now()+TURN_MS;
-  for(const a of ASSETS){S.prices[a.s]=a.p;S.hist[a.s]=[a.p]}
+  for(const a of ASSETS){S.prices[a.s]=a.p;S.hist[a.s]=[a.p]}cryInit();
   log('เริ่มเกม! ทุกคนสุ่มได้อาชีพแล้ว');
   startView();save();
   const body=`<table class="mkt"><tr><th>ผู้เล่น</th><th>อาชีพ</th><th class="r">เงินเดือน</th><th class="r">รายจ่าย</th><th class="r">เงินเก็บ</th><th class="r">❤ ⏳ 📚</th></tr>${S.players.map(p=>{const f=fin(p);return `<tr><td><span class="tok pic" style="display:inline-block;${tokStyle(p)}"></span> ${esc(p.name)}</td><td>${pawnImg(p,'pawn sm')}${S.jobs[p.job].n}</td><td class="r num">${B(p.salary)}</td><td class="r num">${B(f.expenses)}</td><td class="r num">${B(p.cash)}</td><td class="r num">${p.st.h} ${p.st.t} ${p.st.k}</td></tr>`}).join('')}</table>
@@ -1480,6 +1511,7 @@ function newGame(speed){
 }
 function startView(){$('#setupView').hidden=true;$('#gameView').hidden=false;render()}
 function resume(){
+  if(S.cm0==null)cryInit();
   for(const a of ASSETS)if(S.prices[a.s]==null){S.prices[a.s]=a.p;S.hist[a.s]=[a.p]}for(const q of S.players)q.dep=q.dep||0;
   if(S.winner!=null){render();return}
   if(S.phase==='busy')S.phase='card';
@@ -1605,9 +1637,10 @@ setInterval(()=>{
 },500);
 async function botTurn(){await sleep(S.speed*.7);if(S.winner==null&&cp().bot&&S.phase==='roll')rollTurn(cp().charity>0?2:1)}
 function endRound(){
-  S.round++;
+  S.round++;S.cmo=(S.cmo??0)+1;
   const moves=[];
   for(const a of ASSETS){
+    if(a.k==='cry'&&cryIdx()<CRY_N){const i=cryIdx(),np=cryP(a.s,i);if(i===cryFrom(a.s)){S.cryBase[a.s]=np;log(`🪙 ${a.n} (${a.s}) เข้าตลาดแล้ว เริ่มซื้อขายได้`)}S.prices[a.s]=np;S.hist[a.s].push(np);if(S.hist[a.s].length>20)S.hist[a.s].shift();continue}
     const r=(Math.random()+Math.random()+Math.random()-1.5)/1.5;
     let np=S.prices[a.s]*(1+r*a.v*2+(a.d??.004));
     np=roundP(a,np);
@@ -1658,7 +1691,7 @@ function rankPin(p,c='rpin'){return p&&p.net&&p.net.on?`<img class="${c}" src="i
 function badges(p){return rankPin(p)+(p.badge1?'<span class="bdg" title="ชนะ Lv.1: รายได้จากทรัพย์สินมากกว่ารายจ่ายรวม">🏆</span>':'')+(p.badge2?'<span class="bdg" title="ชนะ Lv.2: ธุรกิจ A ระดับไดมอนด์">💎</span>':'')}
 function standings(){return [...S.players].map(q=>[q,fin(q)]).sort((a,b)=>((b[0].badge2?2:0)+(b[0].badge1?1:0))-((a[0].badge2?2:0)+(a[0].badge1?1:0))||b[1].passive/Math.max(1,b[1].expenses)-a[1].passive/Math.max(1,a[1].expenses))}
 function standingsHtml(){return `<table class="ft"><tr class="th"><td>#</td><td>ผู้เล่น</td><td class="r">ทรัพย์สิน / รายจ่าย</td></tr>${standings().map(([q,f],i)=>`<tr><td>${i+1}</td><td><span class="tok pic" style="display:inline-block;${tokStyle(q)}"></span> ${esc(q.name)} ${badges(q)}<div class="fsub">${esc(S.jobs[q.job].n)}${q.badge1?` · Lv.1 รอบ ${q.badge1}`:''}${q.badge2?` · Lv.2 รอบ ${q.badge2}`:''}</div></td><td class="r num"><span class="pos">${B(f.passive)}</span> / <span class="neg">${B(f.expenses)}</span></td></tr>`).join('')}</table>`}
-function endGame(why){S.winner=S.winner??(standings()[0][0].id);S.phase='done';save();render();
+function endGame(why){if(S.phase!=='done')log(cryReveal());S.winner=S.winner??(standings()[0][0].id);S.phase='done';save();render();
   ask({kind:'win',npc:'happy',title:'🏁 จบเกม · สรุปผล',body:`${why?`<p>${why}</p>`:''}${standingsHtml()}<p class="muted" style="font-size:12px">🏆 Lv.1 = รายได้จากทรัพย์สินมากกว่ารายจ่ายรวม · 💎 Lv.2 = ธุรกิจ A ระดับไดมอนด์</p>`,opts:[{v:'see',l:'ดูกระดาน'},{v:'new',l:'เกมใหม่',c:'pri'}]}).then(r=>{if(r.v==='new')showSetup()})}
 function confirmEnd(){if(MODAL||!S||S.winner!=null)return;choose({title:'จบเกมและสรุปผล?',body:standingsHtml(),opts:[{v:'y',l:'จบเกม',c:'pri'},{v:'n',l:'เล่นต่อ'}]}).then(v=>{if(v==='y')endGame('จบเกมโดยผู้เล่น')})}
 function flushAnn(){if(!S||!S.ann||!S.ann.length||MODAL)return;const a=S.ann.shift();ask({kind:'win',npc:'happy',title:a.t,body:a.b,opts:[{v:'ok',l:'เล่นต่อ',c:'pri'}]})}
@@ -1675,7 +1708,7 @@ function checkWin(){
 }
 function checkWinOld(){
   for(const p of S.players){const f=fin(p);if(f.passive>f.expenses){
-    S.winner=p.id;S.phase='done';log(`🏆 <b>${esc(p.name)} ได้รับอิสรภาพทางการเงิน!</b>`);save();render();
+    S.winner=p.id;S.phase='done';log(`🏆 <b>${esc(p.name)} ได้รับอิสรภาพทางการเงิน!</b>`);log(cryReveal());save();render();
     ask({kind:'win',npc:'happy',title:`🏆 ${esc(p.name)} ชนะ!`,body:`<p>${S.jobs[p.job].n} คนนี้มีรายได้จากทรัพย์สิน <b class="num">${B(f.passive)}</b> มากกว่ารายจ่ายรวม <b class="num">${B(f.expenses)}</b> ต่อเดือน ใช้เวลา ${S.round} รอบ</p>
       <div class="kv"><b>ค่าเช่าอสังหาฯ บนกระดาน</b><span class="num">${B(f.board)}</span><b>ธุรกิจและดีล</b><span class="num">${B(f.deals)}</span><b>ปันผลหุ้น</b><span class="num">${B(f.div)}</span><b>ธุรกิจเครือข่าย</b><span class="num">${B(f.net)}</span></div>`,
       opts:[{v:'see',l:'ดูกระดาน'},{v:'new',l:'เกมใหม่',c:'pri'}]}).then(r=>{if(r.v==='new')showSetup()});
@@ -2178,7 +2211,7 @@ function renderFin(){
   for(const a of ASSETS){const hd=q.stocks[a.s];if(hd&&hd.q){const v=hd.q*S.prices[a.s],pl=v-hd.c;grp[a.k==='fund'?'fund':'stk'].push(`<tr><td>${a.n}<div class="fsub">${hd.q.toLocaleString()} ${a.k==='stock'?'หุ้น':'หน่วย'} · ทุน ${B(hd.c)} · <span class="${pl>=0?'pos':'neg'}">${pl>=0?'+':'−'}${B(Math.abs(pl))}</span></div></td><td class="r num">${B(v)}</td><td class="r num ${a.div?'pos':'muted'}">${a.div?'+'+B(hd.q*a.div*(1+skV(q,'stock')/100)):'—'}</td><td class="r"><button class="sm" onclick="TAB='mkt';render()">ตลาด</button></td></tr>`)}}
   if(q.net.on)grp.net.push(`<tr><td>ธุรกิจ A · ${NET_RANKS[q.net.rank].n}<div class="fsub">ยอดกลุ่ม ${netGV(q).toLocaleString()} PV · ขั้นโบนัส ${Math.round(netEff(q)*100)}%</div></td><td class="r num muted">—</td><td class="r num pos">+${B(f.net)}</td><td class="r"><button class="sm" onclick="TAB='net';render()">ดู</button></td></tr>`);
   if(q.dep>0)grp.bank.push(`<tr><td>เงินฝากประจำ<div class="fsub">ดอกเบี้ย ${DEP_TXT} ต่อเดือน</div></td><td class="r num">${B(q.dep)}</td><td class="r num pos">+${B(f.depI)}</td><td><button class="sm" onclick="TAB='bank';render()">ธนาคาร</button></td></tr>`);
-  const gname={board:'อสังหาฯ บนกระดาน',deal:'ดีลและธุรกิจ',stk:'หุ้นและสินค้า',fund:'กองทุนรวม',bank:'เงินฝากธนาคาร',net:'ธุรกิจเครือข่าย'};
+  const gname={board:'อสังหาฯ บนกระดาน',deal:'ดีลและธุรกิจ',stk:'หุ้น สินค้า และคริปโต',fund:'กองทุนรวม',bank:'เงินฝากธนาคาร',net:'ธุรกิจเครือข่าย'};
   const assetRows=Object.entries(grp).filter(([,v])=>v.length).map(([g,v])=>`<tr class="gh"><td colspan="4">${gname[g]}</td></tr>${v.join('')}`).join('');
   const debtRows=[['home','หนี้บ้าน'],['car','หนี้รถ'],['card','หนี้บัตรเครดิต']].filter(([k])=>q.debt[k]>0).map(([k,n])=>`<div class="dli"><div class="dlt"><b>${n}</b></div><div class="dlv"><span class="num">${B(q.debt[k])}</span><small class="num neg">จ่าย ${B(q.exp[k])}/ด.</small></div><div class="dlb"><button class="sm" ${dis} onclick="payDebt('${k}')">ปิดหนี้</button></div></div>`).join('');
   const passRows=[['ค่าเช่าอสังหาฯ บนกระดาน',f.board],['ธุรกิจและดีล',f.deals],['ปันผลหุ้นและกองทุน',f.div],['ดอกเบี้ยเงินฝากประจำ',f.depI],['ธุรกิจ A',f.net]].filter(x=>x[1]).map(([n,v])=>line(n,B(v),'pos')).join('');
@@ -2236,19 +2269,21 @@ function spark(arr){const w=64,h=20,mn=Math.min(...arr),mx=Math.max(...arr),sp=m
   return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" aria-hidden="true"><polyline points="${pts}" fill="none" stroke="${up?'var(--good)':'var(--bad)'}" stroke-width="1.5"/></svg>`}
 let LOTS=1;
 /* แถวสินทรัพย์ในตาราง (ใช้ร่วม: ตลาดหุ้นและสินค้า / กองทุนในแท็บธนาคาร) acc สะสมทุน-มูลค่าพอร์ต */
+const MICO=a=>a.k==='cry'?`<span class="mico cico" style="--cc:${a.c}" aria-hidden="true">${a.g}</span>`:`<img class="mico" src="img/${ICO(a)}.webp" alt="">`;
 const ICO=a=>a.k==='fund'?(a.s==='MMF'||a.s==='BOND'?'as-saving':a.s==='GOLDF'?'as-gold':'as-stock'):a.k==='stock'?(a.s==='REIT'?'as-estate':'as-stock'):a.s==='GOLD'?'as-gold':'as-commod';
+function cryTag(a){if(!cryLive(a,S))return `<span class="mk neg">ยังไม่เข้าตลาด · อีก ${cryFrom(a.s)-cryIdx()} รอบ</span>`;const b=(S.cryBase||{})[a.s];if(!b)return '';const x=S.prices[a.s]/b;return `<span class="mk ${x>=1?'pos':'neg'}" title="เทียบราคาตอนเริ่มเกม/เข้าตลาด">ตั้งแต่เริ่ม ${x>=10?'×'+Math.round(x).toLocaleString():x>=1.995?'×'+x.toFixed(1):(x>=1?'+':'−')+Math.abs(Math.round((x-1)*100))+'%'}</span>`}
 function mrow(a,p,dis,acc){
   const pr=S.prices[a.s],hs=S.hist[a.s],prev=hs.length>1?hs[hs.length-2]:pr,ch=(pr-prev)/prev*100,h=p.stocks[a.s];
   const pl=h&&h.q?(()=>{const avg=h.c/h.q,val=h.q*pr,pl=val-h.c;acc.tc+=h.c;acc.tv+=val;return `<span class="mk">ทุน ${fmtAvg(a,avg)}</span><span class="mk ${pl>=0?'pos':'neg'}">${pl>=0?'+':'−'}${B(Math.abs(pl)).replace('−','')} (${pl>=0?'+':''}${(pl/h.c*100).toFixed(1)}%)</span>`})():'';
-  return `<div class="mi"><div class="mi1 tap" role="button" tabindex="0" aria-label="ซื้อขาย ${a.n}" onclick="tradeDlg('${a.s}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tradeDlg('${a.s}')}"><img class="mico" src="img/${ICO(a)}.webp" alt=""><div class="mname"><b>${a.s}</b><span class="muted">${a.n}</span></div>${spark(hs)}<div class="mprice"><b class="num">${fmtP(a,pr)}</b><span class="num ${ch>=0?'pos':'neg'}">${ch>=0?'+':''}${ch.toFixed(1)}%</span></div><span class="mgo" aria-hidden="true">›</span></div>
-    <div class="mi2"><div class="mtags">${a.risk?`<span class="mk">เสี่ยง${RISK[a.risk]}</span>`:''}${a.div?`<span class="mk">ปันผล ฿${a.k==='fund'?a.div.toFixed(2):a.div.toFixed(1)}/${UNIT(a)}</span>`:''}<span class="mk">ถือ ${h&&h.q?h.q.toLocaleString():0}</span>${pl}</div></div></div>`;
+  return `<div class="mi"><div class="mi1 tap" role="button" tabindex="0" aria-label="ซื้อขาย ${a.n}" onclick="tradeDlg('${a.s}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tradeDlg('${a.s}')}">${MICO(a)}<div class="mname"><b>${a.s}</b><span class="muted">${a.n}</span></div>${spark(hs)}<div class="mprice"><b class="num">${fmtP(a,pr)}</b><span class="num ${ch>=0?'pos':'neg'}">${ch>=0?'+':''}${ch.toFixed(1)}%</span></div><span class="mgo" aria-hidden="true">›</span></div>
+    <div class="mi2"><div class="mtags">${a.risk?`<span class="mk">เสี่ยง${RISK[a.risk]}</span>`:''}${a.k==='cry'?cryTag(a):''}${a.div?`<span class="mk">ปันผล ฿${a.k==='fund'?a.div.toFixed(2):a.div.toFixed(1)}/${UNIT(a)}</span>`:''}<span class="mk">ถือ ${h&&h.q?h.q.toLocaleString():0}</span>${pl}</div></div></div>`;
 }
 function renderMkt(){
   const act=canAct(),p=act?cp():P(S.view),dis=act?'':'disabled';
   const acc={tc:0,tv:0};
   return `<p class="trhint">👆 แตะชื่อหุ้นหรือสินค้า เพื่อเลือก <b>ซื้อ / ขาย</b> แล้วกดปุ่มจำนวน · ค่าธรรมเนียม 1%${S.freeComm?' <b class="pos">(เทิร์นนี้ฟรี)</b>':''}${act?'':' · <span class="neg">ซื้อขายได้เฉพาะในเทิร์นของคุณ</span>'}</p>
   <div class="mlist">
-  ${ASSETS.filter(a=>a.k!=='fund').map(a=>mrow(a,p,dis,acc)).join('')}</div>
+  ${[['stock','📈 หุ้น'],['com','🛢️ สินค้าโภคภัณฑ์'],['cry','🪙 คริปโต']].map(([k,t])=>`<h4 class="mgh">${t}${k==='cry'?` <span class="crydate">📅 ราคาจริงช่วงสุ่มจาก 10 ปีที่ผ่านมา · เดือนที่ ${(S.cmo??0)+1} · 1 รอบ = 1 เดือน · เฉลยปีตอนจบเกม</span>`:''}</h4>`+ASSETS.filter(a=>a.k===k).map(a=>mrow(a,p,dis,acc)).join('')).join('')}</div>
   ${acc.tc?`<div class="ln" style="margin-top:6px"><span><b>รวมพอร์ต ${esc(p.name)}</b><br><span class="muted" style="font-size:12px">ทุน ${B(acc.tc)} · มูลค่าตอนนี้ ${B(acc.tv)}</span></span><b class="num ${acc.tv>=acc.tc?'pos':'neg'}">${acc.tv>=acc.tc?'+':'−'}${B(Math.abs(acc.tv-acc.tc)).replace('−','')} (${acc.tv>=acc.tc?'+':''}${((acc.tv-acc.tc)/acc.tc*100).toFixed(1)}%)</b></div>`:''}
   <p class="muted" style="font-size:12px;margin:4px 0 0">ทุนเฉลี่ยรวมค่าคอมมิชชันแล้ว</p>
   <h3 style="margin:14px 0 6px;font-size:14px">🪧 ป้ายประกาศขายในตลาดกลาง</h3>
@@ -2257,7 +2292,7 @@ function renderMkt(){
 }
 
 /* ===================== เทรด: แตะชื่อ → ซื้อ/ขาย → กดปุ่มจำนวนหน่วย → ยืนยัน ===================== */
-const TSTEP=a=>a.k==='com'?[100,10,1]:[100000,10000,1000,100];
+const TSTEP=a=>a.st||(a.k==='com'?[100,10,1]:[100000,10000,1000,100]);
 let TR=null;
 function tradeCalc(){
   const p=cp(),a=AS(TR.s),pr=S.prices[TR.s],hd=p.stocks[TR.s],have=hd?hd.q:0,unit=UNIT(a);
@@ -2283,17 +2318,18 @@ function tradeUpd(){
   const ok=m.querySelector('.mf button[data-i="0"]');if(ok){ok.disabled=!c.ok;ok.textContent=c.lbl;ok.classList.toggle('sell',TR.dir<0)}
 }
 function trDir(d){if(!TR)return;const c=tradeCalc();if(d<0&&!c.have){toast('ยังไม่มีให้ขาย');return}TR.dir=d;TR.q=d<0?Math.min(TR.q,c.have):TR.q;tradeUpd()}
-function trAdd(n){if(!TR)return;const c=tradeCalc();let q=TR.q+n;if(TR.dir<0&&q>c.have){q=c.have;toast(`มีอยู่ ${c.have.toLocaleString()} ${c.unit} ขายได้สูงสุดเท่านี้`)}TR.q=q;tradeUpd()}
+function trAdd(n){if(!TR)return;const c=tradeCalc();let q=QR(TR.q+n);if(TR.dir<0&&q>c.have){q=c.have;toast(`มีอยู่ ${c.have.toLocaleString()} ${c.unit} ขายได้สูงสุดเท่านี้`)}TR.q=q;tradeUpd()}
 function trSet(q){if(!TR)return;TR.q=Math.max(0,q);tradeUpd()}
 async function tradeDlg(s){
   if(!canAct()){toast('ซื้อขายได้เฉพาะในเทิร์นของคุณ');return}
+  {const a0=AS(s);if(!cryLive(a0,S)){toast(`${a0.s} ยังไม่เข้าตลาด เปิดเทรดในอีก ${cryFrom(s)-cryIdx()} รอบ`);return}}
   const p=cp(),a=AS(s),hd=p.stocks[s],have=hd?hd.q:0,unit=UNIT(a);
   TR={s,dir:1,q:0,loan:0};
   const body=`<div class="trbox">
-   <div class="trhead"><img class="mico" src="img/${ICO(a)}.webp" alt=""><div><b>${a.s}</b> <span class="muted">${a.n}</span><div class="muted" style="font-size:12px">ราคาตอนนี้ <b class="num" style="color:var(--ink)">${fmtP(a,S.prices[s])}</b> ต่อ${unit} · ถืออยู่ ${have.toLocaleString()} ${unit}${have?` · ทุนเฉลี่ย ${fmtAvg(a,hd.c/have)}`:''} · เงินสด ${B(p.cash)}</div></div></div>
+   <div class="trhead">${MICO(a)}<div><b>${a.s}</b> <span class="muted">${a.n}</span><div class="muted" style="font-size:12px">ราคาตอนนี้ <b class="num" style="color:var(--ink)">${fmtP(a,S.prices[s])}</b> ต่อ${unit}${a.k==='cry'?' (ราคาจริงช่วงสุ่ม)':''} · ถืออยู่ ${have.toLocaleString()} ${unit}${have?` · ทุนเฉลี่ย ${fmtAvg(a,hd.c/have)}`:''} · เงินสด ${B(p.cash)}</div></div></div>
    <div class="seg trdir"><button data-d="1" onclick="trDir(1)">ซื้อ</button><button data-d="-1" onclick="trDir(-1)" ${have?'':'disabled'}>ขาย</button></div>
    <div class="trqty"><span>จำนวน</span><b class="num" id="trq">0</b><span>${unit}</span></div>
-   <div class="trsteps">${TSTEP(a).map(n=>`<button onclick="trAdd(${n})">+${n.toLocaleString()}</button>`).join('')}</div>
+   <div class="trsteps">${TSTEP(a).map(n=>`<button onclick="trAdd(${n})">+${n.toLocaleString(undefined,{maximumFractionDigits:3})}</button>`).join('')}</div>
    <div class="trsteps2"><button class="sm" onclick="trSet(0)">ล้าง</button><button class="sm" id="trall" onclick="trSet(${have})" hidden>ขายทั้งหมด ${have.toLocaleString()}</button></div>
    <div class="kv trcalc" id="trcalc"></div></div>`;
   const r=await choose({kind:'trade',title:`ซื้อขาย ${a.n}`,body,npc:false,opts:[{v:'ok',l:'เลือกจำนวนก่อน',c:'pri',dis:true},{v:'no',l:'ยกเลิก'}],onShow:()=>tradeUpd()});
@@ -2303,7 +2339,7 @@ async function tradeDlg(s){
     if(p.cash<total){const L=Math.ceil((total-p.cash)/1000)*1000;p.loan+=L;p.cash+=L;log(`🏦 ${esc(p.name)} กู้ ${B(L)} เพื่อซื้อ${a.n}`)}
     p.cash-=total;addHold(p,s,t.q,total);log(`${esc(p.name)} ซื้อ ${a.n} ${t.q.toLocaleString()} ${unit} @ ${fmtP(a,pr)} รวม ${B(total)} (ค่าธรรมเนียม ${B(fee)})`);toast(`ซื้อ ${a.s} ${t.q.toLocaleString()} ${unit} แล้ว`)}
   else{if(!hd2||!hd2.q)return;const q=Math.min(t.q,hd2.q),v=pr*q,fee=commission(p,v),get=v-fee,cost=hd2.c/hd2.q*q,pl=get-cost;
-    hd2.q-=q;hd2.c-=cost;if(!hd2.q)delete p.stocks[s];p.cash+=get;
+    hd2.q=QR(hd2.q-q);hd2.c-=cost;if(hd2.q<=0)delete p.stocks[s];p.cash+=get;
     log(`${esc(p.name)} ขาย ${a.n} ${q.toLocaleString()} ${unit} @ ${fmtP(a,pr)} ได้ ${B(get)} (${pl>=0?'กำไร':'ขาดทุน'} ${B(Math.abs(pl))})`);toast(`ขาย ${a.s} ได้ ${B(get)}`)}
   render();save();checkWin();
 }
