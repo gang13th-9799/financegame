@@ -16,15 +16,59 @@
             ".write": "auth != null && data.parent().parent().child('status').val() === 'lobby' && ((data.child('t').val() === 'h' && !data.child('uid').exists() && newData.child('uid').val() === auth.uid) || data.child('uid').val() === auth.uid)"
           }
         },
-        "mem":  { "$uid": { ".write": "auth != null && auth.uid === $uid" } },
-        "on":   { "$uid": { ".write": "auth != null && auth.uid === $uid" } },
-        "left": { "$uid": { ".write": "auth != null && auth.uid === $uid" } },
-        "st":     { ".write": "auth != null && data.parent().child('mem').child(auth.uid).exists()" },
-        "status": { ".write": "auth != null && data.parent().child('mem').child(auth.uid).exists() && newData.val() === 'end'" },
-        "win":    { ".write": "auth != null && data.parent().child('mem').child(auth.uid).exists()" },
-        "q":      { ".write": "auth != null && data.parent().child('mem').child(auth.uid).exists()" },
-        "a":      { ".write": "auth != null && data.parent().child('mem').child(auth.uid).exists()" },
-        "voice":  { ".write": "auth != null && data.parent().child('mem').child(auth.uid).exists()" }
+        "mem": {
+          "$uid": {
+            ".write": "auth != null && auth.uid === $uid"
+          }
+        },
+        "on": {
+          "$uid": {
+            ".write": "auth != null && auth.uid === $uid"
+          }
+        },
+        "left": {
+          "$uid": {
+            ".write": "auth != null && auth.uid === $uid"
+          }
+        },
+        "st": {
+          ".write": "auth != null && data.parent().child('mem').child(auth.uid).exists()"
+        },
+        "status": {
+          ".write": "auth != null && data.parent().child('mem').child(auth.uid).exists() && newData.val() === 'end'"
+        },
+        "win": {
+          ".write": "auth != null && data.parent().child('mem').child(auth.uid).exists()"
+        },
+        "q": {
+          ".write": "auth != null && data.parent().child('mem').child(auth.uid).exists()"
+        },
+        "a": {
+          ".write": "auth != null && data.parent().child('mem').child(auth.uid).exists()"
+        },
+        "voice": {
+          ".write": "auth != null && data.parent().child('mem').child(auth.uid).exists()"
+        },
+        "p": {
+          ".write": "auth != null && data.parent().child('mem').child(auth.uid).exists()"
+        },
+        "pr": {
+          ".write": "auth != null && data.parent().child('mem').child(auth.uid).exists()"
+        },
+        "led": {
+          ".write": "auth != null && data.parent().child('mem').child(auth.uid).exists()"
+        },
+        "nq": {
+          ".write": "auth != null && data.parent().child('mem').child(auth.uid).exists()"
+        },
+        "lg": {
+          ".write": "auth != null && data.parent().child('mem').child(auth.uid).exists()"
+        },
+        "afk": {
+          "$uid": {
+            ".write": "auth != null && data.parent().parent().child('mem').child(auth.uid).exists()"
+          }
+        }
       }
     }
   }

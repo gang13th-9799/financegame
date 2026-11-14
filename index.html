@@ -1034,6 +1034,17 @@ body.fs #gameView:not(.mapmin){grid-template-columns:minmax(288px,1.2fr) minmax(
  width:max-content;max-width:min(92vw,640px)!important;min-width:min(70vw,260px);text-align:center;z-index:9999!important;
  box-shadow:0 5px 0 #36502c,0 10px 24px rgba(0,0,0,.18)!important;cursor:pointer;transition:opacity .25s,transform .25s!important}
 .toast.on{transform:translate(-50%,0);pointer-events:auto!important}
+
+/* ===== ออนไลน์เล่นพร้อมกัน ===== */
+.rbanner{position:fixed;left:50%;top:9%;transform:translate(-50%,-10px) scale(.96);z-index:9998;opacity:0;pointer-events:none;transition:opacity .3s,transform .3s;
+ background:#fffdf3;border:3px solid #e8d48a;border-radius:22px;padding:.8em 1.6em;text-align:center;box-shadow:0 6px 0 #d9c37a,0 18px 40px rgba(0,0,0,.2);min-width:min(80vw,320px)}
+.rbanner.on{opacity:1;transform:translate(-50%,0) scale(1);pointer-events:auto}
+.rbanner b{display:block;font-size:clamp(24px,6vw,40px);color:#b8202f}.rbanner span{display:block;margin-top:4px;font-size:clamp(14px,3.6vw,18px)}
+.afkov{position:fixed;inset:0;z-index:9990;background:rgba(90,92,96,.72);backdrop-filter:grayscale(1);-webkit-backdrop-filter:grayscale(1);display:grid;place-items:center;padding:16px}
+.afkov[hidden]{display:none}
+.afk-box{background:#fffdf3;border-radius:22px;padding:22px 20px;max-width:420px;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,.3)}
+.afk-box .afk-ic{font-size:48px}.afk-box h2{margin:6px 0}.afk-box button{margin-top:12px;font-size:18px;min-height:48px;padding:0 28px}
+.pwait{font-size:15px}
 </style>
 </head>
 <body>
@@ -1398,7 +1409,7 @@ const TURN_MS=180000;
 function cp(){return S.players[S.cur]}
 function P(id){return S.players.find(p=>p.id===id)}
 function has(p,k){return p.skills.includes(k)}
-function log(t){S.log.unshift(`<b class="num">ร${S.round}</b> ${t}`);if(S.log.length>200)S.log.length=200}
+function log(t){S.log.unshift(`<b class="num">ร${S.round}</b> ${t}`);if(S.log.length>200)S.log.length=200;if(ON.play&&S.par)parLog(S.log[0])}
 /* กติกาเสริม: ปิด/เปิดได้ เผื่อโหมดง่าย/ยากในอนาคต */
 const GRULE={sickAtZeroHeart:false};
 function ruleNote(p,title,why){if(!p||p.bot||(S&&S.autoPilot))return;const box=$('#rnotes');if(!box)return;const d=document.createElement('div');d.className='rnote';d.innerHTML=`<b>📌 ${title}</b><span>${why}</span><i>แตะเพื่อปิด</i>`;d.onclick=()=>d.remove();box.appendChild(d);setTimeout(()=>d.classList.add('out'),9000);setTimeout(()=>d.remove(),9600)}
@@ -1406,7 +1417,9 @@ function toast(t){if(S&&S.players&&S.winner==null&&cp().bot)return;const el=$('#
 $('#toast').onclick=()=>{clearTimeout(toast.h);$('#toast').classList.remove('on')};
 function save(){if(ON.play){onSave();return}try{localStorage.setItem('ffgame-v8',JSON.stringify(S))}catch(e){}}
 function loadSaved(){try{const s=localStorage.getItem('ffgame-v8');return s?JSON.parse(s):null}catch(e){return null}}
-function draw(k){const DEF={life:LIFE,learn:LEARN,opp:OPP,news:NEWS,netc:NETDB}[k];if(!S.decks[k]||S.decks[k].some(i=>i>=DEF.length))S.decks[k]=[];if(!S.decks[k]||!S.decks[k].length)S.decks[k]=shuffle(DEF.map((_,i)=>i));return DEF[S.decks[k].pop()]}
+function draw(k){const DEF={life:LIFE,learn:LEARN,opp:OPP,news:NEWS,netc:NETDB}[k];
+  if(ON.play&&S.par&&S.rp==='h'){const q=cp(),h=q&&q.hand&&q.hand[k];while(h&&h.length){const i=h.pop();if(DEF[i])return DEF[i]}}
+  if(!S.decks[k]||S.decks[k].some(i=>i>=DEF.length))S.decks[k]=[];if(!S.decks[k]||!S.decks[k].length)S.decks[k]=shuffle(DEF.map((_,i)=>i));return DEF[S.decks[k].pop()]}
 
 /* ===================== FINANCE ===================== */
 let NETDB=[];
@@ -1517,7 +1530,8 @@ function ask({actor=null,kind='',title,body='',opts=[{v:'ok',l:'ตกลง',c:
     else{MODAL_CANCEL=()=>done(lastOk());m.querySelectorAll('.mf button').forEach(b=>b.onclick=()=>done(opts[+b.dataset.i].v));m.querySelectorAll('.mb [data-v]').forEach(b=>b.onclick=()=>done(b.dataset.v));const f=m.querySelector('.mf button.pri')||m.querySelector('.mf button');if(f)f.focus()}
   });
 }
-async function choose(o){if(ON.play&&o.actor&&!o.actor.bot&&o.actor.uid&&o.actor.uid!==ON.user.uid)return onRemoteChoose(o);return (await ask(o)).v}
+async function choose(o){if(o.actor&&o.actor._afkb){const d=(o.opts||[]).find(x=>['no','n','skip','stay','x','cancel','pass'].includes(x.v));if(d)o={...o,bot:d.v}}
+  if(ON.play&&o.actor&&!o.actor.bot&&o.actor.uid&&o.actor.uid!==ON.user.uid)return onRemoteChoose(o);return (await ask(o)).v}
 
 
 /* ===================== FX ===================== */
@@ -1602,6 +1616,7 @@ function resume(){
   if(S.winner!=null){render();return}
   if(S.phase==='busy')S.phase='card';
   S.autoPilot=false;S.turnEnd=Date.now()+TURN_MS;
+  if(PAR()){render();if(!S.rp&&parMaster())parStartRound();return}
   render();const p=cp();if(!p.bot)return;
   if(S.phase==='roll')botTurn();
   else if(S.phase==='card')sleep(S.speed).then(()=>pickPile(botPile(p)));
@@ -1616,7 +1631,7 @@ function canAct(){return S&&S.winner==null&&!cp().bot&&onMine()&&!MODAL&&['roll'
 const CHARITY_TURNS=3;
 async function rollTurn(n){
   if(!S||S.phase!=='roll'||S.winner!=null)return;
-  const p=cp();S.phase='busy';
+  const p=cp();S.phase='busy';if(!p.bot&&!S.autoPilot)p.acted=true;
   n=(p.charity>0&&n===2)?2:1;if(p.charity>0)p.charity--;
   const d=S.forceRoll?[S.forceRoll]:n===2?[r6(),r6()]:[r6()];S.forceRoll=0;await diceAnim(d,p.bot);S.dice=d;render();await sleep(p.bot?120:200);
   const steps=d.reduce((a,b)=>a+b,0);
@@ -1639,7 +1654,7 @@ async function rollTurn(n){
   if(checkWin())return;
   if(S.autoPilot){endTurn();return}
   S.phase='card';S.picks=0;render();save();
-  if(p.bot){botSkills(p);await sleep(S.speed*.6);await pickPile(botPile(p))}
+  if(p.bot){if(p._afkb){await sleep(S.speed*.4);endTurn(true);return}botSkills(p);await sleep(S.speed*.6);await pickPile(botPile(p))}
 }
 const PICKS=3;
 function picksMax(){return PICKS+(S.bonusPicks||0)}
@@ -1697,7 +1712,7 @@ function botSkills(p){
 }
 function stopPicking(){if(!canAct()||S.phase!=='card')return;log(`${esc(cp().name)} หยุดจั่วการ์ดที่ ${S.picks||0}/${picksMax()} ใบ`);S.phase='free';render();save()}
 function endTurn(early){
-  if(S.winner!=null)return;S.bonusPicks=0;const tn=S.autoPilot&&S.timeoutNote;S.timeoutNote=null;S.freeComm=false;S.picks=0;
+  if(S.winner!=null)return;if(PAR()){parEndTurn(early);return}S.bonusPicks=0;const tn=S.autoPilot&&S.timeoutNote;S.timeoutNote=null;S.freeComm=false;S.picks=0;
   if(tn)setTimeout(()=>{if(!MODAL)ask({npc:'think',title:'⏰ หมดเวลา 3 นาที',body:`<p><b>${esc(tn.name)}</b> ใช้เวลาครบ 3 นาที ระบบจึงจบเทิร์นให้อัตโนมัติ${tn.phase==='roll'?' (ยังไม่ได้ทอยลูกเต๋า)':` · จั่วการ์ดไป ${tn.picks}/${PICKS} ใบ`}</p><p class="muted">นาฬิกานับถอยหลังอยู่กลางกระดาน ใต้ค่าพลัง · ระหว่างเปิดหน้าตั้งค่านาฬิกาจะหยุดเดิน</p>`})},50);
   const p=cp();p.hired=false;
   if(early&&!S.autoPilot&&Date.now()<S.turnEnd){const sx=adj(p,{t:1},true);if(sx){log(`⏱ ${esc(p.name)} จบเทิร์นก่อนเวลา${sx}`);if(!p.bot)toast(`⏱ จบไว ได้เวลา +1`)}}
@@ -1709,13 +1724,14 @@ function endTurn(early){
 }
 function timeUp(){
   const p=cp();S.autoPilot=true;S.timeoutNote={name:p.name,picks:S.picks||0,phase:S.phase};log(`⏰ ${esc(p.name)} หมดเวลา 3 นาที จบเทิร์นอัตโนมัติ (จั่วการ์ดไป ${S.picks||0}/${PICKS} ใบ)`);toast(`⏰ ${p.name} หมดเวลา! จบเทิร์นอัตโนมัติ`);
-  if(MODAL_CANCEL){MODAL_CANCEL();return}
+  if(MODAL_CANCEL){MODAL_CANCEL();setTimeout(()=>{if(S&&S.autoPilot&&!MODAL&&['roll','card','free'].includes(S.phase))endTurn()},1500);return}
   if(['roll','card','free'].includes(S.phase))endTurn();
 }
 setInterval(()=>{
   if(S&&S.ann&&S.ann.length&&!MODAL&&S.winner==null)flushAnn();
   if(!S||S.winner!=null||$('#gameView').hidden)return;const el=$('#timer');const p=cp();
   if(p.bot){if(el)el.textContent='';return}
+  if(ON.play&&S.par&&(p.done||S.phase==='wait')){if(el)el.textContent='';return}
   if(!$('#setov').hidden){S.turnEnd+=500;return}
   const ms=S.turnEnd-Date.now(),s=Math.max(0,Math.ceil(ms/1000));
   if(el){el.textContent=`⏱ ${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`;el.classList.toggle('low',s<=30)}
@@ -1778,17 +1794,19 @@ function rankPin(p,c='rpin'){return p&&p.net&&p.net.on?`<img class="${c}" src="i
 function badges(p){return rankPin(p)+(p.warn>0?`<span class="bdg" title="โดนใบเตือน: เงินเดือนลด 50% อีก ${p.warn} เดือน">🟨</span>`:'')+(p.badge1?'<span class="bdg" title="ชนะ Lv.1: รายได้จากทรัพย์สินมากกว่ารายจ่ายรวม">🏆</span>':'')+(p.badge2?'<span class="bdg" title="ชนะ Lv.2: ธุรกิจ A ระดับไดมอนด์">💎</span>':'')}
 function standings(){return [...S.players].map(q=>[q,fin(q)]).sort((a,b)=>((b[0].badge2?2:0)+(b[0].badge1?1:0))-((a[0].badge2?2:0)+(a[0].badge1?1:0))||b[1].passive/Math.max(1,b[1].expenses)-a[1].passive/Math.max(1,a[1].expenses))}
 function standingsHtml(){return `<table class="ft"><tr class="th"><td>#</td><td>ผู้เล่น</td><td class="r">ทรัพย์สิน / รายจ่าย</td></tr>${standings().map(([q,f],i)=>`<tr><td>${i+1}</td><td><span class="tok pic" style="display:inline-block;${tokStyle(q)}"></span> ${esc(q.name)} ${badges(q)}<div class="fsub">${esc(S.jobs[q.job].n)}${q.badge1?` · Lv.1 รอบ ${q.badge1}`:''}${q.badge2?` · Lv.2 รอบ ${q.badge2}`:''}</div></td><td class="r num"><span class="pos">${B(f.passive)}</span> / <span class="neg">${B(f.expenses)}</span></td></tr>`).join('')}</table>`}
-function endGame(why){if(S.phase!=='done')log(cryReveal());S.winner=S.winner??(standings()[0][0].id);S.phase='done';save();render();
+function endGame(why){if(PAR()&&!parMaster()&&S.winner==null)return;if(S.phase!=='done')log(cryReveal());S.winner=S.winner??(standings()[0][0].id);S.phase='done';save();render();
   ask({kind:'win',npc:'happy',title:'🏁 จบเกม · สรุปผล',body:`${why?`<p>${why}</p>`:''}${standingsHtml()}<p class="muted" style="font-size:12px">🏆 Lv.1 = รายได้จากทรัพย์สินมากกว่ารายจ่ายรวม · 💎 Lv.2 = ธุรกิจ A ระดับไดมอนด์</p>`,opts:[{v:'see',l:'ดูกระดาน'},{v:'new',l:'เกมใหม่',c:'pri'}]}).then(r=>{if(r.v==='new')showSetup()})}
 function confirmEnd(){if(MODAL||!S||S.winner!=null)return;choose({title:'จบเกมและสรุปผล?',body:standingsHtml(),opts:[{v:'y',l:'จบเกม',c:'pri'},{v:'n',l:'เล่นต่อ'}]}).then(v=>{if(v==='y')endGame('จบเกมโดยผู้เล่น')})}
-function flushAnn(){if(!S||!S.ann||!S.ann.length||MODAL)return;const a=S.ann.shift();ask({kind:'win',npc:'happy',title:a.t,body:a.b,opts:[{v:'ok',l:'เล่นต่อ',c:'pri'}]})}
+function flushAnn(){if(!S||!S.ann||!S.ann.length||MODAL)return;const a=S.ann.shift();ask({kind:a.k||'win',npc:'happy',title:a.t,body:a.b,opts:[{v:'ok',l:'เล่นต่อ',c:'pri'}]})}
 function checkWin(){
   S.ann=S.ann||[];let over=null;
   for(const p of S.players){const f=fin(p);
     if(!p.badge1&&f.passive>f.expenses){p.badge1=S.round;const first=!S.players.some(q=>q!==p&&q.badge1);
       log(`🏆 <b>${esc(p.name)} ชนะ Lv.1</b> รายได้จากทรัพย์สิน ${B(f.passive)} มากกว่ารายจ่ายรวม ${B(f.expenses)}`);
       S.ann.push({t:`🏆 ${esc(p.name)} ชนะ Lv.1!`,b:`<p>${first?'<b>คนแรกของเกม!</b> ':''}มีรายได้จากทรัพย์สิน <b class="num pos">${B(f.passive)}</b> มากกว่ารายจ่ายรวม <b class="num neg">${B(f.expenses)}</b> ต่อเดือน ใช้เวลา ${S.round} รอบ</p><p>ได้ถ้วยรางวัล 🏆 ไว้ข้างชื่อ · เกมยังเล่นต่อได้ เป้าหมายต่อไปคือ 💎 Lv.2: ธุรกิจ A ระดับไดมอนด์</p>`})}
-    if(!p.badge2&&p.net&&p.net.on&&p.net.rank>=7){p.badge2=S.round;log(`💎 <b>${esc(p.name)} ชนะ Lv.2</b> ธุรกิจ A ระดับไดมอนด์`);over=p}}
+    if(!p.badge2&&p.net&&p.net.on&&p.net.rank>=7){p.badge2=S.round;log(`💎 <b>${esc(p.name)} ชนะ Lv.2</b> ธุรกิจ A ระดับไดมอนด์`);over=p}
+    else if(p.badge2&&S.winner==null&&PAR())over=over||p}
+  if(over&&PAR()&&!parMaster())over=null;/* ออนไลน์: หัวห้องเป็นคนตัดสินจบเกม */
   if(over){S.winner=over.id;S.ann=[];log(`🏁 จบเกม ${esc(over.name)} ทำธุรกิจ A ถึงระดับไดมอนด์`);endGame(`💎 <b>${esc(over.name)}</b> ชนะ Lv.2 ทำธุรกิจ A ถึงระดับไดมอนด์ได้เป็นคนแรก`);return true}
   setTimeout(flushAnn,60);
   return false;
@@ -1832,6 +1850,7 @@ async function buyFlow(p,cost,o){
   const want=o.bot!==undefined?o.bot:botWants(p,cost,o.cf||0);
   const v=await choose({actor:p,kind:o.kind,noflip:o._again,pose:o.pose||(nb.lack?'think':'thumb'),title:o.title,body:o.body+discNote+nb.html,opts,bot:want?opts[0].v:'no'});
   if(v==='no')return false;
+  if(o.pre&&(v==='buy'||v==='loan')&&!(await o.pre())){toast('มีผู้เล่นอื่นซื้อตัดหน้าไปแล้ว');return false}
   if(v==='hire'){loanFor(p,HIRE_COST);p.cash-=HIRE_COST;p.hired=true;const sx=adj(p,{t:1},true);log(`🧹 ${esc(p.name)} จ้างคนช่วยงาน ${B(HIRE_COST)}${sx}`);render();return buyFlow(p,cost0,{...o,_again:true})}
   if(nT||nH||(useK&&nK))adj(p,{t:-nT,h:-nH,k:useK?-nK:0},true);
   if(v==='loan'){p.loan+=L;p.cash+=L;log(`🏦 ${esc(p.name)} กู้ ${B(L)}`)}
@@ -1844,14 +1863,14 @@ async function resolveSquare(p){
     const d=sq,pr=S.props[key];
     if(!pr){
       const c=buyPrice(p,d.down);
-      const ok=await buyFlow(p,c,{cf:d.cf,needK:d.nk||0,title:esc(sq.n),body:`<div class="kv"><b>พื้นที่</b><span>${ZONES[d.z].n} · ${RINGN[d.z[0]]}</span><b>ผลตอบแทน</b><span class="num">${d.roi}% ต่อเดือน · ใช้ 📚 ${d.nk}</span><b>เงินดาวน์</b><span class="num neg">${B(c)}</span><b>ค่าเช่าต่อเดือน</b><span class="num pos">+${B(d.cf)}</span><b>ค่าผ่านทาง</b><span class="num neg">${B(d.fee)}</span></div><p class="muted">ครบทั้งเขตได้ค่าเช่า ×1.5 ค่าผ่านทาง ×2</p>`});
+      const ok=await buyFlow(p,c,{cf:d.cf,needK:d.nk||0,pre:PARH()?()=>parClaim(key,{o:p.id,l:0,inv:c}):null,title:esc(sq.n),body:`<div class="kv"><b>พื้นที่</b><span>${ZONES[d.z].n} · ${RINGN[d.z[0]]}</span><b>ผลตอบแทน</b><span class="num">${d.roi}% ต่อเดือน · ใช้ 📚 ${d.nk}</span><b>เงินดาวน์</b><span class="num neg">${B(c)}</span><b>ค่าเช่าต่อเดือน</b><span class="num pos">+${B(d.cf)}</span><b>ค่าผ่านทาง</b><span class="num neg">${B(d.fee)}</span></div><p class="muted">ครบทั้งเขตได้ค่าเช่า ×1.5 ค่าผ่านทาง ×2</p>`});
       if(ok){S.props[key]={o:p.id,l:0,inv:c};log(`🏠 ${esc(p.name)} ซื้อ ${esc(sq.n)}`)}
     }else if(pr.o===p.id){
       if(pr.l<2){const c=buyPrice(p,d.up);
         const ok=await buyFlow(p,c,{cf:d.upcf,needT:1,verb:'อัปเกรด',no:'ไม่อัปเกรด',title:`อัปเกรด ${esc(sq.n)}`,body:`<p>อัปเกรดเป็นขั้น ${pr.l+1} ค่าเช่าเพิ่ม <b class="pos">+${B(d.upcf)}</b> ต่อเดือน ค่าผ่านทางเพิ่มขึ้นด้วย</p>`});
         if(ok){pr.l++;pr.inv+=c;log(`🔨 ${esc(p.name)} อัปเกรด ${esc(sq.n)} เป็นขั้น ${pr.l}`)}}
     }else{
-      const o=P(pr.o),fee=propFee(key);pay(p,fee);o.cash+=fee;
+      const o=P(pr.o),fee=propFee(key);pay(p,fee);if(PARH()&&o.uid!==ON.user.uid)parLed(o.id,{cash:fee,note:`💰 ${p.name} จ่ายค่าผ่านทาง ${B(fee)} ให้คุณ`});else o.cash+=fee;
       log(`${esc(p.name)} จ่ายค่าผ่านทาง ${B(fee)} ให้ ${esc(o.name)}`);toast(`${p.name} จ่ายค่าผ่านทาง ${B(fee)} ให้ ${o.name}`);
     }
   }else if(sq.t==='news'){await newsCard(p)}
@@ -1962,7 +1981,7 @@ async function forcedPay(p,amt,title){
   if(p.loan>Math.max(400000,p.salary*12))bankrupt(p);
 }
 async function newsCard(p){
-  const n=draw('news');const parts=[];
+  const n=draw('news');if(PAR()){await parQueueNews(p,'n',n);return}const parts=[];
   for(const s in n.e){const a=AS(s),old=S.prices[s];let np=old*(1+n.e[s]/100);np=roundP(a,np);if(MKT[s]){S.adj=S.adj||{};S.adj[s]=(S.adj[s]||1)*(1+n.e[s]/100)}S.prices[s]=np;S.hist[s].push(np);if(S.hist[s].length>20)S.hist[s].shift();
     parts.push(`<div class="ln"><span>${a.n} <span class="muted">${s}</span></span><span class="num ${n.e[s]>0?'pos':'neg'}">${n.e[s]>0?'+':''}${n.e[s]}% → ${a.k==='stock'?'฿'+np.toFixed(1):B(np)}</span></div>`)}
   log(`📰 ข่าว: ${n.t}`);render();
@@ -2014,6 +2033,7 @@ const OPP_NEWS=[
 const MNCAT={st:['📈','ข่าวหุ้น'],fd:['📊','ข่าวกองทุน'],cy:['🪙','ข่าวคริปโต'],cm:['🛢️','ข่าวสินค้าโภคภัณฑ์']};
 function shockPrices(e){const ch=[];for(const s in e){const a=AS(s);if(!a||!cryLive(a,S))continue;const old=S.prices[s];let np=roundP(a,old*(1+e[s]/100));if(MKT[s]||a.k==='cry'){S.adj=S.adj||{};S.adj[s]=(S.adj[s]||1)*(1+e[s]/100)}S.prices[s]=np;S.hist[s].push(np);if(S.hist[s].length>20)S.hist[s].shift();ch.push({s,a,old,np,pct:e[s]})}syncDiv();return ch}
 async function mnewsCard(p,c){
+  if(PAR()){await parQueueNews(p,'m',c);return}
   const ch=shockPrices(c.e),[ico,cn]=MNCAT[c.cat];
   const rows=S.players.map(q=>{let dv=0;for(const x of ch){const h=q.stocks[x.s];if(h&&h.q)dv+=h.q*(x.np-x.old)}return {q,dv:Math.round(dv)}});
   if(c.cash)for(const q of S.players){if(c.cash>0)q.cash+=c.cash;else pay(q,-c.cash)}
@@ -2180,8 +2200,15 @@ async function tradeUI(){
   const botOk=other===buyer?(price<=fair*1.1&&buyer.cash-price>=fin(buyer).expenses*.5):(price>=fair*1.3);
   const v=await choose({actor:other,title:'ข้อเสนอซื้อขาย',handoff:other.name,body:`<p><b>${esc(p.name)}</b> ${other===buyer?'เสนอขาย':'ขอซื้อ'} <b>${esc(it.n)}</b> (รายได้ +${B(it.cf)}/เดือน) ราคา <b class="num">${B(price)}</b></p><p class="muted">${esc(other.name)} มีเงินสด ${B(other.cash)}</p>`,opts:[{v:'y',l:'ตกลง',c:'pri'},{v:'n',l:'ปฏิเสธ'}],bot:botOk?'y':'n'});
   if(v!=='y'){log(`${esc(other.name)} ปฏิเสธข้อเสนอเรื่อง ${esc(it.n)}`);toast(`${other.name} ปฏิเสธ`);return}
+  if(PARH()&&other.uid!==ON.user.uid){/* ออนไลน์เล่นพร้อมกัน: ฝั่งเราทำทันที ฝั่งอีกคนส่งไปให้เครื่องเขาบวกเอง */
+    const d=it.k==='d'?seller.deals.find(x=>x.id===it.id):null;
+    if(other===buyer){p.cash+=price;if(d)p.deals=p.deals.filter(x=>x!==d);parLed(buyer.id,{cash:-price,add:d||null,note:`🤝 ซื้อ ${it.n} จาก ${p.name} ${B(price)}`})}
+    else{pay(p,price);if(d)p.deals.push(d);parLed(seller.id,{cash:price,rem:d?d.id:null,note:`🤝 ขาย ${it.n} ให้ ${p.name} ${B(price)}`})}
+    if(it.k==='p'){S.props[it.i].o=buyer.id;ON.be.set(`rooms/${ON.code}/pr/${it.i}`,S.props[it.i]);ON.prSent=ON.prSent||{};ON.prSent[it.i]=JSON.stringify(S.props[it.i])}
+  }else{
   buyer.cash-=price;seller.cash+=price;
   if(it.k==='p')S.props[it.i].o=buyer.id;else{const d=seller.deals.find(x=>x.id===it.id);seller.deals=seller.deals.filter(x=>x!==d);buyer.deals.push(d)}
+  }
   log(`🤝 ${esc(seller.name)} ขาย ${esc(it.n)} ให้ ${esc(buyer.name)} ${B(price)}`);render();save();checkWin();
 }
 
@@ -2268,6 +2295,8 @@ function render(){
     <div class="trow">${!p.bot&&S.winner==null?`<div class="tline"><div class="timer num" id="timer"></div>${(S.phase==='card'||S.phase==='free')?`<button class="sm endbtn mini" ${act?'':'disabled'} onclick="canAct()&&confirmEndTurn()">✅ จบเทิร์น</button>`:''}</div>`:''}
     <div class="dice">${S.dice.map(v=>`<div class="die">${pips(v)}</div>`).join('')}</div></div>${p.charity>0?`<div class="prompt">💝 สิทธิ์ทอย 2 ลูกเหลือ ${p.charity} เทิร์น</div>`:''}`;
   if(S.winner!=null)ctr+=`<div class="prompt">🏁 จบเกม · อันดับ 1 ${esc(standings()[0][0].name)} ${badges(standings()[0][0])}</div><button class="sm" onclick="endGame()">ดูสรุปผล</button><button class="pri" onclick="showSetup()">เกมใหม่</button>`;
+  else if(PARH()&&p.done)ctr+=parWaitHtml();
+  else if(PAR()&&S.rp==='b'&&p.bot)ctr+=parBotHtml(p);
   else if(p.bot)ctr+=`<div class="prompt">บอทกำลังเล่น…</div>`;
   else if(!onMine())ctr+=`<div class="prompt">⏳ ตาของ ${esc(p.name)} กำลังเล่น…${ON.pres[p.uid]?'':' (หลุดการเชื่อมต่อ)'}</div>`;
   else if(S.phase==='roll')ctr+=`<div class="prompt">ตาของ ${esc(p.name)} จัดการเงินก่อนทอยได้</div>${p.charity>0?`<div class="btnrow"><button ${act?'':'disabled'} onclick="canAct()&&rollTurn(1)">ทอย 1 ลูก</button><button class="pri rollbtn" ${act?'':'disabled'} onclick="canAct()&&rollTurn(2)">ทอย 2 ลูก</button></div>`:`<button class="pri rollbtn" ${act?'':'disabled'} onclick="canAct()&&rollTurn(1)">🎲 ทอยลูกเต๋า</button>`}<div class="btnrow subact">${skillPanelBtn(p,act)}</div>`;
@@ -2286,6 +2315,8 @@ function render(){
     let sum;if(q.t==='prop')sum=pr?`เจ้าของ ${esc(P(pr.o).name)} · ค่าผ่านทาง ${B(propFee(k))}`:`ดาวน์ ${B(q.down)} · ค่าเช่า +${B(q.cf)} · ว่าง`;else if(q.t==='pay'){sum=`คงเหลือต่อเดือน ${B(fin(p).flow)}`}else sum=SQ_SUB[q.t]||'';
     let act2;
     if(S.winner!=null)act2=`<button class="sm pri" onclick="showSetup()">เกมใหม่</button>`;
+    else if(PARH()&&p.done)act2=`<span class="muted">⏳ รอผู้เล่นอื่น</span>`;
+    else if(PAR()&&S.rp==='b'&&p.bot)act2=`<span class="muted">🤖 รอ Bot</span>`;
     else if(p.bot)act2=`<span class="muted">บอทกำลังเล่น…</span>`;
     else if(!onMine())act2=`<span class="muted">⏳ ตาของ ${esc(p.name)}</span>`;
     else if(S.phase==='roll')act2=p.charity>0?`<button class="sm" ${act?'':'disabled'} onclick="canAct()&&rollTurn(1)">ทอย 1 ลูก</button><button class="sm pri" ${act?'':'disabled'} onclick="canAct()&&rollTurn(2)">ทอย 2 ลูก</button>`:`<button class="sm pri" ${act?'':'disabled'} onclick="canAct()&&rollTurn(1)">ทอยลูกเต๋า</button>`;
@@ -2838,7 +2869,8 @@ async function onRoom(r){
   if(me<0){toast('คุณไม่ได้อยู่ในห้องนี้แล้ว');await ON.be.remove('users/'+ON.user.uid+'/room');onHome();return}
   if(r.status==='lobby'){ON.play=false;onLobby(r);return}
   ON.play=true;if(S&&!$('#gameView').hidden&&ON.lastDrv==null)ON.lastDrv=iDrive();
-  if(!ON.subbed){ON.subbed=1;ON.unsub.push(ON.be.on(`rooms/${ON.code}/st`,onState));ON.unsub.push(ON.be.on(`rooms/${ON.code}/q`,onQ))}
+  if(!ON.subbed){ON.subbed=1;const c=ON.code;ON.unsub.push(ON.be.on(`rooms/${c}/st`,onState));ON.unsub.push(ON.be.on(`rooms/${c}/q`,onQ));
+    ON.unsub.push(ON.be.on(`rooms/${c}/p`,m=>{ON.pQ=(ON.pQ||Promise.resolve()).then(()=>parOnP(m))}),ON.be.on(`rooms/${c}/pr`,parOnPr),ON.be.on(`rooms/${c}/lg`,parOnLg),ON.be.on(`rooms/${c}/led`,m=>{ON.lQ=(ON.lQ||Promise.resolve()).then(()=>parOnLed(m))}),ON.be.on(`rooms/${c}/afk`,parOnAfk))}
   onDrive()}
 function onLobby(r){
   const v=$('#setupView');$('#gameView').hidden=true;v.hidden=false;const host=r.host===ON.user.uid,n=r.n||4;
@@ -2872,7 +2904,7 @@ async function onLeave(){const r=ON.room,uid=ON.user.uid,code=ON.code;if(!r)retu
   await ON.be.remove('users/'+uid+'/room');onHome()}
 async function onStart(){const r=ON.room;if(!r||r.host!==ON.user.uid)return;const n=r.n||4;
   seats=[...Array(n).keys()].map(i=>{const s=(r.seats||{})[i]||{t:'h'};return s.uid?{n:s.name||('ผู้เล่น '+(i+1)),bot:false,uid:s.uid}:{n:'บอท '+(i+1),bot:true}});
-  ON.play=true;ON.ver=0;newGame(900);await onPush(true);
+  ON.play=true;ON.ver=0;newGame(900);S.par=1;await onPush(true);
   await ON.be.update('rooms/'+ON.code,{status:'play',started:ON.be.now()})}
 
 /* ---------- ซิงก์เกม ---------- */
@@ -2881,9 +2913,11 @@ function onMine(){return !ON.play||!S||(cp()&&cp().uid===ON.user.uid)}
 function onLive(u){return !!u&&(!!ON.pres[u]||u===ON.user.uid||(ON.gone&&ON.gone[u]&&Date.now()-ON.gone[u]<25000))}
 function onDriverUid(){const r=ON.room;if(!r||!S)return null;const c=cp();if(c&&!c.bot&&c.uid&&onLive(c.uid))return c.uid;
   if(onLive(r.host))return r.host;const h=S.players.find(q=>!q.bot&&q.uid&&onLive(q.uid));return h?h.uid:null}
-function iDrive(){return !ON.play||onDriverUid()===ON.user.uid}
+function iDrive(){if(!ON.play)return true;if(PAR())return S.rp==='h'?!!(cp()&&cp().uid===ON.user.uid):parMaster();return onDriverUid()===ON.user.uid}
 /* ส่งขึ้นเมื่อเราถือตาอยู่ · หรือเป็นครั้งสุดท้ายตอนส่งตาต่อให้คนอื่น */
-function onSave(){if(!ON.play||!ON.code)return;const d=iDrive();if(!d&&!ON.lastDrv)return;ON.lastDrv=d;clearTimeout(ON.pushT);ON.pushT=setTimeout(onPush,d?250:0)}
+function onSave(){if(!ON.play||!ON.code)return;
+  if(PAR()){if(S.rp==='h')parPushMe();else if(parMaster()){clearTimeout(ON.pushT);ON.pushT=setTimeout(onPush,250)}return}
+ const d=iDrive();if(!d&&!ON.lastDrv)return;ON.lastDrv=d;clearTimeout(ON.pushT);ON.pushT=setTimeout(onPush,d?250:0)}
 async function onPush(now){clearTimeout(ON.pushT);if(!S||!ON.code)return;
   const o={...S};delete o.view;delete o.viewPick;o.log=(S.log||[]).slice(0,40);
   const z=await zEnc(JSON.stringify(o));ON.ver++;
@@ -2893,23 +2927,36 @@ async function onPush(now){clearTimeout(ON.pushT);if(!S||!ON.code)return;
 async function onState(st){
   if(!st||!st.z)return;
   const fresh=!S||$('#gameView').hidden;if(!fresh&&st.by===ON.user.uid)return;
-  if(!fresh&&iDrive()&&(MODAL||S.phase==='busy'))return;
+  const parNew=S&&o0par(st);
+  if(!fresh&&!parNew&&iDrive()&&(MODAL||S.phase==='busy'))return;
   /* ตาของเราเอง: เราเป็นคนคุม ไม่รับสถานะเก่าที่ยังเป็นตาเดิมจากเครื่องอื่น */
-  if(!fresh&&cp()&&cp().uid===ON.user.uid&&S.winner==null){const hd=st.h;if(hd&&hd.r===S.round&&hd.c===S.cur)return}
+  if(!fresh&&!parNew&&!(S&&S.par)&&cp()&&cp().uid===ON.user.uid&&S.winner==null){const hd=st.h;if(hd&&hd.r===S.round&&hd.c===S.cur)return}
   let o;try{o=JSON.parse(await zDec(st.z))}catch(e){return}
   const first=!S||$('#gameView').hidden,prevCur=S&&S.cur,view=S&&!first?S.view:null,pick=S&&S.viewPick;
   const lg=o.log||[];o.log=first?lg:lg.concat((S.log||[]).filter(x=>!lg.includes(x))).slice(0,200);
+  const oldRound=S&&S.round;if(parNew&&MODAL&&typeof MODAL_CANCEL==='function')try{MODAL_CANCEL()}catch(x){}
   S=o;ON.ver=Math.max(ON.ver,st.v||0);ON.lastDrv=iDrive();
+  if(S.par&&S.rp==='h'){ON.ownRound=null;ON.pz={};parLocalTurn();if(fresh||oldRound!==S.round)setTimeout(parBanner,300);
+    const c=ON.code;ON.be.get(`rooms/${c}/p`).then(m=>{ON.pQ=(ON.pQ||Promise.resolve()).then(()=>parOnP(m))});ON.be.get(`rooms/${c}/pr`).then(parOnPr);ON.be.get(`rooms/${c}/afk`).then(parOnAfk)}
   const mi=S.players.findIndex(q=>q.uid===ON.user.uid);
   if(view!=null&&S.players[view]){S.view=view;S.viewPick=pick}else S.view=mi>=0?mi:0;
   viewFollowOnline();
   if(first&&S.phase==='busy'&&onMine())S.phase='card';
   if(first){startView();$('#setupView').hidden=true}else render();
-  if(prevCur!==S.cur&&onMine()&&S.winner==null)fxBanner(cp());
-  onDrive()}
-function viewFollowOnline(){const c=cp();if(c&&c.uid===ON.user.uid){S.view=S.cur;S.viewPick=0}}
+  if(!S.par&&prevCur!==S.cur&&onMine()&&S.winner==null)fxBanner(cp());
+  onDrive();parOverlay()}
+function o0par(st){return !!(st&&st.h&&S&&S.par&&st.h.r!==S.round)}
+function viewFollowOnline(){if(PAR())return;const c=cp();if(c&&c.uid===ON.user.uid){S.view=S.cur;S.viewPick=0}}
 /* เครื่องที่ถือตา: รันบอท / ผู้เล่นที่หลุด / ผู้เล่นที่ออกจากเกม */
-function onDrive(){if(!ON.play||!S||S.winner!=null||$('#gameView').hidden||!iDrive())return;
+function onDrive(){if(!ON.play||!S||S.winner!=null||$('#gameView').hidden)return;
+  if(PAR()){parOverlay();if(!parMaster())return;
+    const left=(ON.room&&ON.room.left)||{};for(const q of S.players)if(!q.bot&&q.uid&&left[q.uid]&&!q._afkb){q.bot=true;q.done=true;q.name+=' 🤖';log(`🚪 ${esc(q.name)} ออกจากเกม บอทเล่นแทน`)}
+    if(!S.rp){if(!MODAL)parStartRound();return}
+    if(S.rp==='h'){parCheck();return}
+    const p=cp(),key=S.round+':'+S.cur;if(p&&p.bot&&ON.turnKey!==key&&!MODAL){ON.turnKey=key;if(S.phase==='busy')S.phase='card';
+      if(S.phase==='roll')botTurn();else if(S.phase==='card')sleep(S.speed).then(()=>pickPile(botPile(p)));else if(S.phase==='free')sleep(S.speed).then(()=>endTurn(true))}
+    return}
+  if(!iDrive())return;
   const left=(ON.room&&ON.room.left)||{};let ch=false;
   for(const q of S.players)if(!q.bot&&q.uid&&left[q.uid]){q.bot=true;q.name+=' 🤖';log(`🚪 ${esc(q.name)} ออกจากเกม บอทเล่นแทน`);ch=true}
   if(ch){render();save()}
@@ -2930,7 +2977,134 @@ async function onRemoteChoose(o){
 function onQ(qs){if(!qs)return;for(const id in qs){const q=qs[id];if(q.to!==ON.user.uid||ON.qSeen[id])continue;ON.qSeen[id]=1;
   (async()=>{const v=(await ask({actor:S&&S.players[q.actor]||null,kind:q.kind,title:q.title,body:q.body,opts:q.opts,pose:q.pose||undefined})).v;await ON.be.set(`rooms/${ON.code}/a/${id}`,v)})()}}
 
+
+/* ===================== ออนไลน์: เล่นพร้อมกัน (simultaneous turns) =====================
+   รอบหนึ่ง = ผู้เล่นคนทุกคนเล่นพร้อมกัน (คนละ 3 นาที) → บอท + ผู้เล่นสถานะ Bot เล่นทีละตัว (เครื่องหัวห้องรัน) → จบรอบ
+   ข้อมูลระหว่างรอบ: p/{idx} ตัวละครของแต่ละคน (เจ้าของเครื่องเขียน) · pr/{ช่อง} ที่ดินที่ซื้อ/อัปเกรดรอบนี้ (จองด้วย transaction ใครยืนยันก่อนได้)
+   led/{id} เงิน/ทรัพย์สินที่โอนให้คนอื่น (ผู้รับเป็นคนนำไปบวก) · nq/{id} การ์ดข่าวที่รอมีผลตอนจบรอบ · lg/{id} บันทึกเกม · afk/{uid} สถานะ Bot
+   st = สถานะทั้งเกมจากเครื่องหัวห้อง (ตอนเริ่มรอบและระหว่างบอทเล่น) */
+const PAR=()=>!!(ON.play&&S&&S.par);
+const PARH=()=>PAR()&&S.rp==='h';
+function parMe(){return S&&S.players.find(q=>q.uid&&q.uid===ON.user.uid)}
+function parMasterUid(){const r=ON.room;if(!r||!S)return null;if(onLive(r.host))return r.host;const h=S.players.find(q=>!q.bot&&q.uid&&onLive(q.uid));return h?h.uid:null}
+function parMaster(){return parMasterUid()===ON.user.uid}
+const PAR_HAND={life:4,learn:6,opp:4,netc:4,news:2};
+function parDeck(k){const DEF={life:LIFE,learn:LEARN,opp:OPP,news:NEWS,netc:NETDB}[k];if(!S.decks[k]||S.decks[k].some(i=>i>=DEF.length))S.decks[k]=[];if(!S.decks[k].length)S.decks[k]=shuffle(DEF.map((_,i)=>i));return S.decks[k]}
+function parDeal(hum){
+  for(const k in PAR_HAND){const DEF={life:LIFE,learn:LEARN,opp:OPP,news:NEWS,netc:NETDB}[k],n=Math.max(1,Math.min(PAR_HAND[k],Math.floor(DEF.length/Math.max(1,hum.length))));
+    for(const q of hum){q.hand=q.hand||{};q.hand[k]=[];for(let i=0;i<n;i++)q.hand[k].push(parDeck(k).pop())}}}
+function parUndeal(){for(const q of S.players){if(!q.hand)continue;for(const k in q.hand){const d=parDeck(k);(q.hand[k]||[]).forEach(i=>d.unshift(i))}delete q.hand}}
+/* ตั้งค่าตัวแปรประจำเทิร์นในเครื่องนี้ให้เป็นตาของเราเอง */
+function parLocalTurn(){const me=parMe();if(!me)return;S.cur=me.id;S.picks=me.pk||0;S.bonusPicks=0;S.freeComm=!!me.fc;S.autoPilot=false;S.forceRoll=0;S.turnEnd=me.tEnd||Date.now()+TURN_MS;
+  S.phase=me.done||me.afk?'wait':me.ph==='busy'?'card':(['roll','card','free'].includes(me.ph)?me.ph:'roll');S.view=me.id;S.viewPick=0}
+/* ---------- หัวห้อง: เริ่มรอบ ---------- */
+function parStartRound(){
+  const now=Date.now();S.rp='h';S.rt0=now;S.nq=[];delete S.bq;
+  const hum=S.players.filter(q=>!q.bot);
+  for(const q of hum){q.done=!!q.afk||!onLive(q.uid);q.acted=false;q.tEnd=now+TURN_MS;delete q.ph;delete q.pk;delete q.fc;q.hired=false}
+  parDeal(hum.filter(q=>!q.done));
+  log(`🔔 <b>เริ่มรอบที่ ${S.round}</b> · ผู้เล่นทุกคนเล่นพร้อมกัน คนละ 3 นาที`);
+  const c=ON.code;['p','pr','lg','led','nq'].forEach(k=>ON.be.remove(`rooms/${c}/${k}`));
+  ON.lgSeen={};ON.pz={};ON.prSent={};ON.ownRound=S.round;
+  parLocalTurn();render();onPush();parBanner();
+}
+function parBanner(){let el=$('#rbanner');if(!el){el=document.createElement('div');el.id='rbanner';el.className='rbanner';el.onclick=()=>el.classList.remove('on');document.body.appendChild(el)}
+  const me=parMe();el.innerHTML=`<b>🔔 เริ่มรอบที่ ${S.round}</b><span>${me&&me.afk?'คุณติดสถานะ Bot · กดปลดเพื่อกลับมาเล่น':'ทุกคนเล่นพร้อมกัน · คนละ 3 นาที'}</span>`;el.classList.add('on');clearTimeout(parBanner.t);parBanner.t=setTimeout(()=>el.classList.remove('on'),2800)}
+/* ---------- จบเทิร์นของตัวเอง ---------- */
+function parEndTurn(early){
+  const p=cp();S.bonusPicks=0;S.freeComm=false;S.picks=0;p.hired=false;S.timeoutNote=null;
+  if(S.rp==='h'){
+    if(p.uid!==ON.user.uid||p.done)return;
+    if(early&&!S.autoPilot&&Date.now()<S.turnEnd){const sx=adj(p,{t:1},true);if(sx){log(`⏱ ${esc(p.name)} จบเทิร์นก่อนเวลา${sx}`);toast('⏱ จบไว ได้เวลา +1')}}
+    if(S.autoPilot&&!p.acted){p.afk=true;ON.be.set(`rooms/${ON.code}/afk/${ON.user.uid}`,true);log(`💤 ${esc(p.name)} ไม่ได้เล่นภายใน 3 นาที ติดสถานะ Bot`)}
+    else if(S.autoPilot)log(`⏰ ${esc(p.name)} หมดเวลา ระบบจบเทิร์นให้`);
+    S.autoPilot=false;p.done=true;S.phase='wait';render();parPushMe(true);if(parMaster())parCheck();return}
+  /* ช่วงบอท (หัวห้อง) */
+  S.autoPilot=false;
+  if(S.bq&&S.bq.length){S.cur=S.bq.shift();S.phase='roll';S.turnEnd=Date.now()+TURN_MS;ON.turnKey=S.round+':'+S.cur;render();save();botTurn()}
+  else parRoundEnd();
+}
+/* ---------- ส่งตัวละครของเราขึ้นไป ---------- */
+function parPushMe(now){clearTimeout(ON.pmT);ON.pmT=setTimeout(async()=>{const me=parMe();if(!me||!PARH())return;
+  me.ph=S.phase;me.pk=S.picks||0;me.fc=S.freeComm?1:0;const z=await zEnc(JSON.stringify(me));ON.ownRound=S.round;
+  await ON.be.set(`rooms/${ON.code}/p/${me.id}`,{z,r:S.round,by:ON.user.uid});
+  ON.prSent=ON.prSent||{};for(const k in S.props){const pr=S.props[k];if(pr.o!==me.id)continue;const j=JSON.stringify(pr);if(ON.prSent[k]!==j){ON.prSent[k]=j;ON.be.set(`rooms/${ON.code}/pr/${k}`,pr)}}},now?0:300)}
+/* ---------- รับข้อมูลระหว่างรอบ ---------- */
+async function parOnP(map){if(!map||!PARH())return;ON.pz=ON.pz||{};let ch=false;
+  for(const i in map){const e=map[i];if(!e||e.r!==S.round||ON.pz[i]===e.z)continue;
+    const mine=e.by===ON.user.uid;if(mine&&ON.ownRound===S.round){ON.pz[i]=e.z;continue}
+    let o;try{o=JSON.parse(await zDec(e.z))}catch(x){continue}
+    if(!PARH()||e.r!==S.round)return;ON.pz[i]=e.z;S.players[+i]=o;ch=true;
+    if(mine){ON.ownRound=S.round;parLocalTurn()}}
+  if(ch){render();if(parMaster())parCheck()}}
+function parOnPr(map){if(!map||!PARH())return;let ch=false;for(const k in map){const v=map[k];if(v&&JSON.stringify(S.props[k])!==JSON.stringify(v)){S.props[k]=v;ch=true}}if(ch)render()}
+function parOnLg(map){if(!map||!PAR())return;ON.lgSeen=ON.lgSeen||{};let ch=false;
+  for(const id of Object.keys(map).sort()){if(ON.lgSeen[id])continue;ON.lgSeen[id]=1;const e=map[id];if(!e||e.by===ON.user.uid||S.log.includes(e.t))continue;S.log.unshift(e.t);ch=true}
+  if(ch){if(S.log.length>200)S.log.length=200;render()}}
+function parLog(entry){if(!PARH()||!ON.code)return;const id=Date.now().toString(36)+Math.random().toString(36).slice(2,5);ON.lgSeen=ON.lgSeen||{};ON.lgSeen[id]=1;ON.be.set(`rooms/${ON.code}/lg/${id}`,{t:entry,by:ON.user.uid})}
+/* ---------- โอนเงิน/ทรัพย์สินให้ผู้เล่นอื่น ---------- */
+function parOwner(idx){const q=S.players[idx];if(!q)return null;if(PARH()&&!q.bot&&!q.afk&&q.uid&&onLive(q.uid)&&!q._afkb)return q.uid;return parMasterUid()}
+function parLed(to,e){e=JSON.parse(JSON.stringify(e));const id=Date.now().toString(36)+Math.random().toString(36).slice(2,6);ON.be.set(`rooms/${ON.code}/led/${id}`,{...e,to,from:cp()?cp().id:null,at:Date.now()})}
+async function parOnLed(map){if(!map||!PAR())return;for(const id in map)await parApplyLed(id,map[id])}
+async function parApplyLed(id,e){if(!e||e.c||parOwner(e.to)!==ON.user.uid)return false;ON.ledBusy=ON.ledBusy||{};if(ON.ledBusy[id])return false;ON.ledBusy[id]=1;
+  const x=await ON.be.tx(`rooms/${ON.code}/led/${id}`,cur=>cur==null?null:cur.c?undefined:{...cur,c:ON.user.uid});
+  if(!(x.ok&&x.val&&x.val.c===ON.user.uid))return false;
+  const q=S.players[e.to];if(q){if(e.cash){if(e.cash>0)q.cash+=e.cash;else pay(q,-e.cash)}if(e.add)q.deals.push(e.add);if(e.rem)q.deals=q.deals.filter(d=>d.id!==e.rem);
+    if(e.note&&!q.bot&&q.uid===ON.user.uid)toast(e.note)}
+  await ON.be.remove(`rooms/${ON.code}/led/${id}`);render();save();return true}
+/* ---------- การ์ดข่าว: เก็บไว้มีผลตอนจบรอบ ---------- */
+async function parQueueNews(p,kind,c){
+  const e={k:kind,c,by:p.name};
+  if(PARH()){const id=Date.now().toString(36)+Math.random().toString(36).slice(2,5);ON.be.set(`rooms/${ON.code}/nq/${id}`,e)}else{S.nq=S.nq||[];S.nq.push(e)}
+  log(`📰 ${esc(p.name)} เปิดข่าว: ${esc(c.t)} · มีผลตอนจบรอบ`);render();
+  await choose({actor:p,kind:'news',title:c.t,body:`<p>ข่าวนี้จะมีผลกับราคาตลาด${c.cash?' และเงินของผู้เล่นทุกคน':''} <b>ตอนจบรอบ</b> (ระหว่างรอบราคาคงที่ ทุกคนซื้อขายราคาเดียวกัน)</p>`,opts:[{v:'ok',l:'รับทราบ',c:'pri'}],bot:'ok'})}
+function parApplyNews(list){const lines=[];
+  for(const e of list){const c=e.c;if(!c||!c.e)continue;const ch=shockPrices(c.e);
+    if(c.cash)for(const q of S.players){if(c.cash>0)q.cash+=c.cash;else pay(q,-c.cash)}
+    const t=`${esc(c.t)} · ${ch.map(x=>`${x.a.s} ${x.pct>0?'+':''}${x.pct}%`).join(' ')}${c.cash?` · ทุกคน${c.cash>0?'ได้':'จ่าย'} ${B(Math.abs(c.cash))}`:''}`;log(`📰 ข่าวมีผลแล้ว (${esc(e.by)}): ${t}`);lines.push(`<li>${t}</li>`)}
+  if(lines.length){S.ann=S.ann||[];S.ann.push({k:'news',t:'📰 ข่าวที่มีผลตอนจบรอบ',b:`<ul>${lines.join('')}</ul>`})}}
+/* ---------- หัวห้อง: ทุกคนจบแล้ว → บอท ---------- */
+function parCheck(){if(!PARH()||!parMaster()||ON.parBusy)return;const now=Date.now();
+  const hum=S.players.filter(q=>!q.bot);
+  const ok=hum.every(q=>q.done||(!onLive(q.uid)&&q.uid!==ON.user.uid)||now>(q.tEnd||0)+15000);
+  if(ok)parBots()}
+async function parBots(){ON.parBusy=1;try{
+  const c=ON.code;S.rp='b';
+  const led=await ON.be.get(`rooms/${c}/led`)||{};for(const id in led){const e=led[id];if(e&&!e.c){const q=S.players[e.to];if(q){if(e.cash){if(e.cash>0)q.cash+=e.cash;else pay(q,-e.cash)}if(e.add)q.deals.push(e.add);if(e.rem)q.deals=q.deals.filter(d=>d.id!==e.rem)}}}
+  await ON.be.remove(`rooms/${c}/led`);
+  const pr=await ON.be.get(`rooms/${c}/pr`)||{};for(const k in pr)if(pr[k])S.props[k]=pr[k];
+  const nq=await ON.be.get(`rooms/${c}/nq`)||{};S.nq=(S.nq||[]).concat(Object.keys(nq).sort().map(k=>nq[k]));await ON.be.remove(`rooms/${c}/nq`);
+  for(const q of S.players)if(!q.bot&&!q.done){q.done=true;if(!q.acted){q.afk=true;ON.be.set(`rooms/${c}/afk/${q.uid}`,true);log(`💤 ${esc(q.name)} ไม่ได้เล่นในรอบนี้ ติดสถานะ Bot`)}}
+  const afk=S.players.filter(q=>!q.bot&&q.afk);afk.forEach(q=>{q.bot=true;q._afkb=1});
+  S.bq=[...afk,...S.players.filter(q=>q.bot&&!q._afkb)].map(q=>q.id);
+  if(checkWin())return;
+  if(!S.bq.length){parRoundEnd();return}
+  log(`🤖 ผู้เล่นทุกคนจบเทิร์นแล้ว · บอทเล่นต่อ`);
+  S.cur=S.bq.shift();S.phase='roll';S.turnEnd=Date.now()+TURN_MS;ON.turnKey=S.round+':'+S.cur;render();await onPush();botTurn();
+}finally{ON.parBusy=0}}
+function parRoundEnd(){
+  for(const q of S.players)if(q._afkb){q.bot=false;delete q._afkb}
+  parApplyNews(S.nq||[]);S.nq=[];parUndeal();
+  endRound();if(checkWin())return;parStartRound()}
+/* ---------- สถานะ Bot (ไม่ได้เล่น) ---------- */
+function parOnAfk(map){if(!PAR())return;map=map||{};let ch=false;
+  for(const q of S.players)if(q.uid&&map[q.uid]===false&&q.afk){q.afk=false;ch=true}
+  if(ch){render();if(parMaster()&&S.rp==='b')save()}parOverlay()}
+async function parUnafk(){const me=parMe();if(!me)return;me.afk=false;await ON.be.set(`rooms/${ON.code}/afk/${ON.user.uid}`,false);
+  if(PARH()&&me.done&&Date.now()<S.rt0+TURN_MS-15000){me.done=false;me.acted=false;me.tEnd=S.rt0+TURN_MS;parLocalTurn();toast('กลับมาเล่นแล้ว · ทันรอบนี้')}
+  else toast('ปลดสถานะ Bot แล้ว · กลับมาเล่นได้ตั้งแต่รอบถัดไป');
+  render();if(PARH())parPushMe(true);parOverlay()}
+function parOverlay(){let el=$('#afkov');const me=PAR()&&parMe(),on=!!(me&&me.afk&&S.winner==null&&!$('#gameView').hidden);
+  if(!el){if(!on)return;el=document.createElement('div');el.id='afkov';el.className='afkov';document.body.appendChild(el)}
+  el.hidden=!on;if(on)el.innerHTML=`<div class="afk-box"><div class="afk-ic">💤</div><h2>คุณติดสถานะ Bot</h2><p>ไม่ได้เล่นภายใน 3 นาที ระบบจะทอยลูกเต๋าให้และทำเฉพาะสิ่งที่กติกาบังคับ (เช่น ตกช่องตกงาน) ไม่ซื้อ ไม่จั่วการ์ดให้</p><button class="pri" onclick="parUnafk()">ปลดสถานะ Bot</button></div>`}
+function parWaitHtml(){const me=parMe(),now=Date.now();const rest=S.players.filter(q=>!q.bot&&!q.done&&q!==me);
+  return `<div class="prompt pwait">⏳ <b>รอผู้เล่นอื่น</b>${rest.length?` · ${rest.map(q=>`${esc(q.name)} ${Math.max(0,Math.ceil(((q.tEnd||now)-now)/1000))} วิ`).join(' · ')}`:''}</div>`}
+function parBotHtml(p){const n=(S.bq||[]).length;return `<div class="prompt">🤖 <b>รอ Bot</b> · ${esc(p.name)} กำลังเล่น${n?` (เหลืออีก ${n})`:''}</div>`}
+async function parClaim(k,rec){const x=await ON.be.tx(`rooms/${ON.code}/pr/${k}`,cur=>cur==null?rec:undefined);const ok=!!(x.ok&&x.val&&x.val.o===rec.o);
+  if(!ok&&x.val){S.props[k]=x.val;render()}if(ok){ON.prSent=ON.prSent||{};ON.prSent[k]=JSON.stringify(rec)}return ok}
+
 setInterval(()=>{if(ON.play&&S)onDrive()},4000);
+setInterval(()=>{const w=document.querySelector('.pwait');if(w&&PARH())w.outerHTML=parWaitHtml()},1000);
 if(onWanted())onBoot();else showSetup();
 
 /* ===== เต็มจอ ===== */
