@@ -2708,6 +2708,7 @@ async function beFirebase(){
     on:(p,cb)=>D.onValue(r(p),s=>cb(s.val())),
     tx:async(p,f)=>{try{const x=await D.runTransaction(r(p),f);return {ok:x.committed,val:x.snapshot.val()}}catch(e){return {ok:false,err:e}}},
     onDisc:(p,v)=>v==null?D.onDisconnect(r(p)).remove():D.onDisconnect(r(p)).set(v),
+    conn:cb=>D.onValue(r('.info/connected'),x=>cb(!!x.val())),
     now:()=>D.serverTimestamp()
   }}
 /* ---------- backend จำลอง (?mock=1) ใช้ทดสอบหลายแท็บในเครื่องเดียว ---------- */
@@ -2730,7 +2731,7 @@ function beMock(){
     update:async(p,v)=>W(d=>{for(const k in v)setP(d,p+'/'+k,v[k])}),
     on:(p,cb)=>{const s={p,cb,last:undefined};subs.add(s);setTimeout(fire);return ()=>subs.delete(s)},
     tx:async(p,f)=>{let ok=false,val;W(d=>{const cur=getP(d,p);let nv=f(null);if(nv===undefined&&cur==null)return;if(cur!=null)nv=f(JSON.parse(JSON.stringify(cur)));if(nv!==undefined){setP(d,p,nv);ok=true}val=getP(d,p)});return {ok,val}},
-    onDisc:(p,v)=>disc.push([p,v]),now:()=>Date.now()
+    onDisc:(p,v)=>disc.push([p,v]),now:()=>Date.now(),conn:cb=>{setTimeout(()=>cb(true));return ()=>{}}
   }}
 
 /* ---------- บีบอัดสถานะเกม ---------- */
@@ -2823,14 +2824,17 @@ async function onJoin(code){
   await ON.be.set(`rooms/${code}/mem/${uid}`,got);await ON.be.update('users/'+uid,{room:code});onEnter(code)}
 function onEnter(code){
   onStop();ON.code=code;const uid=ON.user.uid;
-  ON.be.set(`rooms/${code}/on/${uid}`,true);ON.be.onDisc(`rooms/${code}/on/${uid}`,null);
+  /* สถานะออนไลน์: ตั้งใหม่ทุกครั้งที่เชื่อมต่อกลับ (มือถือสลับแอป/เน็ตกระตุก Firebase จะลบให้ตอนหลุด) */
+  ON.unsub.push(ON.be.conn(c=>{if(!c||ON.code!==code)return;Promise.resolve(ON.be.onDisc(`rooms/${code}/on/${uid}`,null)).then(()=>ON.be.set(`rooms/${code}/on/${uid}`,true))}));
   ON.unsub.push(ON.be.on('rooms/'+code,r=>onRoom(r)));onTag()}
 function onTag(){let t=$('#roomTag');if(!ON.code){if(t)t.remove();return}
   if(!t){t=document.createElement('span');t.id='roomTag';t.className='roomtag';const h=document.querySelector('header .logo')?.parentElement||document.querySelector('header');h.appendChild(t)}
   t.textContent='ห้อง '+ON.code}
 async function onRoom(r){
   if(!r){toast('ห้องนี้ถูกลบแล้ว');await ON.be.remove('users/'+ON.user.uid+'/room');onHome();return}
-  ON.room=r;ON.pres=r.on||{};const me=onSeatOf(r,ON.user.uid);
+  const np=r.on||{},now=Date.now();ON.gone=ON.gone||{};
+  for(const u in ON.pres)if(!np[u]&&!ON.gone[u])ON.gone[u]=now;for(const u in np)delete ON.gone[u];
+  ON.room=r;ON.pres=np;const me=onSeatOf(r,ON.user.uid);
   if(me<0){toast('คุณไม่ได้อยู่ในห้องนี้แล้ว');await ON.be.remove('users/'+ON.user.uid+'/room');onHome();return}
   if(r.status==='lobby'){ON.play=false;onLobby(r);return}
   ON.play=true;if(S&&!$('#gameView').hidden&&ON.lastDrv==null)ON.lastDrv=iDrive();
@@ -2873,21 +2877,25 @@ async function onStart(){const r=ON.room;if(!r||r.host!==ON.user.uid)return;cons
 
 /* ---------- ซิงก์เกม ---------- */
 function onMine(){return !ON.play||!S||(cp()&&cp().uid===ON.user.uid)}
-function onDriverUid(){const r=ON.room;if(!r||!S)return null;const c=cp();if(c&&!c.bot&&c.uid&&ON.pres[c.uid])return c.uid;
-  if(ON.pres[r.host])return r.host;const h=S.players.find(q=>!q.bot&&q.uid&&ON.pres[q.uid]);return h?h.uid:null}
+/* ถือว่ายังออนไลน์ถ้าหลุดไม่เกิน 25 วิ (กันสลับแอปแป๊บเดียวแล้วโดนคนอื่นยึดตา) */
+function onLive(u){return !!u&&(!!ON.pres[u]||u===ON.user.uid||(ON.gone&&ON.gone[u]&&Date.now()-ON.gone[u]<25000))}
+function onDriverUid(){const r=ON.room;if(!r||!S)return null;const c=cp();if(c&&!c.bot&&c.uid&&onLive(c.uid))return c.uid;
+  if(onLive(r.host))return r.host;const h=S.players.find(q=>!q.bot&&q.uid&&onLive(q.uid));return h?h.uid:null}
 function iDrive(){return !ON.play||onDriverUid()===ON.user.uid}
 /* ส่งขึ้นเมื่อเราถือตาอยู่ · หรือเป็นครั้งสุดท้ายตอนส่งตาต่อให้คนอื่น */
 function onSave(){if(!ON.play||!ON.code)return;const d=iDrive();if(!d&&!ON.lastDrv)return;ON.lastDrv=d;clearTimeout(ON.pushT);ON.pushT=setTimeout(onPush,d?250:0)}
 async function onPush(now){clearTimeout(ON.pushT);if(!S||!ON.code)return;
   const o={...S};delete o.view;delete o.viewPick;o.log=(S.log||[]).slice(0,40);
   const z=await zEnc(JSON.stringify(o));ON.ver++;
-  await ON.be.set(`rooms/${ON.code}/st`,{z,v:ON.ver,by:ON.user.uid});
+  await ON.be.set(`rooms/${ON.code}/st`,{z,v:ON.ver,by:ON.user.uid,h:{r:S.round,c:S.cur}});
   if(S.winner!=null&&ON.room&&ON.room.status!=='end'){const st=standings();
     await ON.be.update('rooms/'+ON.code,{status:'end',win:{name:st[0][0].name,job:S.jobs[st[0][0].job].n,rank:st.map(x=>x[0].name)}})}}
 async function onState(st){
   if(!st||!st.z)return;
   const fresh=!S||$('#gameView').hidden;if(!fresh&&st.by===ON.user.uid)return;
   if(!fresh&&iDrive()&&(MODAL||S.phase==='busy'))return;
+  /* ตาของเราเอง: เราเป็นคนคุม ไม่รับสถานะเก่าที่ยังเป็นตาเดิมจากเครื่องอื่น */
+  if(!fresh&&cp()&&cp().uid===ON.user.uid&&S.winner==null){const hd=st.h;if(hd&&hd.r===S.round&&hd.c===S.cur)return}
   let o;try{o=JSON.parse(await zDec(st.z))}catch(e){return}
   const first=!S||$('#gameView').hidden,prevCur=S&&S.cur,view=S&&!first?S.view:null,pick=S&&S.viewPick;
   const lg=o.log||[];o.log=first?lg:lg.concat((S.log||[]).filter(x=>!lg.includes(x))).slice(0,200);
@@ -2922,6 +2930,7 @@ async function onRemoteChoose(o){
 function onQ(qs){if(!qs)return;for(const id in qs){const q=qs[id];if(q.to!==ON.user.uid||ON.qSeen[id])continue;ON.qSeen[id]=1;
   (async()=>{const v=(await ask({actor:S&&S.players[q.actor]||null,kind:q.kind,title:q.title,body:q.body,opts:q.opts,pose:q.pose||undefined})).v;await ON.be.set(`rooms/${ON.code}/a/${id}`,v)})()}}
 
+setInterval(()=>{if(ON.play&&S)onDrive()},4000);
 if(onWanted())onBoot();else showSetup();
 
 /* ===== เต็มจอ ===== */
