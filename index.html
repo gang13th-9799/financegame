@@ -992,6 +992,18 @@ body.fs #gameView:not(.mapmin){grid-template-columns:minmax(288px,1.2fr) minmax(
 .mnl{background:#fff;border:1px solid #efe5cf;border-radius:10px;padding:4px 10px}
 .jl.yw{background:#f2c230;color:#5a4300}
 .ycard{font-size:54px;text-align:center;line-height:1;margin:2px 0 6px;filter:drop-shadow(0 3px 2px rgba(0,0,0,.2))}
+
+/* ===== จอแนวตั้ง: ตัวละครไม่ล้นแผนที่ · การ์ดเห็นครบ ===== */
+.board.v3d .cell .tok.pic{width:calc(64cqmin * var(--fs,1))!important;height:calc(150cqmin * var(--fs,1))!important;margin-left:calc(-26cqmin * var(--fs,1))}
+.board.v3d .cell .tok.pic.cur{width:calc(92cqmin * var(--fs,1))!important;height:calc(215cqmin * var(--fs,1))!important}
+.board.v3d .cell .toks:has(.tok:nth-child(3)) .tok.pic:not(.cur){width:calc(54cqmin * var(--fs,1))!important;height:calc(126cqmin * var(--fs,1))!important;margin-left:calc(-26cqmin * var(--fs,1))}
+.board.v3d .cell .toks:has(.tok:nth-child(3)) .tok.pic.cur{width:calc(82cqmin * var(--fs,1))!important;height:calc(190cqmin * var(--fs,1))!important;margin-left:calc(-26cqmin * var(--fs,1))}
+.bwrap.cardtime .hud{overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin}
+.bwrap.v3d.cardtime .hud .pile.deck{max-width:min(21cqw,calc(var(--bh,600px) * .2))}
+.bwrap.v3d.cardtime .hud .ci-fig{max-height:calc(var(--bh,600px) * .26)}
+@media (orientation:portrait){
+ body.fs #gameView:not(.mapmin){grid-template-rows:minmax(0,min(calc(100vw + 30px),64dvh)) minmax(0,1fr)!important}
+}
 </style>
 </head>
 <body>
@@ -2686,7 +2698,7 @@ camSync();
 /* ===== มุมมองกึ่ง 3D หมุนเข้าหาฝั่งผู้เล่น ===== */
 const V3={on:true,ang:0,side:-1,tx:0,SC:2.3};try{V3.on=localStorage.getItem('ff-3d')!=='0'}catch(e){}
 function v3Side(p){const L=RING_LEN[p.ring],per=L/4;return Math.floor(p.pos/per)%4}
-function v3Update(p){const bd=$('#board'),w=$('#bwrap');if(!bd)return;if(!V3.inited&&w.clientWidth){V3.inited=true;setTimeout(()=>{if(V3.on)render()},80);setTimeout(()=>{if(V3.on)render()},600)}bd.classList.add('v3d');w.classList.add('v3d');const WW=w.clientWidth||360;const SS=Math.max(1.35,Math.min(2.1,760/WW));w.style.setProperty('--S',SS.toFixed(2));/* เต็มจอ: ระยะกล้องโตตามขนาดกระดาน → ภาพเหมือนเดิมแต่ใหญ่เต็มจอ */w.style.perspective=document.body.classList.contains('fs')?Math.round(820*Math.max(1,SS*WW/1026))+'px':'';
+function v3Update(p){const bd=$('#board'),w=$('#bwrap');if(!bd)return;if(!V3.inited&&w.clientWidth){V3.inited=true;setTimeout(()=>{if(V3.on)render()},80);setTimeout(()=>{if(V3.on)render()},600)}bd.classList.add('v3d');w.classList.add('v3d');w.style.setProperty('--bh',w.clientHeight+'px');const WW=w.clientWidth||360;const SS=Math.max(1.35,Math.min(2.1,760/WW));w.style.setProperty('--S',SS.toFixed(2));/* เต็มจอ: ระยะกล้องโตตามขนาดกระดาน → ภาพเหมือนเดิมแต่ใหญ่เต็มจอ */w.style.perspective=document.body.classList.contains('fs')?Math.round(820*Math.max(1,SS*WW/1026))+'px':'';
   if(S.phase!=='busy'||V3.side<0){const sd=v3Side(p);if(sd!==V3.side){const tgt=[180,90,0,-90][sd];let a=tgt;while(a-V3.ang>180)a-=360;while(V3.ang-a>180)a+=360;V3.ang=a;V3.side=sd}}
   bd.style.setProperty('--ang',V3.ang+'deg');
   const c=bd.querySelector(`.cell[data-k="${p.ring+p.pos}"]`);if(c){
@@ -2709,7 +2721,7 @@ v3Sync();
 /* ===== เดินแบบลื่น 60fps (3D) ===== */
 const STEP_MS=640;let WALK=null;
 function walkOn(p){return V3.on&&!MAPMIN&&!RM&&!p.bot&&!(S&&S.autoPilot)}
-function walkGeom(p){const bd=$('#board'),c=bd&&bd.querySelector(`.cell[data-k="${p.ring+p.pos}"]`);if(!c)return null;const m=Math.min(c.offsetWidth,c.offsetHeight),w=m*.92,h=m*2.15;
+function walkGeom(p){const bd=$('#board'),c=bd&&bd.querySelector(`.cell[data-k="${p.ring+p.pos}"]`);if(!c)return null;const m=Math.min(c.offsetWidth,c.offsetHeight)*(V3.fs||1),w=m*.92,h=m*2.15;
   return{x:c.offsetLeft+c.offsetWidth/2-w/2,y:c.offsetTop+c.offsetHeight*.82-h,w,h}}
 function walkStart(p){if(!walkOn(p))return;const bd=$('#board');let el=bd.querySelector(':scope>.walker');if(!el){el=document.createElement('div');el.className='walker';bd.appendChild(el)}
   const i=jobIdx(p);el.style.setProperty('--pawn',`url(img/pawn-${i}.webp)`);el.style.setProperty('--pc',p.color);
@@ -2731,6 +2743,8 @@ function v3Center(bd,w,c,p){
   const y2=yr*Math.cos(tilt),z=yr*Math.sin(tilt),k=(per-z)/per;
   let tx=OX+(X0-OX)*k-xr-W/2,ty=OY+(Y0-OY)*k-y2-H/2;
   const lim=W*3;tx=Math.max(-lim,Math.min(lim,tx));ty=Math.max(-lim,Math.min(lim,ty));
+  /* ขนาดตัวละคร: ตัวผู้เล่นปัจจุบัน (สูง 2.15 เท่าช่อง × กำลังขยายตามระยะ) ต้องไม่สูงเกิน 88% ของพื้นที่จากเท้าถึงขอบ HUD */
+  {const cm=Math.min(c.offsetWidth,c.offsetHeight),mag=1/Math.max(.2,k),fig=2.15*cm*mag,av=(Y0-top)*.88;const f=Math.max(.45,Math.min(1,av/Math.max(1,fig)));V3.fs=f;w.style.setProperty('--fs',f.toFixed(3))}
   bd.style.setProperty('--tx',tx+'px');w.style.setProperty('--typx',ty+'px');V3.tx=tx;V3.ty=ty}
 
 /* แผงข้อมูลตอนเลือกกองการ์ด: ตัวละครเต็มตัว + การเงิน + ค่าพลัง */
