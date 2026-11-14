@@ -990,6 +990,8 @@ body.fs #gameView:not(.mapmin){grid-template-columns:minmax(288px,1.2fr) minmax(
 @container panel (max-width:340px){.mi1>svg{display:none}}
 .mprice b{white-space:nowrap}
 .mnl{background:#fff;border:1px solid #efe5cf;border-radius:10px;padding:4px 10px}
+.jl.yw{background:#f2c230;color:#5a4300}
+.ycard{font-size:54px;text-align:center;line-height:1;margin:2px 0 6px;filter:drop-shadow(0 3px 2px rgba(0,0,0,.2))}
 </style>
 </head>
 <body>
@@ -1055,7 +1057,7 @@ const ZPROPS={
  i3:[['อาคารธนาคาร',220000,26000,18000],['ตึกตลาดหลักทรัพย์',280000,33000,23000],['ตึกระฟ้า',350000,41000,28000],['ทาวเวอร์ใจกลางเมือง',400000,47000,32000]],
 };
 const SQN={mkt:'ตลาดกลาง',rest:'พักผ่อน',charity:'บริจาคการกุศล',jobless:'ตกงาน',pay:'เงินเดือน',news:'ข่าวตลาด',net:'เครือข่าย',exch:'ตลาดหลักทรัพย์',splurge:'ฟุ่มเฟือย',crisis:'วิกฤตชีวิต',road:'ถนน',bizc:'ศูนย์ธุรกิจ'};
-const SQ_SUB={mkt:'ป้ายขาย · ธนาคารรับซื้อ',rest:'❤+1 ⏳+1–2',charity:'10% ได้ทอย 2 ลูก',jobless:'❤−2 · 2 เดือนได้แค่ Passive',pay:'รับกระแสเงินสด',news:'ราคาตลาดขยับ',net:'ธุรกิจเครือข่าย',exch:'เทรดฟรี',splurge:'จั่วรายจ่าย',crisis:'ทอยเสี่ยง',road:'เข้า/ออกเมือง',bizc:'ดีลธุรกิจ −20%'};
+const SQ_SUB={mkt:'ป้ายขาย · ธนาคารรับซื้อ',rest:'❤+1 ⏳+1–2',charity:'10% ได้ทอย 2 ลูก',jobless:'❤−2 · 2 เดือนได้แค่ Passive (รอบ 1–5: ใบเตือน 🟨)',pay:'รับกระแสเงินสด',news:'ราคาตลาดขยับ',net:'ธุรกิจเครือข่าย',exch:'เทรดฟรี',splurge:'จั่วรายจ่าย',crisis:'ทอยเสี่ยง',road:'เข้า/ออกเมือง',bizc:'ดีลธุรกิจ −20%'};
 const LIVING={o:.85,i:1.3};
 const ZLIVE={o0:.7,o1:.8,o2:1,o3:.85,i0:1.7,i1:1.5,i2:1.4,i3:1.3};
 function lifeMul(p){return ZLIVE[zoneOfCell(p.ring+p.pos)]||1}
@@ -1411,7 +1413,8 @@ function fin(p){
     ['ภาษี',Math.round(p.exp.tax*Math.max(0,1-skV(p,'tax')/100))],['ผ่อนบ้าน',p.exp.home],['ผ่อนรถ',p.exp.car],['บัตรเครดิต',p.exp.card],
     [`ค่าครองชีพ (${RINGN[p.ring]} ×${LIVING[p.ring]})`,Math.round(p.exp.living*LIVING[p.ring]/10)*10],['ค่าเลี้ยงดูบุตร',p.kids*p.kidCost],['ดอกเบี้ยเงินกู้ธนาคาร',Math.round(p.loan*LOAN_R)],['ค่าใช้จ่ายรายเดือนอื่น ๆ',p.exp.extra||0]];
   const expenses=ex.reduce((a,b)=>a+b[1],0);
-  return {board:Math.round(board),deals:Math.round(deals),div:Math.round(div),net:Math.round(net),depI,passive,ex,expenses,salary:p.salary,act,flow:p.salary+act+passive-expenses};
+  const sal=p.warn>0?Math.round(p.salary*.5):p.salary;
+  return {board:Math.round(board),deals:Math.round(deals),div:Math.round(div),net:Math.round(net),depI,passive,ex,expenses,salary:sal,act,flow:sal+act+passive-expenses};
 }
 function settle(p){
   if(p.cash>=0)return;
@@ -1440,7 +1443,7 @@ function titleAmt(t,a){const n=Math.round(a);return new RegExp('(^|[^\\d,])('+n.
 function payS(p,a){const x=rnd100(a*Math.max(1,p.salary/40000));pay(p,x);return `จ่าย ${B(x)}`}
 function bankrupt(p){
   for(const k in S.props)if(S.props[k].o===p.id)delete S.props[k];
-  p.deals=[];p.stocks={};p.loan=0;p.dep=0;p.net=netNew();p.active=0;p.cash=S.jobs[p.job].cash;
+  p.deals=[];p.stocks={};p.loan=0;p.dep=0;p.warn=0;p.net=netNew();p.active=0;p.cash=S.jobs[p.job].cash;
   log(`💀 <b>${esc(p.name)} ล้มละลาย</b> ทรัพย์สินถูกยึดทั้งหมด เริ่มใหม่จากอาชีพเดิม`);ruleNote(p,'ล้มละลาย','หนี้ธนาคารเกิน 12 เท่าของเงินเดือน (หรือ ฿400,000) ทรัพย์สินทั้งหมดถูกยึด และเริ่มใหม่ด้วยเงินสดตั้งต้นของอาชีพ');
 }
 
@@ -1515,7 +1518,7 @@ const RULES=`<ol class="rules">
 <li><b>กองดำเนินชีวิต</b> = แหล่งเติม ❤ หัวใจ และ ⏳ เวลา ไม่มีใบไหนหักค่าพลัง จ่ายเป็นเงินแทน และค่าใช้จ่ายของการ์ดคูณค่าครองชีพเขตที่ยืนอยู่: ต่างจังหวัด: เกษตรกรรม ×0.7 · อุตสาหกรรม ×0.8 · ชุมชน ×0.85 · ท่องเที่ยว ×1.0 | เมืองหลวงแพงกว่าเสมอ: ย่านการเงิน ×1.3 · ย่านธุรกิจ ×1.4 · ย่านช้อปปิ้ง ×1.5 · ย่านที่พักหรู ×1.7 · <b>การ์ดชีวิตไม่บังคับรับ</b> เลือกข้ามได้ ยกเว้นการ์ดอุบัติเหตุ (และช่องฟุ่มเฟือยที่บังคับจ่าย)</li>
 <li>กระดาน 2 ชั้น: <b>ชั้นนอก = ต่างจังหวัด</b> 40 ช่อง (เขตเกษตรกรรม อุตสาหกรรม ท่องเที่ยว ชุมชน) ค่าครองชีพ ×0.85 ที่ดินถูก · <b>ชั้นใน = เมืองหลวง</b> 32 ช่อง ค่าครองชีพ ×1.3 อสังหาฯ แพง แต่สร้างธุรกิจง่าย (มีศูนย์ธุรกิจ และดีลธุรกิจลด 20%)</li>
 <li>ทุกเขตมี <b>ช่องถนน</b> เดินผ่านแล้วเลือกข้ามไปถนนของอีกชั้นได้ การข้ามนับเป็น 1 ก้าว ก้าวที่เหลือเดินต่อในชั้นใหม่ ค่าครองชีพคิดตามชั้นที่คุณอยู่</li>
-<li>ช่อง <b>เงินเดือน</b>: ชั้นนอก 4 ช่อง (ทุกมุม) ชั้นใน 2 ช่อง (มุมตรงข้ามกัน) · ช่อง <b>ตกงาน</b>: ชั้นละ 1 ช่อง หัวใจ −2 และติดสถานะตกงาน วันเงินเดือน 2 ครั้งถัดไปได้เฉพาะ Passive income (ไม่ได้เงินเดือนและรายได้ Active) แล้วหักรายจ่ายรวม ถ้าเงินสดไม่พอ เลือกกู้ หรือขายทรัพย์สินในราคา 50%</li>
+<li>ช่อง <b>เงินเดือน</b>: ชั้นนอก 4 ช่อง (ทุกมุม) ชั้นใน 2 ช่อง (มุมตรงข้ามกัน) · ช่อง <b>ตกงาน</b>: ชั้นละ 1 ช่อง · <b>รอบที่ 1–5</b> โดนแค่ <b>ใบเตือน 🟨</b> เงินเดือนลด 50% 2 เดือน · ตั้งแต่รอบที่ 6 หัวใจ −2 และติดสถานะตกงาน วันเงินเดือน 2 ครั้งถัดไปได้เฉพาะ Passive income (ไม่ได้เงินเดือนและรายได้ Active) แล้วหักรายจ่ายรวม ถ้าเงินสดไม่พอ เลือกกู้ หรือขายทรัพย์สินในราคา 50%</li>
 <li>ปกติ <b>ทอยลูกเต๋า 1 ลูก</b> · ช่อง <b>บริจาคการกุศล</b> (ชั้นละ 1 ช่อง) บริจาค 10% ของรายรับรวม แล้วเลือกทอย 1 หรือ 2 ลูกได้ 3 เทิร์น</li>
 <li>เทิร์นของคุณ: <b>ทอยลูกเต๋า</b> เดิน แล้วทำตามช่องที่หยุด จากนั้น <b>จั่วการ์ดได้ 3 ใบ</b> เลือกจากกองไหนก็ได้ ซ้ำกองได้: ดำเนินชีวิต · เรียนรู้ · โอกาสชีวิต · ธุรกิจ A (กด "พอแล้ว" เพื่อหยุดก่อนครบได้)</li>
 <li>เดินผ่านช่อง <b>เงินเดือน</b> รับกระแสเงินสด = เงินเดือน + รายได้จากทรัพย์สิน − รายจ่ายรวม</li>
@@ -1533,7 +1536,7 @@ function newGame(speed){
   const S0jobs=JSON.parse(JSON.stringify(JOBS));const jobs=shuffle(JOBS.map((_,i)=>i));
   S={jobs:S0jobs,listings:[],round:1,cur:0,phase:'roll',speed,props:{},prices:{},hist:{},decks:{},log:[],dice:[1],winner:null,freeComm:false,view:0,
     players:seats.map((s,i)=>{const j=S0jobs[jobs[i]];return {id:i,name:s.n,bot:s.bot,color:COLORS[i],job:jobs[i],salary:j.sal,cash:j.cash,
-      exp:{...j.e,extra:0},active:0,debt:{home:j.e.home*100,car:j.e.car*25,card:j.e.card*20},kids:0,kidCost:j.kc||rnd100(j.sal*.06),loan:0,dep:0,deals:[],stocks:{},skills:[],
+      exp:{...j.e,extra:0},active:0,debt:{home:j.e.home*100,car:j.e.car*25,card:j.e.card*20},kids:0,kidCost:j.kc||rnd100(j.sal*.06),loan:0,dep:0,warn:0,deals:[],stocks:{},skills:[],
       net:netNew(),ring:'o',pos:0,jobless:0,charity:0,st:{h:j.h,t:j.t,k:j.k}}})};
   S.turnEnd=Date.now()+TURN_MS;
   for(const a of ASSETS){S.prices[a.s]=a.p;S.hist[a.s]=[a.p]}cryInit();
@@ -1692,7 +1695,7 @@ async function payday(p){
   delete p._sick;
   const f=fin(p),c0=p.cash,s0={...p.st},L0=p.loan,extra=[],why={h:[],t:[],k:[]};let net,note='',jl=false;
   if(p.jobless>0){p.jobless--;jl=true;net=f.passive-f.expenses;note=` (ตกงาน: ได้เฉพาะ Passive ${B(f.passive)} − รายจ่ายรวม ${B(f.expenses)}${p.jobless?` · ตกงานอีก ${p.jobless} เดือน`:' · ได้งานคืนแล้ว'})`}
-  else net=f.salary+f.act+f.passive-f.expenses;
+  else{net=f.salary+f.act+f.passive-f.expenses;if(p.warn>0){p.warn--;note=` (🟨 ใบเตือน: เงินเดือนลด 50% ได้ ${B(f.salary)} จาก ${B(p.salary)}${p.warn?` · เหลืออีก ${p.warn} เดือน`:' · ครบกำหนด เงินเดือนกลับเต็มแล้ว'})`}}
   if(jl&&net<0&&p.cash< -net){log(`⚠ ${esc(p.name)} ตกงาน วันเงินเดือนต้องจ่ายส่วนต่าง ${B(-net)}`);await forcedPay(p,-net,`ตกงาน: Passive ไม่พอรายจ่าย ขาด ${B(-net)}`)}else p.cash+=net;
   for(const d of [...p.deals])if(d.ty==='scam'){
     if(Math.random()<.5){p.deals=p.deals.filter(x=>x!==d);log(`💥 ${esc(d.t)} ของ ${esc(p.name)} ปิดตัวหนี! เงินลงทุน ${B(d.cost)} สูญทั้งหมด`);extra.push([`💥 ${esc(d.t)} ปิดตัวหนี`,0])}
@@ -1725,7 +1728,7 @@ async function payday(p){
   }
 }
 function rankPin(p,c='rpin'){return p&&p.net&&p.net.on?`<img class="${c}" src="img/rank-${Math.min(7,p.net.rank||0)}.webp" alt="${NET_RANKS[p.net.rank||0].n}" title="ธุรกิจ A ระดับ ${NET_RANKS[p.net.rank||0].n}">`:''}
-function badges(p){return rankPin(p)+(p.badge1?'<span class="bdg" title="ชนะ Lv.1: รายได้จากทรัพย์สินมากกว่ารายจ่ายรวม">🏆</span>':'')+(p.badge2?'<span class="bdg" title="ชนะ Lv.2: ธุรกิจ A ระดับไดมอนด์">💎</span>':'')}
+function badges(p){return rankPin(p)+(p.warn>0?`<span class="bdg" title="โดนใบเตือน: เงินเดือนลด 50% อีก ${p.warn} เดือน">🟨</span>`:'')+(p.badge1?'<span class="bdg" title="ชนะ Lv.1: รายได้จากทรัพย์สินมากกว่ารายจ่ายรวม">🏆</span>':'')+(p.badge2?'<span class="bdg" title="ชนะ Lv.2: ธุรกิจ A ระดับไดมอนด์">💎</span>':'')}
 function standings(){return [...S.players].map(q=>[q,fin(q)]).sort((a,b)=>((b[0].badge2?2:0)+(b[0].badge1?1:0))-((a[0].badge2?2:0)+(a[0].badge1?1:0))||b[1].passive/Math.max(1,b[1].expenses)-a[1].passive/Math.max(1,a[1].expenses))}
 function standingsHtml(){return `<table class="ft"><tr class="th"><td>#</td><td>ผู้เล่น</td><td class="r">ทรัพย์สิน / รายจ่าย</td></tr>${standings().map(([q,f],i)=>`<tr><td>${i+1}</td><td><span class="tok pic" style="display:inline-block;${tokStyle(q)}"></span> ${esc(q.name)} ${badges(q)}<div class="fsub">${esc(S.jobs[q.job].n)}${q.badge1?` · Lv.1 รอบ ${q.badge1}`:''}${q.badge2?` · Lv.2 รอบ ${q.badge2}`:''}</div></td><td class="r num"><span class="pos">${B(f.passive)}</span> / <span class="neg">${B(f.expenses)}</span></td></tr>`).join('')}</table>`}
 function endGame(why){if(S.phase!=='done')log(cryReveal());S.winner=S.winner??(standings()[0][0].id);S.phase='done';save();render();
@@ -1883,6 +1886,11 @@ function botMarket(p,offers,mine,others,avail,soldBank){
 async function joblessHit(p){
   if(useableCount(p,'shield_jobless')){const v=await choose({actor:p,title:'ตกงาน! ใช้สกิลการ์ดประกันรายได้?',body:'<p>คุณมีสกิลการ์ดกันการตกงาน ใช้แล้วไม่ติดสถานะตกงาน</p>',opts:[{v:'y',l:'ใช้การ์ดป้องกัน',c:'pri'},{v:'n',l:'ไม่ใช้'}],bot:'y'});
     if(v==='y'){consumeEff(p,'shield_jobless');log(`🛡 ${esc(p.name)} ใช้สกิลการ์ดประกันรายได้ รอดจากการตกงาน`);return}}
+    if((S.round||1)<=5){p.warn=2;const cut=Math.round(p.salary*.5);
+      log(`🟨 ${esc(p.name)} หยุดช่องตกงานในรอบที่ ${S.round} — โดนแค่ใบเตือน เงินเดือนลด 50% (−${B(cut)}/เดือน) 2 เดือน`);
+      ruleNote(p,'🟨 โดนใบเตือน',`หยุดช่องตกงานช่วงรอบที่ 1–5 จึงยังไม่ตกงาน แต่เงินเดือนลด 50% เหลือ ${B(p.salary-cut)} ในวันเงินเดือน 2 ครั้งถัดไป`);
+      await choose({actor:p,pose:'sad',title:'🟨 โดนใบเตือน!',body:`<div class="ycard">🟨</div><p>ยังอยู่ในช่วงทดลองงาน (รอบที่ 1–5) หัวหน้าเลยให้แค่ <b>ใบเตือน</b> ไม่ไล่ออก</p><p>ติดสถานะ <b>โดนใบเตือน</b>: วันเงินเดือน 2 ครั้งถัดไปได้เงินเดือนแค่ <b>50%</b> (${B(p.salary-cut)} จาก ${B(p.salary)}) ส่วนรายได้อื่นได้ตามปกติ</p><p class="muted">ตั้งแต่รอบที่ 6 ถ้าหยุดช่องตกงานจะตกงานจริง</p>`,opts:[{v:'ok',l:'รับทราบ',c:'pri'}],bot:'ok'});
+      return}
     const sx=adj(p,{h:-2},true);p.jobless=2;
     log(`⚠ ${esc(p.name)} ตกงาน! ติดสถานะตกงาน 2 เดือน${sx}`);
     await choose({actor:p,pose:'sad',title:'ตกงาน!',body:`<p>ติดสถานะ <b>ตกงาน</b>: ผ่านหรือหยุดช่องเงินเดือน 2 ครั้งถัดไป จะได้เฉพาะ Passive income (ไม่ได้เงินเดือนและรายได้ Active) แล้วหักรายจ่ายรวม ถ้าเงินสดไม่พอ เลือกกู้ หรือขายทรัพย์สินในราคา 50%</p><p>หัวใจ −2</p>`,opts:[{v:'ok',l:'รับทราบ',c:'pri'}],bot:'ok'});
@@ -2271,7 +2279,7 @@ function renderPlayers(){
   return `<div class="plist">${S.players.map(q=>{const f=fin(q),pct=Math.min(100,f.passive/Math.max(1,f.expenses)*100),pos=rank.findIndex(x=>x[0]===q)+1;
     return `<button class="prow ${q.id===S.cur?'cur':''}" onclick="S.view=${q.id};TAB='fin';render()" aria-label="ดูงบของ ${esc(q.name)}">
       <span class="prk num">${pos}</span>
-      <span class="pmain"><span class="pname"><span class="tok pic" style="${tokStyle(q)}"></span><b>${esc(q.name)}</b>${badges(q)}<span class="muted">${esc(S.jobs[q.job].n)}${q.bot?' · บอท':''}</span>${q.id===S.cur?'<span class="chip">ตานี้</span>':''}${q.jobless?`<span class="jl">ตกงาน ${q.jobless}</span>`:''}${q.net.on?`<span class="chip">ธุรกิจ A · ${NET_RANKS[q.net.rank].n}</span>`:''}</span>
+      <span class="pmain"><span class="pname"><span class="tok pic" style="${tokStyle(q)}"></span><b>${esc(q.name)}</b>${badges(q)}<span class="muted">${esc(S.jobs[q.job].n)}${q.bot?' · บอท':''}</span>${q.id===S.cur?'<span class="chip">ตานี้</span>':''}${q.jobless?`<span class="jl">ตกงาน ${q.jobless}</span>`:''}${q.warn>0?`<span class="jl yw">🟨 โดนใบเตือน ${q.warn}</span>`:''}${q.net.on?`<span class="chip">ธุรกิจ A · ${NET_RANKS[q.net.rank].n}</span>`:''}</span>
         <span class="pnums"><span>เงินสด <b class="num">${B(q.cash)}</b></span><span>ทรัพย์สิน <b class="num pos">${B(f.passive)}</b> / รายจ่าย <b class="num neg">${B(f.expenses)}</b></span><span class="muted">❤${q.st.h} ⏳${q.st.t} 📚${q.st.k}</span></span>
         <span class="bar ${pct>=100?'win':''}"><i style="width:${pct}%"></i></span></span>
       <span class="ppct num">${Math.round(pct)}%</span></button>`}).join('')}</div>
@@ -2314,7 +2322,7 @@ function renderFin(){
   const debtRows=[['home','หนี้บ้าน'],['car','หนี้รถ'],['card','หนี้บัตรเครดิต']].filter(([k])=>q.debt[k]>0).map(([k,n])=>`<div class="dli"><div class="dlt"><b>${n}</b></div><div class="dlv"><span class="num">${B(q.debt[k])}</span><small class="num neg">จ่าย ${B(q.exp[k])}/ด.</small></div><div class="dlb"><button class="sm" ${dis} onclick="payDebt('${k}')">ปิดหนี้</button></div></div>`).join('');
   const passRows=[['ค่าเช่าอสังหาฯ บนกระดาน',f.board],['ธุรกิจและดีล',f.deals],['ปันผลหุ้นและกองทุน',f.div],['ดอกเบี้ยเงินฝากประจำ',f.depI],['ธุรกิจ A',f.net]].filter(x=>x[1]).map(([n,v])=>line(n,B(v),'pos')).join('');
   return `<div class="fin">
-   <div class="fhead"><div><b>${esc(q.name)}</b>${badges(q)} · ${S.jobs[q.job].n}${q.jobless?` <span class="jl">ตกงานอีก ${q.jobless} เดือน</span>`:''}</div></div>${statPanel(q)}
+   <div class="fhead"><div><b>${esc(q.name)}</b>${badges(q)} · ${S.jobs[q.job].n}${q.jobless?` <span class="jl">ตกงานอีก ${q.jobless} เดือน</span>`:''}${q.warn>0?` <span class="jl yw">🟨 โดนใบเตือน อีก ${q.warn} เดือน</span>`:''}</div></div>${statPanel(q)}
    <div class="tiles">
      <div class="tile"><span>เงินสด</span><b class="num">${B(q.cash)}</b></div>
      <div class="tile"><span>เงินคงเหลือต่อเดือน</span><b class="num ${f.flow>=0?'pos':'neg'}">${f.flow>=0?'+':''}${B(f.flow)}</b></div>
@@ -2322,7 +2330,7 @@ function renderFin(){
    </div>
    <div class="fgrid">
     <section class="fcard"><h3>รายรับต่อเดือน <span class="num">${B(f.salary+f.act+f.passive)}</span></h3>
-     <table class="ft"><tr class="gh"><td colspan="2">จากการทำงาน (Active)</td></tr>${line('เงินเดือน',q.jobless?`<s>${B(f.salary)}</s> ตกงาน`:B(f.salary))}${f.act?line('รายได้เสริม',B(f.act)):''}
+     <table class="ft"><tr class="gh"><td colspan="2">จากการทำงาน (Active)</td></tr>${line('เงินเดือน',q.jobless?`<s>${B(f.salary)}</s> ตกงาน`:q.warn>0?`<s>${B(q.salary)}</s> ${B(f.salary)}`:B(f.salary),'',q.warn>0?'🟨 โดนใบเตือน เงินเดือนลด 50%':'')}${f.act?line('รายได้เสริม',B(f.act)):''}
      <tr class="gh"><td colspan="2">จากทรัพย์สิน (Passive)</td></tr>${passRows||'<tr><td class="muted" colspan="2">ยังไม่มี</td></tr>'}
      <tr class="tot"><td>รวมรายได้จากทรัพย์สิน</td><td class="r num pos">${B(f.passive)}</td></tr></table></section>
     <section class="fcard"><h3>รายจ่ายต่อเดือน <span class="num neg">${B(f.expenses)}</span></h3>
