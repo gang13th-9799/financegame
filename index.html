@@ -882,6 +882,26 @@ body.pseudofs header{position:sticky;top:0}
 /* base disc must stay above the board plane (it is upright with the standee) */
 .board.v3d .cell .tok.pic::after,.walker::after{bottom:0!important;height:9%!important}
 .board.v3d .cell .tok.pic::before,.walker::before{bottom:3.5%;top:auto;height:96.5%;inset:auto 0 3.5% 0}
+/* ===== เต็มจอ: เกมพอดีขนาดหน้าจอจริง (body.fs) ===== */
+body.fs{height:100dvh;min-height:0;overflow:hidden;display:flex;flex-direction:column}
+body.fs>header{flex:none;padding-top:4px;padding-bottom:4px;position:static}
+body.fs #setupView:not(:empty){flex:1;min-height:0;overflow:auto}
+body.fs #gameView:not([hidden]){flex:1;min-height:0;width:100%;max-width:none;margin:0;padding:6px 10px 8px;gap:10px;align-items:stretch}
+body.fs #gameView:not(.mapmin){grid-template-columns:minmax(0,1fr) clamp(300px,30vw,480px)!important;grid-template-rows:minmax(0,1fr)!important}
+body.fs #gameView.mapmin{overflow:auto}
+body.fs #gameView:not(.mapmin)>section{min-height:0}
+body.fs #gameView:not(.mapmin)>section:first-child{display:flex;flex-direction:column;container-type:size}
+body.fs #gameView:not(.mapmin) .mapbar{flex:none;width:100%;max-width:none}
+body.fs #gameView:not(.mapmin) .legend{display:none!important}
+body.fs #gameView:not(.mapmin) .bwrap:not(.v3d){flex:none;width:min(100cqw,calc(100cqh - 40px));aspect-ratio:1;margin:0 auto}
+body.fs #gameView:not(.mapmin) .bwrap:not(.v3d) .board{width:100%!important;max-width:none!important}
+body.fs #gameView:not(.mapmin) .bwrap.v3d{flex:1;min-height:0;width:100%;aspect-ratio:auto!important}
+body.fs #gameView:not(.mapmin)>section:last-child{display:flex;flex-direction:column;max-height:none!important;position:static!important;overflow:hidden!important}
+body.fs #gameView:not(.mapmin)>section:last-child>.tabs{flex:none}
+body.fs #gameView:not(.mapmin)>section:last-child>.panel{flex:1;min-height:0;overflow:auto}
+@media (orientation:portrait){
+ body.fs #gameView:not(.mapmin){grid-template-columns:minmax(0,1fr)!important;grid-template-rows:minmax(0,1.4fr) minmax(0,1fr)!important;padding:4px 6px 6px;gap:6px}
+}
 </style>
 </head>
 <body>
@@ -2249,13 +2269,16 @@ showSetup();
 /* ===== เต็มจอ ===== */
 function fsEl(){return document.fullscreenElement||document.webkitFullscreenElement}
 function fsCan(){const d=document.documentElement;return !!(d.requestFullscreen||d.webkitRequestFullscreen)}
-function fsSync(){const b=$('#btnFS');if(!b)return;const on=!!fsEl()||document.body.classList.contains('pseudofs');b.innerHTML=on?'🗗 <span>ย่อจอ</span>':'⛶ <span>เต็มจอ</span>';b.title=on?'ออกจากเต็มจอ':'เต็มจอ';b.setAttribute('aria-label',b.title)}
+function fsSync(){const b=$('#btnFS');if(!b)return;const on=!!fsEl()||document.body.classList.contains('pseudofs');if(document.body.classList.contains('fs')!==on){document.body.classList.toggle('fs',on);fitScreen()}b.innerHTML=on?'🗗 <span>ย่อจอ</span>':'⛶ <span>เต็มจอ</span>';b.title=on?'ออกจากเต็มจอ':'เต็มจอ';b.setAttribute('aria-label',b.title)}
 async function toggleFS(){const d=document.documentElement;
   try{if(fsEl()){await (document.exitFullscreen||document.webkitExitFullscreen).call(document)}
   else if(fsCan()){await (d.requestFullscreen||d.webkitRequestFullscreen).call(d,{navigationUI:'hide'});try{screen.orientation&&screen.orientation.lock&&await screen.orientation.lock('any')}catch(e){}}
   else{document.body.classList.toggle('pseudofs');window.scrollTo(0,1);if(document.body.classList.contains('pseudofs'))toast('มือถือบางรุ่น (iPhone) ไม่รองรับเต็มจอจากเว็บ · กดแชร์ → "เพิ่มไปยังหน้าจอโฮม" เพื่อเล่นแบบเต็มจอ')}}
   catch(e){document.body.classList.toggle('pseudofs')}
   fsSync()}
+/* วาดกระดานใหม่ให้พอดีจอ เมื่อเข้า/ออกเต็มจอ หมุนจอ หรือเปลี่ยนขนาดหน้าต่าง */
+let FIT_T=0;function fitScreen(){clearTimeout(FIT_T);FIT_T=setTimeout(()=>{if(typeof S==='undefined'||!S||!S.players||WALK)return;const g=$('#gameView');if(!g||g.hidden)return;render();if(typeof bzApply==='function')bzApply()},180)}
+window.addEventListener('resize',fitScreen);window.addEventListener('orientationchange',fitScreen);
 $('#btnFS').onclick=toggleFS;document.addEventListener('fullscreenchange',fsSync);document.addEventListener('webkitfullscreenchange',fsSync);
 
 /* ===== ซูมกระดานด้วย 2 นิ้ว ===== */
@@ -2305,7 +2328,7 @@ camSync();
 /* ===== มุมมองกึ่ง 3D หมุนเข้าหาฝั่งผู้เล่น ===== */
 const V3={on:true,ang:0,side:-1,tx:0,SC:2.3};try{V3.on=localStorage.getItem('ff-3d')!=='0'}catch(e){}
 function v3Side(p){const L=RING_LEN[p.ring],per=L/4;return Math.floor(p.pos/per)%4}
-function v3Update(p){const bd=$('#board'),w=$('#bwrap');if(!bd)return;if(!V3.inited&&w.clientWidth){V3.inited=true;setTimeout(()=>{if(V3.on)render()},80);setTimeout(()=>{if(V3.on)render()},600)}bd.classList.add('v3d');w.classList.add('v3d');const WW=w.clientWidth||360;w.style.setProperty('--S',Math.max(1.35,Math.min(2.1,760/WW)).toFixed(2));
+function v3Update(p){const bd=$('#board'),w=$('#bwrap');if(!bd)return;if(!V3.inited&&w.clientWidth){V3.inited=true;setTimeout(()=>{if(V3.on)render()},80);setTimeout(()=>{if(V3.on)render()},600)}bd.classList.add('v3d');w.classList.add('v3d');const WW=w.clientWidth||360;const SS=Math.max(1.35,Math.min(2.1,760/WW));w.style.setProperty('--S',SS.toFixed(2));/* เต็มจอ: ระยะกล้องโตตามขนาดกระดาน → ภาพเหมือนเดิมแต่ใหญ่เต็มจอ */w.style.perspective=document.body.classList.contains('fs')?Math.round(820*Math.max(1,SS*WW/1026))+'px':'';
   if(S.phase!=='busy'||V3.side<0){const sd=v3Side(p);if(sd!==V3.side){const tgt=[180,90,0,-90][sd];let a=tgt;while(a-V3.ang>180)a-=360;while(V3.ang-a>180)a+=360;V3.ang=a;V3.side=sd}}
   bd.style.setProperty('--ang',V3.ang+'deg');
   const c=bd.querySelector(`.cell[data-k="${p.ring+p.pos}"]`);if(c){
