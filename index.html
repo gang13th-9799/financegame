@@ -2668,7 +2668,11 @@ loadDB();
    ล็อกอิน · ล็อบบี้ (เลขห้อง 5 หลัก, 2–6 ที่นั่ง คน/บอท) · กลับเข้าห้องเดิม · ซิงก์เกม
    หลักการซิงก์: เครื่องที่ "ถือตา" (ผู้เล่นคนที่ถึงตา ถ้าออนไลน์อยู่ / ไม่งั้นเจ้าของห้อง) เป็นคนรันกติกา
    แล้วส่งสถานะเกม (S, บีบอัด) ขึ้น rooms/{code}/st · เครื่องอื่นรับมาแสดงผลอย่างเดียว · บอทรันที่เจ้าของห้อง */
-const FB_CONFIG=null;          /* ← วางค่า firebaseConfig จาก Firebase console (มี databaseURL ด้วย) */
+const FB_CONFIG={              /* ค่าจาก Firebase console (เปิดเผยได้ ไม่ใช่รหัสลับ) */
+  apiKey:"AIzaSyBug7POWXD-5lnTCU7fw2pLH4wCGKb6u_w",authDomain:"financegame-5f97e.firebaseapp.com",
+  databaseURL:"https://financegame-5f97e-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId:"financegame-5f97e",storageBucket:"financegame-5f97e.firebasestorage.app",
+  messagingSenderId:"727288347103",appId:"1:727288347103:web:4b4010559c4c48a365ac6a"};
 const FB_FACEBOOK=false;       /* ← เปิดเป็น true หลังตั้งค่า Facebook ใน Firebase แล้ว */
 const FBV='13.3.0';
 const ON={be:null,user:null,code:null,room:null,play:false,ver:0,pres:{},unsub:[],kick:'',pushT:0,qSeen:{},view:'home'};
