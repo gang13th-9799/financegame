@@ -1027,6 +1027,13 @@ body.fs #gameView:not(.mapmin){grid-template-columns:minmax(288px,1.2fr) minmax(
 #gameView[hidden],#setupView[hidden]{display:none!important}
 #olCode:placeholder-shown{letter-spacing:normal;font-size:16px}
 .roomtag{margin-left:8px;font-size:12px;padding:2px 8px;border-radius:999px;background:#fff3c4;border:1px solid #e8d48a;white-space:nowrap}
+
+/* แจ้งเตือน: กลางบนจอ ขนาดตามจอ แตะเพื่อปิด */
+.toast{top:max(12px,env(safe-area-inset-top));bottom:auto!important;left:50%;transform:translate(-50%,-12px);
+ font-size:clamp(16px,calc(13px + .6vw),22px)!important;font-weight:600;line-height:1.45;padding:.75em 1.4em!important;border-radius:16px!important;
+ width:max-content;max-width:min(92vw,640px)!important;min-width:min(70vw,260px);text-align:center;z-index:9999!important;
+ box-shadow:0 5px 0 #36502c,0 10px 24px rgba(0,0,0,.18)!important;cursor:pointer;transition:opacity .25s,transform .25s!important}
+.toast.on{transform:translate(-50%,0);pointer-events:auto!important}
 </style>
 </head>
 <body>
@@ -1395,7 +1402,8 @@ function log(t){S.log.unshift(`<b class="num">ร${S.round}</b> ${t}`);if(S.log.
 /* กติกาเสริม: ปิด/เปิดได้ เผื่อโหมดง่าย/ยากในอนาคต */
 const GRULE={sickAtZeroHeart:false};
 function ruleNote(p,title,why){if(!p||p.bot||(S&&S.autoPilot))return;const box=$('#rnotes');if(!box)return;const d=document.createElement('div');d.className='rnote';d.innerHTML=`<b>📌 ${title}</b><span>${why}</span><i>แตะเพื่อปิด</i>`;d.onclick=()=>d.remove();box.appendChild(d);setTimeout(()=>d.classList.add('out'),9000);setTimeout(()=>d.remove(),9600)}
-function toast(t){if(S&&S.players&&S.winner==null&&cp().bot)return;const el=$('#toast');el.textContent=t;el.classList.add('on');clearTimeout(toast.h);toast.h=setTimeout(()=>el.classList.remove('on'),2200)}
+function toast(t){if(S&&S.players&&S.winner==null&&cp().bot)return;const el=$('#toast');el.textContent=t;el.classList.add('on');clearTimeout(toast.h);toast.h=setTimeout(()=>el.classList.remove('on'),3200)}
+$('#toast').onclick=()=>{clearTimeout(toast.h);$('#toast').classList.remove('on')};
 function save(){if(ON.play){onSave();return}try{localStorage.setItem('ffgame-v8',JSON.stringify(S))}catch(e){}}
 function loadSaved(){try{const s=localStorage.getItem('ffgame-v8');return s?JSON.parse(s):null}catch(e){return null}}
 function draw(k){const DEF={life:LIFE,learn:LEARN,opp:OPP,news:NEWS,netc:NETDB}[k];if(!S.decks[k]||S.decks[k].some(i=>i>=DEF.length))S.decks[k]=[];if(!S.decks[k]||!S.decks[k].length)S.decks[k]=shuffle(DEF.map((_,i)=>i));return DEF[S.decks[k].pop()]}
@@ -2790,7 +2798,7 @@ function onHome(){
    <div class="ol-card"><h3>สร้างห้องใหม่</h3><p class="muted">ได้เลขห้อง 5 หลักไว้ส่งให้เพื่อน แล้วเลือกได้ว่าที่นั่งไหนเป็นคนหรือบอท (2–6 ที่)</p><button class="pri" onclick="onCreate()">＋ สร้างห้อง</button></div>
    <div class="ol-card"><h3>เข้าห้องเพื่อน</h3><div class="ol-row"><input id="olCode" inputmode="numeric" maxlength="5" placeholder="เลขห้อง 5 หลัก" oninput="this.value=this.value.replace(/[^0-9]/g,'')"><button class="pri" onclick="onJoin($('#olCode').value)">เข้าห้อง</button></div></div>
    <div class="btnrow" style="justify-content:flex-start">${u.anon?`<button class="sm" onclick="onLink()">🔗 ผูกบัญชี Google (กันข้อมูลหาย)</button>`:''}<button class="sm" onclick="ON.be.out()">ออกจากระบบ</button><button class="sm" onclick="onExit()">← เล่นบนเครื่องนี้ (ออฟไลน์)</button></div></div>`}
-async function onRename(){const n=$('#olMe').value.trim().slice(0,16);if(!n)return;ON.name=n;await ON.be.update('users/'+ON.user.uid,{name:n});toast('บันทึกชื่อแล้ว')}
+async function onRename(){const n=$('#olMe').value.trim().slice(0,16);if(!n)return;ON.name=n;await ON.be.update('users/'+ON.user.uid,{name:n});onHome();toast('บันทึกชื่อแล้ว')}
 async function onLink(){try{await ON.be.link();ON.user.anon=false;toast('ผูกบัญชี Google แล้ว');onHome()}catch(e){onErr(e)}}
 
 /* ---------- ห้อง ---------- */
