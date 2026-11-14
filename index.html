@@ -1358,7 +1358,9 @@ const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',
 const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
 const AS=s=>ASSETS.find(a=>a.s===s);
 const EXP=new Set();
-function togglePc(id){S.view=id;if(id!==S.cur){EXP.has(id)?EXP.delete(id):EXP.add(id)}render()}
+/* แท็บข้อมูล: ตาคน → ดูคนนั้น · ตาบอท → คงที่เดิม (ถ้ากำลังดูบอทที่ไม่ได้เลือกเอง ให้กลับไปที่ผู้เล่นคน) */
+function viewFollow(){const c=S.players[S.cur];if(c&&!c.bot){S.view=S.cur;S.viewPick=0;return}const v=S.players.find(q=>q.id===S.view);if(!v||(v.bot&&!S.viewPick)){const h=S.players.find(q=>!q.bot);if(h)S.view=h.id}}
+function togglePc(id){S.view=id;S.viewPick=1;if(id!==S.cur){EXP.has(id)?EXP.delete(id):EXP.add(id)}render()}
 function toggleAll(){const o=S.players.filter(q=>q.id!==S.cur);if(o.every(q=>EXP.has(q.id)))o.forEach(q=>EXP.delete(q.id));else o.forEach(q=>EXP.add(q.id));render()}
 let S=null, TAB='fin', MODAL=false, MODAL_CANCEL=null;
 const TURN_MS=180000;
@@ -1546,7 +1548,7 @@ const RULES=`<ol class="rules">
 
 function newGame(speed){
   const S0jobs=JSON.parse(JSON.stringify(JOBS));const jobs=shuffle(JOBS.map((_,i)=>i));
-  S={jobs:S0jobs,listings:[],round:1,cur:0,phase:'roll',speed,props:{},prices:{},hist:{},decks:{},log:[],dice:[1],winner:null,freeComm:false,view:0,
+  S={jobs:S0jobs,listings:[],round:1,cur:0,phase:'roll',speed,props:{},prices:{},hist:{},decks:{},log:[],dice:[1],winner:null,freeComm:false,view:Math.max(0,seats.findIndex(x=>!x.bot)),
     players:seats.map((s,i)=>{const j=S0jobs[jobs[i]];return {id:i,name:s.n,bot:s.bot,color:COLORS[i],job:jobs[i],salary:j.sal,cash:j.cash,
       exp:{...j.e,extra:0},active:0,debt:{home:j.e.home*100,car:j.e.car*25,card:j.e.card*20},kids:0,kidCost:j.kc||rnd100(j.sal*.06),loan:0,dep:0,warn:0,deals:[],stocks:{},skills:[],
       net:netNew(),ring:'o',pos:0,jobless:0,charity:0,st:{h:j.h,t:j.t,k:j.k}}})};
@@ -1668,7 +1670,7 @@ function endTurn(early){
   if(early&&!S.autoPilot&&Date.now()<S.turnEnd){const sx=adj(p,{t:1},true);if(sx){log(`⏱ ${esc(p.name)} จบเทิร์นก่อนเวลา${sx}`);if(!p.bot)toast(`⏱ จบไว ได้เวลา +1`)}}
   S.autoPilot=false;
   S.cur=(S.cur+1)%S.players.length;if(S.cur===0)endRound();
-  S.phase='roll';S.view=S.cur;S.turnEnd=Date.now()+TURN_MS;render();save();
+  S.phase='roll';viewFollow();S.turnEnd=Date.now()+TURN_MS;render();save();
   if(!cp().bot)fxBanner(cp());
   if(cp().bot)botTurn();
 }
@@ -2281,7 +2283,7 @@ function renderSkills(){
       ${q.id===S.cur&&canAct()&&as.length?`<div style="margin-top:6px">${skillPanelBtn(q,true)}</div>`:''}</div>`}).join('');
   const all=Object.keys(SKILLDB).map(k=>{const s=SKILLDB[k],own=S.players.filter(q=>q.skills.includes(k)||(q.charges&&q.charges[k]>0));
     return `<tr><td><b>${esc(s.n)}</b><div class="fsub">${esc(desc(k))}</div></td><td>${s.kind==='active'?`<span class="skc ac mini">Active ×${s.uses}</span>`:'<span class="skc ps mini">Passive</span>'}</td><td>${own.length?own.map(q=>`<span class="tok pic" title="${esc(q.name)}" style="display:inline-block;${tokStyle(q)}"></span>`).join(' '):'<span class="muted">—</span>'}</td></tr>`}).join('');
-  return `<div class="fin"><div class="fld" style="margin:0"><label for="skwho">ดูทักษะของ</label><select id="skwho" onchange="S.view=+this.value;render()">${S.players.map(q=>`<option value="${q.id}" ${q.id===S.view?'selected':''}>${esc(q.name)} · ${esc(S.jobs[q.job].n)}${q.id===S.cur?' (ตานี้)':''} — Passive ${q.skills.filter(k=>SKILLDB[k]).length} · สกิลการ์ด ${totalCharges(q)}</option>`).join('')}</select></div>${per}
+  return `<div class="fin"><div class="fld" style="margin:0"><label for="skwho">ดูทักษะของ</label><select id="skwho" onchange="S.view=+this.value;S.viewPick=1;render()">${S.players.map(q=>`<option value="${q.id}" ${q.id===S.view?'selected':''}>${esc(q.name)} · ${esc(S.jobs[q.job].n)}${q.id===S.cur?' (ตานี้)':''} — Passive ${q.skills.filter(k=>SKILLDB[k]).length} · สกิลการ์ด ${totalCharges(q)}</option>`).join('')}</select></div>${per}
     <section class="fcard"><h3>ทักษะทั้งหมดในเกม <span class="muted" style="font-size:12px">${Object.keys(SKILLDB).length} ทักษะ</span></h3>
     <div class="tw"><table class="ft at"><tr class="th"><td>ทักษะ</td><td>ชนิด</td><td>ผู้ที่มี</td></tr>${all}</table></div>
     <p class="muted" style="font-size:12px;margin:6px 0 0">Passive ทำงานอัตโนมัติ · Active (สกิลการ์ด) สะสมจำนวนครั้งไว้กดใช้เอง · ได้ทักษะจากการจั่วกองเรียนรู้</p></section></div>`;
@@ -2289,7 +2291,7 @@ function renderSkills(){
 function renderPlayers(){
   const rank=[...S.players].map(q=>[q,fin(q)]).sort((a,b)=>b[1].passive/Math.max(1,b[1].expenses)-a[1].passive/Math.max(1,a[1].expenses));
   return `<div class="plist">${S.players.map(q=>{const f=fin(q),pct=Math.min(100,f.passive/Math.max(1,f.expenses)*100),pos=rank.findIndex(x=>x[0]===q)+1;
-    return `<button class="prow ${q.id===S.cur?'cur':''}" onclick="S.view=${q.id};TAB='fin';render()" aria-label="ดูงบของ ${esc(q.name)}">
+    return `<button class="prow ${q.id===S.cur?'cur':''}" onclick="S.view=${q.id};S.viewPick=1;TAB='fin';render()" aria-label="ดูงบของ ${esc(q.name)}">
       <span class="prk num">${pos}</span>
       <span class="pmain"><span class="pname"><span class="tok pic" style="${tokStyle(q)}"></span><b>${esc(q.name)}</b>${badges(q)}<span class="muted">${esc(S.jobs[q.job].n)}${q.bot?' · บอท':''}</span>${q.id===S.cur?'<span class="chip">ตานี้</span>':''}${q.jobless?`<span class="jl">ตกงาน ${q.jobless}</span>`:''}${q.warn>0?`<span class="jl yw">🟨 โดนใบเตือน ${q.warn}</span>`:''}${q.net.on?`<span class="chip">ธุรกิจ A · ${NET_RANKS[q.net.rank].n}</span>`:''}</span>
         <span class="pnums"><span>เงินสด <b class="num">${B(q.cash)}</b></span><span>ทรัพย์สิน <b class="num pos">${B(f.passive)}</b> / รายจ่าย <b class="num neg">${B(f.expenses)}</b></span><span class="muted">❤${q.st.h} ⏳${q.st.t} 📚${q.st.k}</span></span>
