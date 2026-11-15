@@ -1100,6 +1100,17 @@ body:has(#setupView .setup.onl) header{position:relative;z-index:5}
 .npcb{flex:1;min-width:0;display:grid;gap:4px}.npct{display:flex;flex-wrap:wrap;gap:6px;align-items:center}.npct b{overflow-wrap:anywhere;flex:1 1 100%}.ntag{display:inline-block;white-space:nowrap;padding:1px 8px;border-radius:999px;font-size:.8em;background:#f1ece0;border:1px solid var(--line);color:#5a5040}.ntag.warn{background:#fde8c8;color:#9a4b00;border-color:#e9b949}
 .npcb button{justify-self:start}.npce{font-size:.92em}
 .tabn{display:inline-grid;place-items:center;min-width:1.4em;height:1.4em;padding:0 .3em;border-radius:999px;background:#e8584a;color:#fff;font-size:.72em;font-weight:700;vertical-align:.15em}
+
+/* ===== มุมมอง 3D แบบ isometric (กล้องตายตัว) ===== */
+.board.v3d.iso{grid-template-columns:minmax(0,1fr) var(--sep) repeat(9,minmax(0,1fr)) var(--sep) minmax(0,1fr)!important;grid-template-rows:minmax(0,1fr) var(--sep) repeat(9,minmax(0,1fr)) var(--sep) minmax(0,1fr)!important}
+.board.v3d.iso .cell:has(.pimgc){background:transparent!important;border-color:transparent!important;box-shadow:none!important}
+.board.v3d.iso .cell:has(.pimgc) .stripe{display:none}
+.board.v3d.iso .cell .zimg.pimgc{position:absolute;left:50%!important;top:50%!important;right:auto!important;bottom:auto!important;width:calc(var(--cw,62px) * 1.414)!important;height:auto!important;max-width:none!important;max-height:none!important;opacity:1;
+ transform-origin:50% var(--b,46%)!important;transform:translate(-50%,calc(-1 * var(--b,46%))) translateZ(calc(var(--d,0) * .04px)) rotate(-45deg) scaleY(1.3054)!important;z-index:2;pointer-events:none;filter:none}
+.board.v3d.iso .cell .zimg:not(.pimgc),.board.v3d.iso .cell .cimg{left:42%!important;top:42%!important;right:auto!important;bottom:auto!important;width:auto!important;height:62cqmin!important;max-width:none!important;
+ transform-origin:50% 100%!important;transform:translate(-50%,-100%) rotateZ(calc(-1 * var(--ang,45deg))) rotateX(calc(-1 * var(--tilt)))!important;z-index:2}
+.board.v3d.iso .cell .zimg:not(.pimgc){border-radius:10px;box-shadow:0 3px 8px rgba(0,0,0,.25);height:48cqmin!important}
+.board.v3d.iso .cell .toks{left:64%!important;top:auto!important;bottom:36%!important;right:auto!important;transform:translateX(-50%)!important}
 </style>
 </head>
 <body>
@@ -2394,7 +2405,7 @@ function cellBody(k){const q=SQ(k),pr=S.props[k];
 function cellInfo(k){if(MODAL)return;ask({title:esc(SQ(k).n),body:cellBody(k)})}
 let MAPMIN=false;try{MAPMIN=localStorage.getItem('ff-mapmin')==='1'}catch(e){}
 /* ภาพประจำช่องที่ดิน (img/prop-<รหัสช่อง>.webp) — ใส่รหัสช่องที่มีภาพแล้ว */
-const PROPIMG=new Set(['o1','o3','o4','o6']);
+const PROPIMG={o1:46.6,o3:50.3,o4:45.8,o6:39.7,o8:46.6};/* ค่า = จุดกึ่งกลางพื้นข้าวหลามตัดของภาพ (% จากบน) ใช้วางภาพ isometric ให้ตรงกลางช่อง */
 function toggleMap(){MAPMIN=!MAPMIN;try{localStorage.setItem('ff-mapmin',MAPMIN?'1':'0')}catch(e){}render()}
 function render(){
   if(!S)return;
@@ -2408,7 +2419,7 @@ function render(){
       <div class="stripe" style="background:${zc};opacity:${b.t==='prop'?1:.35}"></div>
       <div class="lbl">${b.t==='road'?'ถนน':b.n}</div>
       ${pr?`<div class="own" style="background:${P(pr.o).color}"></div>${pr.l?`<div class="lv">${'★'.repeat(pr.l)}</div>`:''}`:''}
-      ${ico.startsWith('ZIMG:')?`<img class="zimg${PROPIMG.has(k)?' pimgc':''}" src="img/${PROPIMG.has(k)?'prop-'+k:'zone-'+ico.slice(5)}.webp" alt="">`:ico==='LOGO'?`<span class="ico"><i class="logo" style="--lc:#be1e2d"></i></span>`:ico.startsWith('IMG:')?`<img class="cimg" src="img/${ico.slice(4)}.webp" alt="">`:ico?`<span class="ico">${ico}</span>`:''}<div class="toks">${toks}</div></div>`}
+      ${ico.startsWith('ZIMG:')?`<img class="zimg${k in PROPIMG?' pimgc':''}" ${k in PROPIMG?`style="--b:${PROPIMG[k]}%;--d:${(()=>{try{const q=cellPos0(k);return q[0]+q[1]}catch(e){return 0}})()}"`:''} src="img/${k in PROPIMG?'prop-'+k:'zone-'+ico.slice(5)}.webp" alt="">`:ico==='LOGO'?`<span class="ico"><i class="logo" style="--lc:#be1e2d"></i></span>`:ico.startsWith('IMG:')?`<img class="cimg" src="img/${ico.slice(4)}.webp" alt="">`:ico?`<span class="ico">${ico}</span>`:''}<div class="toks">${toks}</div></div>`}
   const act=canAct();
   let ctr=`<div class="who"><span class="tok pic big" style="${tokStyle(p)}"></span>${esc(p.name)}${badges(p)}${p.bot?' <span class="muted" style="font-size:.7em">(บอท)</span>':''}</div>
     <div class="job">${S.jobs[p.job].n} · อยู่${RINGN[p.ring]} · เงินสด <span class="num">${B(p.cash)}</span>${p.jobless?` · <span class="jl">ตกงานอีก ${p.jobless} เดือน</span>`:''}</div>
@@ -3314,14 +3325,15 @@ camSync();
 /* ===== มุมมองกึ่ง 3D หมุนเข้าหาฝั่งผู้เล่น ===== */
 const V3={on:true,ang:0,side:-1,tx:0,SC:2.3};try{V3.on=localStorage.getItem('ff-3d')!=='0'}catch(e){}
 function v3Side(p){const L=RING_LEN[p.ring],per=L/4;return Math.floor(p.pos/per)%4}
-function v3Update(p){const bd=$('#board'),w=$('#bwrap');if(!bd)return;if(!V3.inited&&w.clientWidth){V3.inited=true;setTimeout(()=>{if(V3.on)render()},80);setTimeout(()=>{if(V3.on)render()},600)}bd.classList.add('v3d');w.classList.add('v3d');w.style.setProperty('--bh',w.clientHeight+'px');const WW=w.clientWidth||360;const SS=Math.max(1.35,Math.min(2.1,760/WW));w.style.setProperty('--S',SS.toFixed(2));/* เต็มจอ: ระยะกล้องโตตามขนาดกระดาน → ภาพเหมือนเดิมแต่ใหญ่เต็มจอ */w.style.perspective=document.body.classList.contains('fs')?Math.round(820*Math.max(1,SS*WW/1026))+'px':'';
-  if(S.phase!=='busy'||V3.side<0){const sd=v3Side(p);if(sd!==V3.side){const tgt=[180,90,0,-90][sd];let a=tgt;while(a-V3.ang>180)a-=360;while(V3.ang-a>180)a+=360;V3.ang=a;V3.side=sd}}
+function v3Update(p){const bd=$('#board'),w=$('#bwrap');if(!bd)return;if(!V3.inited&&w.clientWidth){V3.inited=true;setTimeout(()=>{if(V3.on)render()},80);setTimeout(()=>{if(V3.on)render()},600)}bd.classList.add('v3d');w.classList.add('v3d');w.style.setProperty('--bh',w.clientHeight+'px');const WW=w.clientWidth||360;const SS=Math.max(1.35,Math.min(2.1,760/WW))*(V3.on?1.6:1);w.style.setProperty('--S',SS.toFixed(2));requestAnimationFrame(()=>{const c0=bd.querySelector('.cell.inner');if(c0)bd.style.setProperty('--cw',c0.offsetWidth+'px')});/* เต็มจอ: ระยะกล้องโตตามขนาดกระดาน → ภาพเหมือนเดิมแต่ใหญ่เต็มจอ */w.style.perspective=document.body.classList.contains('fs')?Math.round(820*Math.max(1,SS*WW/1026))+'px':'';
+  /* มุมมอง isometric: กล้องมุมเดียวตายตัว (หมุน 45° เอียง 55°) ให้ภาพประจำช่องวางตรงช่องพอดี */
+  V3.ang=45;V3.side=0;bd.classList.add('iso');bd.style.setProperty('--tilt','40deg');w.style.perspective='7000px';
   bd.style.setProperty('--ang',V3.ang+'deg');
   const c=bd.querySelector(`.cell[data-k="${p.ring+p.pos}"]`);if(c){
     const key=p.ring+p.pos+'|'+S.cur;if(V3.key!==key){V3.key=key;V3.ux=0;V3.uy=0;w.style.setProperty('--ux','0px');w.style.setProperty('--uy','0px')}
     v3Center(bd,w,c,p)}
   w.classList.toggle('fastcam',!!p.bot&&S.phase==='busy');w.classList.toggle('cardtime',S.phase==='card'&&!p.bot)}
-function v3Sync(){const b=$('#btnV3');if(b)b.textContent=V3.on?'🧭 มุมมอง 3D':'🗺 มุมมอง 2D';const bd=$('#board'),w=$('#bwrap');if(!V3.on&&bd){bd.classList.remove('v3d');w.classList.remove('v3d','cardtime');bd.style.removeProperty('--ang')}}
+function v3Sync(){const b=$('#btnV3');if(b)b.textContent=V3.on?'🧭 มุมมอง 3D':'🗺 มุมมอง 2D';const bd=$('#board'),w=$('#bwrap');if(!V3.on&&bd){bd.classList.remove('v3d','iso');bd.style.removeProperty('--tilt');w.style.perspective='';w.classList.remove('v3d','cardtime');bd.style.removeProperty('--ang')}}
 function toggleV3(){V3.on=!V3.on;if(!V3.on){const h=$('#hud');h.hidden=true;h.innerHTML=''}try{localStorage.setItem('ff-3d',V3.on?'1':'0')}catch(e){}V3.side=-1;BZ.s=1;BZ.x=0;BZ.y=0;$('#board').style.transform='';v3Sync();render()}
 v3Sync();
 
@@ -3360,7 +3372,7 @@ function v3Center(bd,w,c,p){
   let tx=OX+(X0-OX)*k-xr-W/2,ty=OY+(Y0-OY)*k-y2-H/2;
   const lim=W*3;tx=Math.max(-lim,Math.min(lim,tx));ty=Math.max(-lim,Math.min(lim,ty));
   /* ขนาดตัวละคร: ตัวผู้เล่นปัจจุบัน (สูง 2.15 เท่าช่อง × กำลังขยายตามระยะ) ต้องไม่สูงเกิน 88% ของพื้นที่จากเท้าถึงขอบ HUD */
-  {const cm=Math.min(c.offsetWidth,c.offsetHeight),mag=1/Math.max(.2,k),fig=2.15*cm*mag,av=(Y0-top)*.88;const f=Math.max(.45,Math.min(1,av/Math.max(1,fig)));V3.fs=f;w.style.setProperty('--fs',f.toFixed(3))}
+  {const cm=Math.min(c.offsetWidth,c.offsetHeight),mag=1/Math.max(.2,k),fig=2.15*cm*mag,av=(Y0-top)*.88;const f=Math.max(.45,Math.min(1,av/Math.max(1,fig)))*(bd.classList.contains('iso')?.62:1);V3.fs=f;w.style.setProperty('--fs',f.toFixed(3))}
   bd.style.setProperty('--tx',tx+'px');w.style.setProperty('--typx',ty+'px');V3.tx=tx;V3.ty=ty}
 
 /* แผงข้อมูลตอนเลือกกองการ์ด: ตัวละครเต็มตัว + การเงิน + ค่าพลัง */
