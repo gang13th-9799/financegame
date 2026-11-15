@@ -1072,6 +1072,10 @@ body:has(#setupView .setup.onl) header{position:relative;z-index:5}
 .board:not(.v3d) .cell .toks{top:auto!important;bottom:2%!important;transform:translateX(-50%)!important}
 .board:not(.v3d) .cell[style*="grid-column:1;"] .toks,.board:not(.v3d) .cell[style*="grid-column:13;"] .toks{transform:none!important}
 .board.v3d .cell .zimg,.board.v3d .cell .cimg{height:50cqmin!important;width:auto!important;max-width:none!important;opacity:1}
+.board.v3d .cell .zimg.pimgc{object-fit:contain}
+.board.v3d .cell[data-side="0"] .zimg.pimgc,.board.v3d .cell[data-side="2"] .zimg.pimgc{width:94cqw!important;height:auto!important;max-height:60cqh}
+.board.v3d .cell[data-side="1"] .zimg.pimgc,.board.v3d .cell[data-side="3"] .zimg.pimgc{width:94cqh!important;height:auto!important;max-height:60cqw}
+.board:not(.v3d) .cell .zimg.pimgc{height:auto!important;width:92%!important;max-height:52%}
 .board.v3d .cell[data-side="2"] .zimg,.board.v3d .cell[data-side="2"] .cimg{top:3%!important;bottom:auto!important;right:50%!important;left:auto!important;transform:translateX(50%)!important}
 .board.v3d .cell[data-side="0"] .zimg,.board.v3d .cell[data-side="0"] .cimg{bottom:3%!important;top:auto!important;right:50%!important;left:auto!important;transform:translateX(50%) rotate(180deg)!important}
 .board.v3d .cell[data-side="1"] .zimg,.board.v3d .cell[data-side="1"] .cimg{left:3%!important;right:auto!important;top:50%!important;bottom:auto!important;transform:translateY(-50%) rotate(-90deg)!important}
@@ -2311,7 +2315,7 @@ function cellBody(k){const q=SQ(k),pr=S.props[k];
 function cellInfo(k){if(MODAL)return;ask({title:esc(SQ(k).n),body:cellBody(k)})}
 let MAPMIN=false;try{MAPMIN=localStorage.getItem('ff-mapmin')==='1'}catch(e){}
 /* ภาพประจำช่องที่ดิน (img/prop-<รหัสช่อง>.webp) — ใส่รหัสช่องที่มีภาพแล้ว */
-const PROPIMG=new Set([]);
+const PROPIMG=new Set(['o1','o3','o4','o6']);
 function toggleMap(){MAPMIN=!MAPMIN;try{localStorage.setItem('ff-mapmin',MAPMIN?'1':'0')}catch(e){}render()}
 function render(){
   if(!S)return;
