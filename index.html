@@ -1091,6 +1091,15 @@ body:has(#setupView .setup.onl) header{position:relative;z-index:5}
 .srow{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:12px 14px;border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.6)}
 .srow-t{display:grid;gap:2px;min-width:0;flex:1 1 220px}.srow-t small{font-size:.86em}
 .srow-c{flex:0 1 auto;display:flex;gap:6px;flex-wrap:wrap}.srow-c .ol-row input{min-width:10ch}
+
+/* แท็บตลาด / ข่าวสาร */
+.tabh{margin:10px 0 8px;font-size:1.05em;display:flex;flex-wrap:wrap;gap:6px;align-items:baseline}.tabh small{font-weight:400;font-size:.8em}
+.npcc{display:flex;gap:10px;align-items:flex-start;padding:10px;border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.7);margin-bottom:8px}
+.npcc.sold{opacity:.55}
+.npcc .newsimg{width:56px;margin:0;flex:none}.npci{font-size:30px;line-height:1;flex:none;width:44px;text-align:center}
+.npcb{flex:1;min-width:0;display:grid;gap:4px}.npct{display:flex;flex-wrap:wrap;gap:6px;align-items:center}.npct b{overflow-wrap:anywhere;flex:1 1 100%}.ntag{display:inline-block;white-space:nowrap;padding:1px 8px;border-radius:999px;font-size:.8em;background:#f1ece0;border:1px solid var(--line);color:#5a5040}.ntag.warn{background:#fde8c8;color:#9a4b00;border-color:#e9b949}
+.npcb button{justify-self:start}.npce{font-size:.92em}
+.tabn{display:inline-grid;place-items:center;min-width:1.4em;height:1.4em;padding:0 .3em;border-radius:999px;background:#e8584a;color:#fff;font-size:.72em;font-weight:700;vertical-align:.15em}
 </style>
 </head>
 <body>
@@ -1119,6 +1128,8 @@ body:has(#setupView .setup.onl) header{position:relative;z-index:5}
       <button id="t-sk" data-tab="sk">ทักษะ</button>
       <button id="t-fin" class="on" data-tab="fin">งบการเงิน</button>
       <button id="t-net" data-tab="net">ธุรกิจ A</button>
+      <button id="t-npcm" data-tab="npcm">ตลาด</button>
+      <button id="t-news" data-tab="news">ข่าวสาร</button>
       <button id="t-mkt" data-tab="mkt">เทรด</button>
       <button id="t-bank" data-tab="bank">ธนาคาร</button>
       <button id="t-log" data-tab="log">บันทึกเกม</button>
@@ -1155,8 +1166,8 @@ const ZPROPS={
  i2:[['โคเวิร์กกิ้งสเปซ',150000,17500,12000],['อาคารสำนักงาน',200000,23500,16000],['โรงแรมธุรกิจ',260000,30500,21000],['ศูนย์ประชุม',300000,35000,24000]],
  i3:[['อาคารธนาคาร',220000,26000,18000],['ตึกตลาดหลักทรัพย์',280000,33000,23000],['ตึกระฟ้า',350000,41000,28000],['ทาวเวอร์ใจกลางเมือง',400000,47000,32000]],
 };
-const SQN={mkt:'ตลาดกลาง',rest:'พักผ่อน',charity:'บริจาคการกุศล',jobless:'ตกงาน',pay:'เงินเดือน',news:'ข่าวตลาด',net:'เครือข่าย',exch:'ตลาดหลักทรัพย์',splurge:'ฟุ่มเฟือย',crisis:'วิกฤตชีวิต',road:'ถนน',bizc:'ศูนย์ธุรกิจ'};
-const SQ_SUB={mkt:'ป้ายขาย · ธนาคารรับซื้อ',rest:'❤+1 ⏳+1–2',charity:'10% ได้ทอย 2 ลูก',jobless:'❤−2 · 2 เดือนได้แค่ Passive (รอบ 1–5: ใบเตือน 🟨)',pay:'รับกระแสเงินสด',news:'ราคาตลาดขยับ',net:'ธุรกิจเครือข่าย',exch:'เทรดฟรี',splurge:'จั่วรายจ่าย',crisis:'ทอยเสี่ยง',road:'เข้า/ออกเมือง',bizc:'ดีลธุรกิจ −20%'};
+const SQN={study:'ศูนย์เรียนรู้',mkt:'ตลาดกลาง',rest:'พักผ่อน',charity:'บริจาคการกุศล',jobless:'ตกงาน',pay:'เงินเดือน',news:'ข่าวตลาด',net:'เครือข่าย',exch:'ตลาดหลักทรัพย์',splurge:'ฟุ่มเฟือย',crisis:'วิกฤตชีวิต',road:'ถนน',bizc:'ศูนย์ธุรกิจ'};
+const SQ_SUB={study:'📚+2–4 · สกิลการ์ดฟรี 1',mkt:'ป้ายขาย · ธนาคารรับซื้อ',rest:'❤+1 ⏳+1–2',charity:'10% ได้ทอย 2 ลูก',jobless:'❤−2 · 2 เดือนได้แค่ Passive (รอบ 1–5: ใบเตือน 🟨)',pay:'รับกระแสเงินสด',news:'ราคาตลาดขยับ',net:'ธุรกิจเครือข่าย',exch:'เทรดฟรี',splurge:'จั่วรายจ่าย',crisis:'ทอยเสี่ยง',road:'เข้า/ออกเมือง',bizc:'ดีลธุรกิจ −20%'};
 const LIVING={o:.85,i:1.3};
 const ZLIVE={o0:.7,o1:.8,o2:1,o3:.85,i0:1.7,i1:1.5,i2:1.4,i3:1.3};
 function lifeMul(p){return ZLIVE[zoneOfCell(p.ring+p.pos)]||1}
@@ -1173,10 +1184,10 @@ const SQ_MAP={};
 (function build(){
   const oc=['pay','pay','pay','pay'];
   for(let s=0;s<4;s++){const z='o'+s,b=s*10;
-    const side=[mkProp(z,0),{t:'rest'},mkProp(z,1),mkProp(z,2),{t:'road',z},mkProp(z,3),{t:'mkt'},mkProp(z,4),{t:'splurge'}];
+    const side=[mkProp(z,0),{t:'rest'},mkProp(z,1),mkProp(z,2),{t:'road',z},mkProp(z,3),{t:'study'},mkProp(z,4),{t:'splurge'}];
     SQ_MAP['o'+b]={t:oc[s]};side.forEach((q,k)=>SQ_MAP['o'+(b+1+k)]=q);}
   SQ_MAP.o9={t:'jobless'};SQ_MAP.o29={t:'charity'};
-  const ic=['pay','exch','pay','jobless'],is2=['mkt','news','mkt','charity'];
+  const ic=['pay','exch','pay','jobless'],is2=['study','news','study','charity'];
   for(let s=0;s<4;s++){const z='i'+s,b=s*8;
     const side=[mkProp(z,0),{t:s%2?'rest':'bizc'},mkProp(z,1),{t:'road',z},mkProp(z,2),{t:is2[s]},mkProp(z,3)];
     SQ_MAP['i'+b]={t:ic[s]};side.forEach((q,k)=>SQ_MAP['i'+(b+1+k)]=q);}
@@ -1594,7 +1605,7 @@ function fxFloat(t,cls='up',delay=0){if(RM)return;setTimeout(()=>{const e=docume
 function fxBanner(p){if(RM)return;const e=document.createElement('div');e.className='fxb';e.innerHTML=`<div>${jobIdx(p)>=0?`<img src="img/c${jobIdx(p)}-wave.webp" style="height:64px;margin:-18px 0 -8px" alt="">`:''}<i class="logo" style="font-size:22px"></i>ตาของ ${esc(p.name)}</div>`;$('#fx').appendChild(e);setTimeout(()=>e.remove(),1800)}
 function fxCoins(n=10){if(RM)return;for(let i=0;i<n;i++){const e=document.createElement('div');e.className='coin';e.textContent=i%3?'🪙':'💵';e.style.left=(innerWidth/2-11)+'px';e.style.top=(innerHeight*.45)+'px';const a=Math.random()*Math.PI*2,r=80+Math.random()*120;e.style.setProperty('--dx',Math.cos(a)*r+'px');e.style.setProperty('--dy',(Math.sin(a)*r-60)+'px');e.style.setProperty('--r',(Math.random()*360-180)+'deg');e.style.animationDelay=(i*40)+'ms';$('#fx').appendChild(e);setTimeout(()=>e.remove(),1500+i*40)}}
 const FXT={trail:{},hop:null};
-const SQICO={pay:'IMG:sq-pay',rest:'IMG:sq-rest',charity:'IMG:sq-charity',jobless:'IMG:sq-jobless',mkt:'IMG:sq-market',news:'IMG:sq-news',exch:'IMG:as-stock',bizc:'IMG:as-biz',splurge:'IMG:sq-luxury',crisis:'IMG:sq-crisis',net:'IMG:sq-net'};
+const SQICO={study:'IMG:back-learn',pay:'IMG:sq-pay',rest:'IMG:sq-rest',charity:'IMG:sq-charity',jobless:'IMG:sq-jobless',mkt:'IMG:sq-market',news:'IMG:sq-news',exch:'IMG:as-stock',bizc:'IMG:as-biz',splurge:'IMG:sq-luxury',crisis:'IMG:sq-crisis',net:'IMG:sq-net'};
 const ZICO={o0:'🌾',o1:'🏭',o2:'🏖️',o3:'🏘️',i0:'🏙️',i1:'🛍️',i2:'🏢',i3:'🏦'};
 
 /* ===================== SETUP ===================== */
@@ -1632,7 +1643,7 @@ const RULES=`<ol class="rules">
 <li>ซื้ออสังหาฯ แบบเกมเศรษฐี ใครหยุดต้องจ่ายค่าผ่านทาง ครบทั้งเขตได้ค่าเช่า ×1.5 ค่าผ่านทาง ×2 หยุดที่ของตัวเองอัปเกรดได้ 2 ขั้น แตะช่องบนกระดานเพื่อดูรายละเอียด</li>
 <li>ตลาดหุ้นและสินค้าเทรดได้ตลอดเทิร์นของคุณ ช่องตลาดหลักทรัพย์ (เมืองหลวง) เทรดฟรีค่าคอม</li>
 <li><b>ธุรกิจ A</b> (ธุรกิจเครือข่าย): ไม่มีช่องบนแผนที่ สมัคร ฿900 เพื่อเปิดแท็บธุรกิจ A · จั่วกองการ์ดธุรกิจ A เพื่อสร้างสายงาน A–F ทำยอด PV และไต่ระดับ สมาชิก → ซิลเวอร์ → โกลด์ → แพลทินัม → รูบี้ → เพิร์ล → เอเมอรัลด์ → ไดมอนด์ · การ์ดในกองนี้ส่วนใหญ่ใช้เวลา 1</li>
-<li><b>ตลาดกลาง</b> (ชั้นนอก 4 ช่อง ชั้นใน 2 ช่อง): ติดป้ายประกาศขายทรัพย์สินให้ผู้เล่นอื่น ซื้อของจากป้ายของคนอื่น และขายให้ธนาคารตามข้อเสนอรับซื้อที่สุ่มมาแต่ละครั้ง</li>
+<li><b>ศูนย์เรียนรู้</b> (ชั้นนอก 4 ช่อง ชั้นใน 2 ช่อง): ได้ความรู้ +2–4 และสกิลการ์ดสุ่ม 1 อย่าง ฟรี</li><li><b>แท็บตลาด</b>: ทุกต้นรอบ NPC เปิดการ์ดโอกาส 2 ใบ · ธุรกิจ/อสังหาฯ ขึ้นแท็บตลาด ซื้อได้ในตาของคุณ ใครยืนยันก่อนได้ (บอทซื้อได้เฉพาะตาของบอท) · ข่าวหุ้น/คริปโต/สินค้า/กองทุน ขึ้นแท็บข่าวสารและมีผลกับราคาทันที · โชว์ 2 รอบ · ในแท็บตลาดยังติดป้ายขาย ซื้อจากป้ายคนอื่น และขายให้ธนาคารได้</li>
 <li>ซื้อขายทรัพย์สินกับผู้เล่นอื่นได้ กู้ธนาคารได้ ดอกเบี้ย 10% ต่อเดือน</li>
 <li>⏱ <b>เทิร์นละไม่เกิน 3 นาที</b> หมดเวลาแล้วจบเทิร์นอัตโนมัติ (การตัดสินใจที่ค้างจะถูกปฏิเสธ) · กด <b>จบเทิร์น</b> ก่อนครบ 3 นาทีได้ ⏳ เวลา +1</li>
 <li><b>ค่าพลัง (เต็ม 10)</b>: ❤ หัวใจ (สุขภาพกายและใจ) · ⏳ เวลา · 📚 ความรู้ — เรียนรู้ใช้เวลา 2 ได้ความรู้ +2 · ดีลธุรกิจใช้เวลา 2 อสังหาฯ นอกกระดานใช้เวลา 1 · ธุรกิจและอสังหาฯ (บนกระดานและการ์ดโอกาส) ให้ผลตอบแทน 6–8% ต่อเดือนตามเขต (เกษตร 6% · ชุมชน/ที่พักหรู 6.5% · อุตสาหกรรม/ช้อปปิ้ง 7% · ท่องเที่ยว/ธุรกิจ 7.5% · การเงิน 8%) ผลตอบแทนยิ่งสูงยิ่งต้องใช้ความรู้มาก (×1–2.5) · ความรู้ 7 ขึ้นไปมองเห็นกลโกง · ทุกวันเงินเดือน (ผ่านหรือหยุด) ❤ หัวใจ สุ่ม −1 ถึง +1 และ <b>ลด −1 ต่อความเครียดแต่ละข้อ</b> (รายรับไม่พอรายจ่าย · หนี้ธนาคารเกิน 3 เท่าของเงินเดือน · ⏳ เหลือ ≤2 · ตกงาน · มีลูก 2 คนขึ้นไป) · ⏳ เวลา +1–3 · 📚 ความรู้ −0–1 · <b>การ์ดชีวิต/โอกาส/ธุรกิจ A หัก ⏳ ❤ 📚 ที่ต้องใช้ออกจริง</b> (การ์ดเรียนรู้และอสังหาฯ บนกระดานใช้ 📚 เป็นเกณฑ์ขั้นต่ำ ไม่หัก) · <b>ได้ ⏳ คืนเพิ่ม</b>: ช่องพักผ่อน 🌿 (⏳+1–2 ❤+1) · การ์ดชีวิตบางใบ · ปุ่มจ้างคนช่วย ฿10,000 = ⏳+1 (เทิร์นละครั้ง) · วันเงินเดือนถ้า Passive ถึง 25%/50%/75% ของรายจ่าย ได้ ⏳+1/+2/+3 · ธุรกิจ A เลื่อนระดับละ ⏳+1 · จบเทิร์นก่อนเวลา ⏳+1 · หัวใจ ≤2 เสียค่ารักษา หัวใจหมดป่วยหนักขาดงาน</li>
@@ -1651,6 +1662,7 @@ function newGame(speed){
   startView();save();
   const body=`<table class="mkt"><tr><th>ผู้เล่น</th><th>อาชีพ</th><th class="r">เงินเดือน</th><th class="r">รายจ่าย</th><th class="r">เงินเก็บ</th><th class="r">❤ ⏳ 📚</th></tr>${S.players.map(p=>{const f=fin(p);return `<tr><td><span class="tok pic" style="display:inline-block;${tokStyle(p)}"></span> ${esc(p.name)}</td><td>${pawnImg(p,'pawn sm')}${S.jobs[p.job].n}</td><td class="r num">${B(p.salary)}</td><td class="r num">${B(f.expenses)}</td><td class="r num">${B(p.cash)}</td><td class="r num">${p.st.h} ${p.st.t} ${p.st.k}</td></tr>`}).join('')}</table>
     <p class="muted">เป้าหมายคือทำให้รายได้จากทรัพย์สินสูงกว่า "รายจ่าย" หัวใจ เวลา และความรู้เริ่มต้นต่างกันตามอาชีพ (เต็ม 10)</p>`;
+  npcDraw();
   ask({npc:'happy',title:'สุ่มอาชีพเรียบร้อย',body,opts:[{v:'ok',l:'เริ่มเล่น',c:'pri'}]}).then(resume);
 }
 function startView(){$('#setupView').hidden=true;$('#gameView').hidden=false;render()}
@@ -1700,7 +1712,7 @@ async function rollTurn(n){
   if(checkWin())return;
   if(S.autoPilot){endTurn();return}
   S.phase='card';S.picks=0;render();save();
-  if(p.bot){if(p._afkb){await sleep(S.speed*.4);endTurn(true);return}botSkills(p);await sleep(S.speed*.6);await pickPile(botPile(p))}
+  if(p.bot){if(p._afkb){await sleep(S.speed*.4);endTurn(true);return}botSkills(p);await botNpc(p);await sleep(S.speed*.6);await pickPile(botPile(p))}
 }
 const PICKS=3;
 function picksMax(){return PICKS+(S.bonusPicks||0)}
@@ -1797,6 +1809,7 @@ function endRound(){
     S.prices[a.s]=np;S.hist[a.s].push(np);if(S.hist[a.s].length>20)S.hist[a.s].shift();
   }
   syncDiv();log(`📈 จบรอบ ราคาตลาดขยับแล้ว เริ่มรอบที่ ${S.round}`);
+  npcDraw();
 }
 function delist(){for(const p of S.players)if(p.stocks.GROW&&p.stocks.GROW.q){log(`💥 GROW ล้มละลาย หุ้นของ ${esc(p.name)} ${p.stocks.GROW.q} หุ้นกลายเป็นศูนย์`);delete p.stocks.GROW}log('GROW ปรับโครงสร้าง กลับเข้าตลาดที่ ฿5')}
 
@@ -1922,7 +1935,7 @@ async function resolveSquare(p){
   }else if(sq.t==='news'){await newsCard(p)}
   else if(sq.t==='exch'){S.freeComm=true;toast('ตลาดหลักทรัพย์: เทิร์นนี้เทรดไม่เสียค่าคอม');await newsCard(p)}
   else if(sq.t==='splurge'){const neg=LIFE.filter(c=>c.neg&&!+c.acc&&!c.sp);if(!neg.length)return;await lifeCard(p,neg[Math.floor(Math.random()*neg.length)],'ช่องฟุ่มเฟือย')}
-  else if(sq.t==='mkt'){await marketSquare(p)}
+  else if(sq.t==='study'){await studySquare(p)}else if(sq.t==='mkt'){await marketSquare(p)}
   else if(sq.t==='rest'){const sx=adj(p,{h:1,t:1+Math.floor(Math.random()*2)});log(`🌿 ${esc(p.name)} พักผ่อน${sx}`);toast(`🌿 ${p.name} พักผ่อน${sx}`)}
   else if(sq.t==='bizc'){const biz=OPP.filter(c=>c.ty==='biz');if(biz.length)await oppCard(p,biz[Math.floor(Math.random()*biz.length)],'ศูนย์ธุรกิจเมืองหลวง')}
   else if(sq.t==='charity'){
@@ -1974,10 +1987,10 @@ async function marketSquare(p){
     const body=`<div class="mkbox"><h4>🏦 ธนาคารเสนอรับซื้อวันนี้</h4>${offHtml}</div>
       <div class="mkbox"><h4>🪧 ป้ายประกาศขายจากผู้เล่นอื่น</h4>${lHtml}</div>
       <div class="mkbox"><h4>✍️ ติดป้ายขายทรัพย์สินของคุณ</h4>${postHtml}${myHtml?`<h4 style="margin-top:6px">ป้ายของคุณ</h4>${myHtml}`:''}</div>
-      <p class="muted">เงินสด ${B(p.cash)} · ป้ายจะติดอยู่จนกว่าจะมีคนซื้อหรือคุณปลดป้าย ผู้เล่นอื่นซื้อได้เมื่อมาหยุดที่ตลาดกลาง</p>`;
+      <p class="muted">เงินสด ${B(p.cash)} · ป้ายจะติดอยู่จนกว่าจะมีคนซื้อหรือคุณปลดป้าย ผู้เล่นอื่นซื้อได้ในแท็บตลาดตอนตาของเขา</p>`;
     const bot=botMarket(p,offers,mine,others,avail,soldBank);
     if(p.bot&&bot.v==='done')break;
-    const r=p.bot?(await sleep(S.speed*.6),{v:bot.v,form:bot.form}):await ask({actor:p,kind:'mkt',title:'ตลาดกลาง',body,opts:[{v:'done',l:'ออกจากตลาด',c:'pri'}],bot:bot.v,
+    const r=p.bot?(await sleep(S.speed*.6),{v:bot.v,form:bot.form}):await ask({actor:p,kind:'mkt',title:'ตลาดซื้อขาย',body,opts:[{v:'done',l:'ออกจากตลาด',c:'pri'}],bot:bot.v,
       onShow:m=>{const s=m.querySelector('#mkpk'),i=m.querySelector('#mkpp');if(s&&i){const sync=()=>{i.value=Math.round(+s.selectedOptions[0].dataset.fair*1.2/1000)*1000};s.onchange=sync;sync()}}});
     const v=r.v,form=p.bot?bot.form:r.form;
     if(v==='done'||!v)break;
@@ -2145,16 +2158,74 @@ async function learnCard(p){
 function gainSkill(p,k){const s=SKILLDB[k];if(!s)return;
   if(s.kind==='active'){p.charges=p.charges||{};p.charges[k]=(p.charges[k]||0)+s.uses;log(`🃏 ${esc(p.name)} ได้สกิลการ์ด ${esc(s.n)} +${s.uses} ครั้ง (มี ${p.charges[k]})`);toast(`🃏 ${p.name} ได้สกิลการ์ด ${s.n} ×${s.uses}`);return}
   p.skills.push(k);if(s.eff==='salary')p.salary=rnd100(p.salary*(1+s.val/100));log(`🎓 ${esc(p.name)} ได้ทักษะ ${skillName(k)}`);toast(`${p.name} ได้ทักษะ ${skillName(k)}`)}
+
+/* ===================== NPC เปิดการ์ดโอกาสทุกต้นรอบ · แท็บตลาด / แท็บข่าวสาร =====================
+   ทุกต้นรอบ (และตอนเริ่มเกม) NPC จั่วการ์ดโอกาส 2 ใบจากกองเดียวกับผู้เล่น
+   ธุรกิจ/อสังหาฯ/แชร์/ข้อเสนอซื้อ/รีไฟแนนซ์/ธุรกิจ A → S.mk (แท็บตลาด) · ข่าว/หุ้น IPO/ทอง/กองทุน → S.nw (แท็บข่าวสาร)
+   โชว์ 2 รอบ (exp = รอบที่เปิด + 1) · ซื้อได้ในตาของตัวเอง ใครยืนยันก่อนได้ · บอทซื้อได้เฉพาะตาของบอท */
+const NPC_MK=['re','biz','scam','buyer','refi','netinv'];
+const NPC_BUYPRE=['re','biz','scam','fund'];
+function npcDraw(){if(!S)return;
+  S.mk=(S.mk||[]).filter(x=>x.exp>=S.round&&x.sold==null);S.nw=(S.nw||[]).filter(x=>x.exp>=S.round&&x.sold==null);
+  const out=[],news=[];
+  for(let i=0;i<2;i++){const d=parDeck('opp'),c0=OPP[d.pop()];if(!c0)continue;let c={...c0};const id='n'+S.round+'_'+i+'_'+Math.random().toString(36).slice(2,6);
+    if(NPC_MK.includes(c.ty)){if(['re','biz'].includes(c.ty)){const zs=Object.keys(ZROI);c=oppPrep(c,zs[Math.floor(Math.random()*zs.length)])}S.mk.push({id,c,r0:S.round,exp:S.round+1});out.push('🏪 '+esc(c.t))}
+    else{S.nw.push({id,c,r0:S.round,exp:S.round+1});if(c.ty==='mnews'||c.e)news.push({c,by:'NPC'});out.push('📰 '+esc(c.t))}}
+  if(news.length)parApplyNews(news);
+  log(`🧑‍💼 NPC เปิดการ์ดโอกาส 2 ใบ: ${out.join(' · ')}`);
+  const cur=S.players&&S.players.find(q=>!q.bot);if(cur)ruleNote(cur,'NPC เปิดการ์ดโอกาสต้นรอบ',`${out.join(' · ')} — ดูได้ที่แท็บตลาด / ข่าวสาร (อยู่ 2 รอบ)`)}
+function npcLeft(x){return x.exp-S.round+1}
+async function npcClaim(L,who){if(L.sold!=null)return L.sold===who;
+  if(ON.play&&S.par&&S.rp==='h'){const x=await ON.be.tx(`rooms/${ON.code}/mk/${L.id}`,cur=>cur==null?who:undefined);const ok=!!(x.ok&&x.val===who);L.sold=ok?who:x.val;render();return ok}
+  L.sold=who;return true}
+async function npcTake(id){
+  const L=[...(S.mk||[]),...(S.nw||[])].find(x=>x.id===id);if(!L)return;
+  if(L.sold!=null){toast('มีผู้เล่นอื่นรับโอกาสนี้ไปแล้ว');return}
+  if(!canAct()){toast('รับโอกาสได้ตอนตาของคุณ');return}
+  const p=cp(),pre=NPC_BUYPRE.includes(L.c.ty),before=JSON.stringify(p);
+  await oppCard(p,{...L.c,_pre:pre?()=>npcClaim(L,p.id):null},'โอกาสจาก NPC');
+  if(!pre&&JSON.stringify(p)!==before)await npcClaim(L,p.id);
+  if(L.sold===p.id)log(`🏪 ${esc(p.name)} รับโอกาส "${esc(L.c.t)}" จากแท็บตลาด`);
+  render();save()}
+/* บอท: ดูโอกาสในตลาดเฉพาะตาของตัวเอง */
+async function botNpc(p){for(const L of [...(S.mk||[]),...(S.nw||[])]){if(L.sold!=null||!['re','biz','fund'].includes(L.c.ty))continue;
+    const cost=buyPrice(p,L.c.cost||0);if(p.cash<cost+fin(p).expenses||Math.random()>.45)continue;
+    await oppCard(p,{...L.c,_pre:()=>npcClaim(L,p.id)},'โอกาสจาก NPC');if(L.sold===p.id)log(`🏪 ${esc(p.name)} รับโอกาส "${esc(L.c.t)}" จากแท็บตลาด`);break}}
+function npcCardHtml(L,act){const c=L.c,left=npcLeft(L),sold=L.sold!=null;const cost=c.cost?buyPrice(cp(),c.cost):0;
+  const ico=c.ty==='mnews'?'📰':OPPICO[c.ty]||'💼',tyN=c.ty==='mnews'?({st:'ข่าวหุ้น',fd:'ข่าวกองทุน',cy:'ข่าวคริปโต',cm:'ข่าวสินค้า'}[c.cat]||'ข่าวตลาด'):c.ty==='scam'?'การลงทุน':OPP_TY[c.ty]||'โอกาส';
+  const need=[c.nt?`⏳ ${c.nt}`:'',c.nh?`❤ ${c.nh}`:'',c.nk?`📚 ${c.nk}`:''].filter(Boolean).join(' · ');
+  let eff='';if(c.e)eff=Object.entries(c.e).map(([k,v])=>`<span class="${v>0?'pos':'neg'}">${esc((AS(k)||{s:k}).s)} ${v>0?'+':''}${v}%</span>`).join(' ')+(c.cash?` · ทุกคน${c.cash>0?'ได้':'จ่าย'} ${B(Math.abs(c.cash))}`:'');
+  const buyable=c.ty!=='mnews';
+  return `<div class="npcc ${sold?'sold':''}">${c.ty==='mnews'?newsImg(c.tone!=='g',c.cat):`<span class="npci">${ico}</span>`}<div class="npcb"><div class="npct"><b>${esc(c.t)}</b><span class="ntag">${tyN}</span><span class="ntag ${left<=1?'warn':''}">เหลือ ${left} รอบ</span></div>
+   <div class="muted">${cost?`ราคา ${B(cost)}`:''}${c.cf||c.act?` · รายได้ +${B((c.cf||0)+(c.act||0))}/เดือน`:''}${c._z?` · เขต${ZONES[c._z].n} ${c._roi}%/เดือน`:''}${need?` · ใช้ ${need}`:''}</div>
+   ${eff?`<div class="npce">${eff} <span class="muted">· มีผลแล้วตอนต้นรอบ ${L.r0}</span></div>`:''}
+   ${buyable?(sold?`<div class="muted">✔ ${esc((P(L.sold)||{name:'มีคน'}).name)} รับไปแล้ว</div>`:`<button class="sm ${act?'pri':''}" ${act?'':'disabled'} onclick="npcTake('${L.id}')">${c.ty==='buyer'?'ดูข้อเสนอ / ขาย':['refi','netinv'].includes(c.ty)?'ดูรายละเอียด':'ซื้อ / ดูเงื่อนไข'}</button>`):''}</div></div>`}
+function renderNpcMarket(){const act=canAct(),mk=(S.mk||[]);
+  return `<h3 class="tabh">🏪 โอกาสจาก NPC <small class="muted">เปิดใหม่ทุกต้นรอบ · อยู่ 2 รอบ · ใครยืนยันก่อนได้</small></h3>
+  ${mk.length?mk.map(L=>npcCardHtml(L,act)).join(''):'<p class="muted">รอบนี้ยังไม่มีโอกาสธุรกิจ/อสังหาฯ จาก NPC</p>'}
+  <h3 class="tabh">🪧 ตลาดซื้อขาย <small class="muted">ติดป้ายขาย · ซื้อจากป้ายคนอื่น · ขายให้ธนาคาร</small></h3>
+  ${(cleanListings(),S.listings.length)?S.listings.map(l=>{const sl=P(l.seller),a=findAsset(sl,l.key);return a?`<div class="ln"><span><span class="tok pic" style="display:inline-block;${tokStyle(sl)}"></span> ${esc(sl.name)} · ${esc(a.n)} <span class="muted">(+${B(a.cf)}/เดือน)</span></span><b class="num">${B(l.price)}</b></div>`:''}).join(''):'<p class="muted">ยังไม่มีป้ายขาย</p>'}
+  <button class="${act?'pri':''}" ${act?'':'disabled'} onclick="if(canAct())marketSquare(cp()).then(()=>{render();save()})">🪧 เปิดตลาดซื้อขาย</button>
+  ${act?'':'<p class="muted" style="font-size:12px">ซื้อขายได้ตอนตาของคุณ</p>'}`}
+function renderNewsTab(){const act=canAct(),nw=(S.nw||[]);
+  return `<h3 class="tabh">📰 ข่าวสาร <small class="muted">NPC เปิดทุกต้นรอบ · ข่าวมีผลกับราคาและทุกคนทันที · อยู่ 2 รอบ</small></h3>
+  ${nw.length?nw.map(L=>npcCardHtml(L,act)).join(''):'<p class="muted">ยังไม่มีข่าวรอบนี้</p>'}`}
+async function studySquare(p){const kg=2+Math.floor(Math.random()*3),pool=Object.keys(SKILLDB).filter(isActiveSk),sk=pool.length?pool[Math.floor(Math.random()*pool.length)]:null;
+  const sx=adj(p,{k:kg},true);if(sk)gainSkill(p,sk);log(`🎓 ${esc(p.name)} แวะศูนย์เรียนรู้${sx}`);
+  ruleNote(p,'ศูนย์เรียนรู้',`ได้ความรู้ +${kg}${sk?` และสกิลการ์ด ${SKILLDB[sk].n}`:''} ฟรี ไม่เสียหัวใจ ไม่เสียเวลา`);
+  await choose({actor:p,kind:'learn',pose:'happy',title:'🎓 ศูนย์เรียนรู้',body:`<p>เรียนฟรี ไม่เสียหัวใจ ไม่เสียเวลา</p><p>ได้ความรู้ 📚 <b>+${kg}</b></p>${sk?`<p>ได้สกิลการ์ด <b>${esc(SKILLDB[sk].n)}</b> +${SKILLDB[sk].uses} ครั้ง</p>`:''}`,opts:[{v:'ok',l:'รับทราบ',c:'pri'}],bot:'ok'})}
+
+function oppPrep(c,z){const roi=ZROI[z]||7,tot=Math.round((+c.cost||0)*roi/100/100)*100,A=+c.act||0,Pp=+c.cf||0,sum=A+Pp,na=sum?Math.round(tot*A/sum/100)*100:0;
+  return {...c,act:na,cf:tot-na,nk:Math.max(+c.nk||0,bizNeedK(+c.cost||0,roi)),_roi:roi,_z:z}}
 async function oppCard(p,c,src){
   if(c.ty==='mnews'){await mnewsCard(p,c);return}
-  if(['re','biz'].includes(c.ty)){const z=zoneOfCell(p.ring+p.pos),roi=ZROI[z]||7,tot=Math.round((+c.cost||0)*roi/100/100)*100,A=+c.act||0,Pp=+c.cf||0,sum=A+Pp,na=sum?Math.round(tot*A/sum/100)*100:0;
-    c={...c,act:na,cf:tot-na,nk:Math.max(+c.nk||0,bizNeedK(+c.cost||0,roi)),_roi:roi,_z:z};src=(src?src+' · ':'')+`ผลตอบแทน ${roi}%/เดือน ตามเขต${ZONES[z].n} · ใช้ 📚 ${c.nk}`}
+  if(['re','biz'].includes(c.ty)){if(c._z==null)c=oppPrep(c,zoneOfCell(p.ring+p.pos));src=(src?src+' · ':'')+`ผลตอบแทน ${c._roi}%/เดือน ตามเขต${ZONES[c._z].n} · ใช้ 📚 ${c.nk}`}
   if(['re','biz','fund','scam'].includes(c.ty)){
     const cap=c.ty==='biz'&&p.ring==='i';
     const cost=buyPrice(p,c.cost*(cap?.8:1));
     const warn=c.ty==='scam'&&knowsScam(p)?`<p class="neg"><b>⚠ ทักษะรู้ทันกลโกงเตือน:</b> ผลตอบแทนสูงผิดปกติ นี่คือแชร์ลูกโซ่ ไม่นับเป็นรายได้จากทรัพย์สิน และพร้อมล่มทุกเดือน</p>`:'';
     const tyN=c.ty==='scam'?'การลงทุน':OPP_TY[c.ty];
-    const ok=await buyFlow(p,cost,{kind:'opp',needT:c.nt||0,needH:c.nh||0,needK:c.nk||0,cf:c.ty==='scam'?(knowsScam(p)?-1:c.cf):c.cf+(c.act||0),title:c.t,body:`${chips([chip(OPPICO[c.ty]||'💼',tyN,'','tag'),c.ty==='scam'?chip('📈',`+${B(c.cf)}`,'อ้าง/เดือน','gain'):'',c.ty!=='scam'&&(c.cf||!c.act)?chip('📈',`+${B(dealCf(p,c))}`,'Passive/เดือน','gain'):'',c.act?chip('💼',`+${B(c.act)}`,'Active/เดือน','gain2'):''].filter(Boolean))}${src?`<p class="muted">${src}</p>`:''}${cap?chips([chip('🏙️','−20%','เมืองหลวง','gain')]):''}${warn}`});
+    const ok=await buyFlow(p,cost,{kind:'opp',pre:c._pre||null,needT:c.nt||0,needH:c.nh||0,needK:c.nk||0,cf:c.ty==='scam'?(knowsScam(p)?-1:c.cf):c.cf+(c.act||0),title:c.t,body:`${chips([chip(OPPICO[c.ty]||'💼',tyN,'','tag'),c.ty==='scam'?chip('📈',`+${B(c.cf)}`,'อ้าง/เดือน','gain'):'',c.ty!=='scam'&&(c.cf||!c.act)?chip('📈',`+${B(dealCf(p,c))}`,'Passive/เดือน','gain'):'',c.act?chip('💼',`+${B(c.act)}`,'Active/เดือน','gain2'):''].filter(Boolean))}${src?`<p class="muted">${src}</p>`:''}${cap?chips([chip('🏙️','−20%','เมืองหลวง','gain')]):''}${warn}`});
     if(ok){p.deals.push({id:Date.now()+Math.random(),t:c.t,ty:c.ty,cost,cf:c.cf,act:c.act||0});log(`✨ ${esc(p.name)} ลงทุน ${esc(c.t)} ${B(cost)}${c.cf?` · Passive +${B(c.cf)}`:''}${c.act?` · Active +${B(c.act)}`:''}`)}
   }else if(c.ty==='ipo'){
     const pr=Math.round(S.prices.GROW*.6*10)/10;
@@ -2305,6 +2376,7 @@ const SQ_DESC={
  jobless:()=>`<p>ติดสถานะ <b>ตกงาน</b>: วันเงินเดือน 2 ครั้งถัดไปได้เฉพาะ Passive income (ไม่ได้เงินเดือนและรายได้ Active) แล้วหักรายจ่ายรวม ถ้าเงินสดไม่พอ เลือกกู้ หรือขายทรัพย์สินในราคา 50% · หัวใจ −2</p>`,
  charity:()=>`<p>บริจาค <b>10% ของรายรับรวม</b> (เงินเดือน + รายได้เสริม + รายได้จากทรัพย์สิน)</p><p>แลกกับสิทธิ์เลือกทอยลูกเต๋า 1 หรือ 2 ลูก ใน ${CHARITY_TURNS} เทิร์นถัดไป (ปกติทอยได้ลูกเดียว) · ไม่บริจาคก็ได้</p>`,
  road:k=>`<p>เดินผ่านช่องนี้เลือกได้ว่าจะ<b>ข้ามไปอีกชั้น</b>หรือเดินต่อชั้นเดิม การข้ามนับเป็น 1 ก้าว</p><p>เมืองหลวง: สร้างธุรกิจง่าย ค่าครองชีพ ×1.3 อสังหาฯ แพง · ต่างจังหวัด: ค่าครองชีพ ×0.85 อสังหาฯ ถูก</p>`,
+ study:()=>`<p><b>ศูนย์เรียนรู้</b>: ได้ความรู้ 📚 +2–4 และสกิลการ์ด (Active) สุ่ม 1 อย่าง ฟรี ไม่เสียหัวใจ ไม่เสียเวลา</p>`,
  mkt:()=>`<p><b>ตลาดกลาง</b>: ติดป้ายขายทรัพย์สินให้ผู้เล่นอื่น · ซื้อของจากป้ายของคนอื่น · ขายให้ธนาคารตามข้อเสนอรับซื้อที่สุ่มมา 3 ข้อทุกครั้งที่หยุด</p>`,
  news:()=>`<p>จั่ว<b>ข่าวตลาด</b> 1 ใบ ราคาหุ้นหรือสินค้าบางตัวจะขึ้นหรือลงทันที</p>`,
  exch:()=>`<p>จั่วข่าวตลาด 1 ใบ และ<b>ซื้อขายหุ้นไม่เสียค่าคอม</b>ตลอดเทิร์นนี้</p>`,
@@ -2387,7 +2459,8 @@ function render(){
   $('#legend').innerHTML=Object.entries(ZONES).map(([z,v])=>`<span><i style="background:${v.c}"></i>${v.n}</span>`).join('')+`<span><i style="background:#9da3a8"></i>ถนนคอนกรีต เข้า/ออกเมือง</span><span><i style="background:#ffd338"></i>เงินเดือน</span><span><i style="background:#46206a"></i>ตกงาน</span><span><i style="background:#f5862a"></i>บริจาค</span>`;
 
   document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.tab===TAB));
-  $('#panel').innerHTML=TAB==='pl'?renderPlayers():TAB==='sk'?renderSkills():TAB==='fin'?renderFin():TAB==='net'?renderNet():TAB==='mkt'?renderMkt():TAB==='bank'?renderBank():`<div class="log">${S.log.map(l=>`<div>${l}</div>`).join('')}</div>`;
+  {const nm=(S.mk||[]).filter(x=>x.sold==null).length,nn=(S.nw||[]).length,a=$('#t-npcm'),b=$('#t-news');if(a)a.innerHTML=`ตลาด${nm?` <span class="tabn">${nm}</span>`:''}`;if(b)b.innerHTML=`ข่าวสาร${nn?` <span class="tabn">${nn}</span>`:''}`}
+  $('#panel').innerHTML=TAB==='pl'?renderPlayers():TAB==='sk'?renderSkills():TAB==='fin'?renderFin():TAB==='net'?renderNet():TAB==='npcm'?renderNpcMarket():TAB==='news'?renderNewsTab():TAB==='mkt'?renderMkt():TAB==='bank'?renderBank():`<div class="log">${S.log.map(l=>`<div>${l}</div>`).join('')}</div>`;
 }
 function renderSkills(){
   const desc=k=>(EFFTXT[SKILLDB[k].eff]||(()=>''))(SKILLDB[k].val);
@@ -2521,9 +2594,7 @@ function renderMkt(){
   ${[['stock','หุ้น','as-stock'],['com','สินค้าโภคภัณฑ์','as-commod'],['cry','คริปโต','as-crypto']].map(([k,t,im])=>`<h4 class="mgh"><img class="mghi" src="img/${im}.webp" alt="">${t}${k==='cry'?` <span class="crydate">ราคาจริง (บาท) · 1 รอบ = 1 เดือน</span>`:''}</h4>`+ASSETS.filter(a=>a.k===k).map(a=>mrow(a,p,dis,acc)).join('')).join('')}</div>
   ${acc.tc?`<div class="ln" style="margin-top:6px"><span><b>รวมพอร์ต ${esc(p.name)}</b><br><span class="muted" style="font-size:12px">ทุน ${B(acc.tc)} · มูลค่าตอนนี้ ${B(acc.tv)}</span></span><b class="num ${acc.tv>=acc.tc?'pos':'neg'}">${acc.tv>=acc.tc?'+':'−'}${B(Math.abs(acc.tv-acc.tc)).replace('−','')} (${acc.tv>=acc.tc?'+':''}${((acc.tv-acc.tc)/acc.tc*100).toFixed(1)}%)</b></div>`:''}
   <p class="muted" style="font-size:12px;margin:4px 0 0">ทุนเฉลี่ยรวมค่าคอมมิชชันแล้ว</p>
-  <h3 style="margin:14px 0 6px;font-size:14px">🪧 ป้ายประกาศขายในตลาดกลาง</h3>
-  ${(cleanListings(),S.listings.length)?S.listings.map(l=>{const s=P(l.seller),a=findAsset(s,l.key);return `<div class="ln"><span><span class="tok pic" style="display:inline-block;${tokStyle(s)}"></span> ${esc(s.name)} · ${esc(a.n)} <span class="muted">(+${B(a.cf)}/เดือน)</span></span><b class="num">${B(l.price)}</b></div>`}).join(''):'<p class="muted">ยังไม่มีป้ายขาย</p>'}
-  <p class="muted" style="font-size:12px">ซื้อได้เมื่อหยุดที่ช่องตลาดกลาง · ราคาขยับทุกครั้งที่จบรอบ และเมื่อมีข่าวตลาด หุ้นที่มีปันผลนับเป็นรายได้จากทรัพย์สินทุกเดือน ${act?'':'· ซื้อขายได้เฉพาะในเทิร์นของผู้เล่นที่เป็นคน'}</p>`;
+  <p class="muted" style="font-size:12px">ราคาขยับทุกครั้งที่จบรอบ และเมื่อมีข่าวตลาด หุ้นที่มีปันผลนับเป็นรายได้จากทรัพย์สินทุกเดือน · ป้ายประกาศขายทรัพย์สินอยู่ในแท็บตลาด ${act?'':'· ซื้อขายได้เฉพาะในเทิร์นของคุณ'}</p>`;
 }
 
 /* ===================== เทรด: แตะชื่อ → ซื้อ/ขาย → กดปุ่มจำนวนหน่วย → ยืนยัน ===================== */
@@ -2943,7 +3014,7 @@ async function onRoom(r){
   if(r.status==='lobby'){ON.play=false;onLobby(r);return}
   ON.play=true;if(S&&!$('#gameView').hidden&&ON.lastDrv==null)ON.lastDrv=iDrive();
   if(!ON.subbed){ON.subbed=1;const c=ON.code;ON.unsub.push(ON.be.on(`rooms/${c}/st`,onState));ON.unsub.push(ON.be.on(`rooms/${c}/q`,onQ));
-    ON.unsub.push(ON.be.on(`rooms/${c}/p`,m=>{ON.pQ=(ON.pQ||Promise.resolve()).then(()=>parOnP(m))}),ON.be.on(`rooms/${c}/pr`,parOnPr),ON.be.on(`rooms/${c}/lg`,parOnLg),ON.be.on(`rooms/${c}/led`,m=>{ON.lQ=(ON.lQ||Promise.resolve()).then(()=>parOnLed(m))}),ON.be.on(`rooms/${c}/afk`,parOnAfk))}
+    ON.unsub.push(ON.be.on(`rooms/${c}/p`,m=>{ON.pQ=(ON.pQ||Promise.resolve()).then(()=>parOnP(m))}),ON.be.on(`rooms/${c}/pr`,parOnPr),ON.be.on(`rooms/${c}/lg`,parOnLg),ON.be.on(`rooms/${c}/led`,m=>{ON.lQ=(ON.lQ||Promise.resolve()).then(()=>parOnLed(m))}),ON.be.on(`rooms/${c}/afk`,parOnAfk),ON.be.on(`rooms/${c}/mk`,parOnMk))}
   onDrive()}
 function onLobby(r){
   const v=$('#setupView');$('#gameView').hidden=true;v.hidden=false;const host=r.host===ON.user.uid,n=r.n||4;
@@ -3077,7 +3148,7 @@ function parStartRound(){
   for(const q of hum){q.done=!!q.afk||!onLive(q.uid);q.acted=false;q.tEnd=now+TURN_MS;delete q.ph;delete q.pk;delete q.fc;q.hired=false}
   parDeal(hum.filter(q=>!q.done));
   log(`🔔 <b>เริ่มรอบที่ ${S.round}</b> · ผู้เล่นทุกคนเล่นพร้อมกัน คนละ 3 นาที`);
-  const c=ON.code;['p','pr','lg','led','nq'].forEach(k=>ON.be.remove(`rooms/${c}/${k}`));
+  const c=ON.code;['p','pr','lg','led','nq','mk'].forEach(k=>ON.be.remove(`rooms/${c}/${k}`));
   ON.lgSeen={};ON.pz={};ON.prSent={};ON.ownRound=S.round;
   parLocalTurn();render();onPush();parBanner();
 }
@@ -3110,6 +3181,7 @@ async function parOnP(map){if(!map||!PARH())return;ON.pz=ON.pz||{};let ch=false;
     if(!PARH()||e.r!==S.round)return;ON.pz[i]=e.z;S.players[+i]=o;ch=true;
     if(mine){ON.ownRound=S.round;parLocalTurn()}}
   if(ch){render();if(parMaster())parCheck()}}
+function parOnMk(map){if(!map||!S)return;let ch=false;for(const id in map){const L=[...(S.mk||[]),...(S.nw||[])].find(x=>x.id===id);if(L&&L.sold==null){L.sold=map[id];ch=true}}if(ch)render()}
 function parOnPr(map){if(!map||!PARH())return;let ch=false;for(const k in map){const v=map[k];if(v&&JSON.stringify(S.props[k])!==JSON.stringify(v)){S.props[k]=v;ch=true}}if(ch)render()}
 function parOnLg(map){if(!map||!PAR())return;ON.lgSeen=ON.lgSeen||{};let ch=false;
   for(const id of Object.keys(map).sort()){if(ON.lgSeen[id])continue;ON.lgSeen[id]=1;const e=map[id];if(!e||e.by===ON.user.uid||S.log.includes(e.t))continue;S.log.unshift(e.t);ch=true}

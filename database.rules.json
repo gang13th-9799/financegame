@@ -68,6 +68,9 @@
           "$uid": {
             ".write": "auth != null && data.parent().parent().child('mem').child(auth.uid).exists()"
           }
+        },
+        "mk": {
+          ".write": "auth != null && data.parent().child('mem').child(auth.uid).exists()"
         }
       }
     }
