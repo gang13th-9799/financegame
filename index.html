@@ -1104,14 +1104,16 @@ body:has(#setupView .setup.onl) header{position:relative;z-index:5}
 /* ===== มุมมอง 3D แบบ isometric (กล้องตายตัว) ===== */
 .board.v3d.iso{--band:minmax(0,1fr);background:none!important;grid-template-columns:minmax(0,1fr) var(--band) repeat(9,minmax(0,1fr)) var(--band) minmax(0,1fr)!important;grid-template-rows:minmax(0,1fr) var(--band) repeat(9,minmax(0,1fr)) var(--band) minmax(0,1fr)!important}
 .landring{display:none}
-.tbase{display:none}.gapt{display:none}.board.v3d.iso .gapt{display:block;position:relative;container-type:size;z-index:1}.board.v3d.iso .gapt .pimgc{position:absolute;left:50%;top:50%;width:calc(var(--cw,62px) * 1.414);max-width:none;transform-origin:50% var(--b);transform:translate(-50%,calc(-1 * var(--b))) translateZ(calc(var(--d,0) * .04px)) rotate(-45deg) scaleY(var(--s)) scaleX(var(--m,1));pointer-events:none}
-.board.v3d.iso .cell .ico{position:absolute;left:50%;top:50%;z-index:3;transform-origin:50% 100%;transform:translate(-50%,-100%) rotateZ(calc(-1 * var(--ang,45deg))) rotateX(calc(-1 * var(--tilt)))}.board.v3d.iso .cell .zimg.tbase{display:block}
+.tbase{display:none}.gapt{display:none}.board.v3d.iso .gapt{display:none;position:relative;container-type:size;z-index:1}.board.v3d.iso .gapt .pimgc{position:absolute;left:50%;top:50%;width:calc(var(--cw,62px) * 1.414);max-width:none;transform-origin:50% var(--b);transform:translate(-50%,calc(-1 * var(--b))) translateZ(calc(var(--d,0) * .04px)) rotate(-45deg) scaleY(var(--s)) scaleX(var(--m,1));pointer-events:none}
+.board.v3d.iso .cell .ico{position:absolute;left:50%;top:50%;z-index:3;transform-origin:50% 100%;transform:translate(-50%,-100%) rotateZ(calc(-1 * var(--ang,45deg))) rotateX(calc(-1 * var(--tilt)))}.board.v3d.iso .cell .zimg.tbase{display:none}
 .board.v3d.iso .cell:has(.tbase)::before,.board.v3d.iso .cell:has(.tbase)::after{display:none}
 /* แถบภูมิทัศน์ระหว่างวงนอก-วงใน (เฉพาะ isometric): หญ้า + แม่น้ำ + ทางรถไฟ รอใส่ภาพตกแต่ง */
 .board.v3d.iso .landring{display:block;grid-row:2/13;grid-column:2/13;position:relative;z-index:0;container-type:size;background:radial-gradient(circle at 30% 30%,#9ccf6e,#86bd5c 70%);border-radius:6px}
 .board.v3d.iso .landring i{position:absolute;display:block;pointer-events:none}
-.board.v3d.iso .lr-river{inset:2.2%;border:2.6cqw solid #5ec0cf;border-radius:3cqw;box-shadow:inset 0 0 0 .5cqw #8fdbe6,0 0 0 .5cqw #e8d9a6}
-.board.v3d.iso .lr-rail{inset:8.6%;border:1cqw dashed #6b4f36;border-radius:2cqw;outline:1.1cqw solid #b9b3a6;outline-offset:-1.05cqw}
+.board.v3d.iso .lr-road{inset:0;border:2.7cqw solid #8e9198;border-radius:1.5cqw;box-shadow:inset 0 0 0 .35cqw #d9d2bd}
+.board.v3d.iso .lr-line{inset:1.25cqw;border:.25cqw dashed #fff;border-radius:.6cqw;opacity:.9}
+.board.v3d.iso .lr-river{inset:3.6%;border:1.9cqw solid #5ec0cf;border-radius:3cqw;box-shadow:inset 0 0 0 .5cqw #8fdbe6,0 0 0 .5cqw #e8d9a6}
+.board.v3d.iso .lr-rail{inset:7.2%;border:1cqw dashed #6b4f36;border-radius:2cqw;outline:1.1cqw solid #b9b3a6;outline-offset:-1.05cqw}
 .board.v3d.iso .cityplate{margin:0;box-shadow:0 0 0 3px #fffdf6,0 0 0 6px #8fa9cc}
 .board.v3d.iso .bridge{margin:0 22%;z-index:1}.board.v3d.iso .bridge.h{margin:22% 0}
 .board.v3d.iso .cell:has(.pimgc){background:transparent!important;border-color:transparent!important;box-shadow:none!important}
@@ -2387,7 +2389,7 @@ function cellPos0(k){const ring=k[0],i=+k.slice(1);
 const GX=x=>x===1?1:x===11?13:x+1;
 function cellPos(k){const [r,c]=cellPos0(k);return [GX(r),GX(c)]}
 function roadDir(k){const [r]=cellPos0(k),i=+k.slice(1),L=RING_LEN[k[0]];const side=Math.floor(i/(L/4));return side%2===0?'v':'h'}
-const CITY_PLATE='<div class="landring" aria-hidden="true"><i class="lr-river"></i><i class="lr-rail"></i></div>'+[[1,2,0],[1,12,0],[13,2,0],[13,12,0],[2,1,1],[12,1,1],[2,13,1],[12,13,1]].map(([r,c,m])=>`<div class="gapt" style="grid-row:${r};grid-column:${c}" aria-hidden="true"><img class="zimg pimgc" style="--b:43.9%;--s:1.664;--m:${m?-1:1};--d:${r+c}" src="img/tile-road.webp" alt=""></div>`).join('')+'<div class="cityplate" aria-hidden="true"><span>เมืองหลวง</span></div>'+[[2,7],[7,12],[12,7],[7,2]].map(([r,c],i)=>`<div class="bridge ${i%2?'h':'v'}" style="grid-row:${r};grid-column:${c}" aria-hidden="true"></div>`).join('');
+const CITY_PLATE='<div class="landring" aria-hidden="true"><i class="lr-road"></i><i class="lr-line"></i><i class="lr-river"></i><i class="lr-rail"></i></div>'+[[1,2,0],[1,12,0],[13,2,0],[13,12,0],[2,1,1],[12,1,1],[2,13,1],[12,13,1]].map(([r,c,m])=>`<div class="gapt" style="grid-row:${r};grid-column:${c}" aria-hidden="true"><img class="zimg pimgc" style="--b:43.9%;--s:1.664;--m:${m?-1:1};--d:${r+c}" src="img/tile-road.webp" alt=""></div>`).join('')+'<div class="cityplate" aria-hidden="true"><span>เมืองหลวง</span></div>'+[[2,7],[7,12],[12,7],[7,2]].map(([r,c],i)=>`<div class="bridge ${i%2?'h':'v'}" style="grid-row:${r};grid-column:${c}" aria-hidden="true"></div>`).join('');
 function zoneOfCell(k){const ring=k[0],i=+k.slice(1),L=RING_LEN[ring];return ring+Math.min(3,Math.floor(i/(L/4)))}
 const SQ_DESC={
  pay:k=>{const p=cp(),f=fin(p);return `<p><b>เดินผ่านหรือหยุด</b>ที่ช่องนี้ ได้รับเงินคงเหลือต่อเดือนทันที</p>
@@ -2419,7 +2421,8 @@ let MAPMIN=false;try{MAPMIN=localStorage.getItem('ff-mapmin')==='1'}catch(e){}
 const PROPIMG={o1:46.6,o3:50.3,o4:45.8,o6:39.7,o8:46.6};/* ค่า = จุดกึ่งกลางพื้นข้าวหลามตัดของภาพ (% จากบน) ใช้วางภาพ isometric ให้ตรงกลางช่อง */
 const PROPR={},TILE_ROAD={c:43.9,r:.601};/* r = สัดส่วนสูง/กว้างของพื้นข้าวหลามตัดในภาพ (ภาพเกษตรชุดแรก .766) — ภาพทุกภาพถูกยืดให้ตรงกับมุมกล้องเดียวกัน */
 function tileSty(k,c,r){let d=0;try{const q=cellPos0(k);d=q[0]+q[1]}catch(e){}const sd=Math.floor(+k.slice(1)/(RING_LEN[k[0]]/4))%4;return `--b:${c}%;--s:${(1/r).toFixed(4)};--m:${sd%2?-1:1};--d:${d}`}
-function tileBase(k){return k[0]==='o'&&!(k in PROPIMG)?`<img class="zimg pimgc tbase" style="${tileSty(k,TILE_ROAD.c,TILE_ROAD.r)}" src="img/tile-road.webp" alt="">`:''}
+const TILE_BASE_ON=false;/* เปิดเมื่อมีภาพพื้นหญ้าเปล่า (ถนนอยู่ที่แถบกลางแล้ว) */
+function tileBase(k){return TILE_BASE_ON&&k[0]==='o'&&!(k in PROPIMG)?`<img class="zimg pimgc tbase" style="${tileSty(k,TILE_ROAD.c,TILE_ROAD.r)}" src="img/tile-road.webp" alt="">`:''}
 function toggleMap(){MAPMIN=!MAPMIN;try{localStorage.setItem('ff-mapmin',MAPMIN?'1':'0')}catch(e){}render()}
 function render(){
   if(!S)return;
