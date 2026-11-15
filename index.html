@@ -3157,6 +3157,7 @@ function viewFollowOnline(){if(PAR())return;const c=cp();if(c&&c.uid===ON.user.u
 function onDrive(){if(!ON.play||!S||S.winner!=null||$('#gameView').hidden)return;
   if(PAR()){parOverlay();if(!parMaster())return;
     const left=(ON.room&&ON.room.left)||{};for(const q of S.players)if(!q.bot&&q.uid&&left[q.uid]&&!q._afkb){q.bot=true;q.done=true;q.name+=' 🤖';log(`🚪 ${esc(q.name)} ออกจากเกม บอทเล่นแทน`)}
+    parOfflineAfk();
     if(!S.rp){if(!MODAL)parStartRound();return}
     if(S.rp==='h'){parCheck();return}
     const p=cp(),key=S.round+':'+S.cur;if(p&&p.bot&&ON.turnKey!==key&&!MODAL){ON.turnKey=key;if(S.phase==='busy')S.phase='card';
@@ -3300,8 +3301,18 @@ function parRoundEnd(){
   parApplyNews(S.nq||[]);S.nq=[];parUndeal();
   endRound();if(checkWin())return;parStartRound()}
 /* ---------- สถานะ Bot (ไม่ได้เล่น) ---------- */
+/* เครื่องคุมรอบ: ผู้เล่นที่ออฟไลน์เกิน 1 นาที → ติดสถานะ Bot (บอททอยแทนช่วงบอท) */
+const OFFLINE_AFK_MS=60000;
+function parOfflineAfk(){if(!PAR()||!parMaster()||S.winner!=null)return;const now=Date.now(),left=(ON.room&&ON.room.left)||{};ON.gone=ON.gone||{};let ch=false;
+  for(const q of S.players){if(q.bot||!q.uid||q.afk||left[q.uid]||q.uid===ON.user.uid)continue;
+    if(ON.pres[q.uid]){delete ON.gone[q.uid];continue}
+    if(!ON.gone[q.uid]){ON.gone[q.uid]=now;continue}
+    if(now-ON.gone[q.uid]<OFFLINE_AFK_MS)continue;
+    q.afk=true;if(S.rp==='h')q.done=true;ch=true;ON.be.set(`rooms/${ON.code}/afk/${q.uid}`,true);log(`💤 ${esc(q.name)} ออฟไลน์เกิน 1 นาที ติดสถานะ Bot`)}
+  if(ch){render();if(S.rp==='b')save();else if(S.rp==='h')parCheck()}}
 function parOnAfk(map){if(!PAR())return;map=map||{};ON.afkMap=map;let ch=false;
-  for(const q of S.players)if(q.uid&&map[q.uid]===false&&q.afk){q.afk=false;ch=true}
+  for(const q of S.players){if(q.uid&&map[q.uid]===false&&q.afk){q.afk=false;ch=true}
+    else if(q.uid&&map[q.uid]===true&&!q.afk&&!q.bot){q.afk=true;if(PARH()&&q.uid!==ON.user.uid)q.done=true;ch=true}}
   if(ch){render();if(parMaster()&&S.rp==='b')save()}parOverlay()}
 async function parUnafk(){const me=parMe();if(!me)return;me.afk=false;await ON.be.set(`rooms/${ON.code}/afk/${ON.user.uid}`,false);
   if(PARH()&&me.done&&Date.now()<S.rt0+TURN_MS-15000){me.done=false;me.acted=false;me.tEnd=S.rt0+TURN_MS;parLocalTurn();toast('กลับมาเล่นแล้ว · ทันรอบนี้')}
