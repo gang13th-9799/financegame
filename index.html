@@ -3043,11 +3043,13 @@ async function onJoin(code){
 function onEnter(code){
   onStop();ON.code=code;const uid=ON.user.uid;
   /* สถานะออนไลน์: ตั้งใหม่ทุกครั้งที่เชื่อมต่อกลับ (มือถือสลับแอป/เน็ตกระตุก Firebase จะลบให้ตอนหลุด) */
-  ON.unsub.push(ON.be.conn(c=>{if(!c||ON.code!==code)return;Promise.resolve(ON.be.onDisc(`rooms/${code}/on/${uid}`,null)).then(()=>ON.be.set(`rooms/${code}/on/${uid}`,true))}));
+  ON.unsub.push(ON.be.conn(c=>{if(!c||ON.code!==code)return;Promise.resolve(ON.be.onDisc(`rooms/${code}/on/${uid}`,null)).then(()=>ON.be.set(`rooms/${code}/on/${uid}`,BUILD))}));
   ON.unsub.push(ON.be.on('rooms/'+code,r=>onRoom(r)));onTag()}
 function onTag(){let t=$('#roomTag');if(!ON.code){if(t)t.remove();return}
   if(!t){t=document.createElement('span');t.id='roomTag';t.className='roomtag';t.setAttribute('role','button');t.title='ดูข้อมูลห้อง';t.onclick=onRoomInfo;const h=document.querySelector('header .logo')?.parentElement||document.querySelector('header');h.appendChild(t)}
   t.textContent='ห้อง '+ON.code+' ⓘ'}
+/* เวอร์ชันของไฟล์เกม (เปลี่ยนทุกครั้งที่แก้ระบบออนไลน์) · ส่งไปกับสถานะออนไลน์ เพื่อดูว่าใครยังเปิดเวอร์ชันเก่า */
+const BUILD='2026-11-15.3';
 /* ป้ายเลขห้อง → ข้อมูลห้อง: เจ้าของห้อง · เครื่องที่คุมรอบ · สถานะผู้เล่นแต่ละคน */
 function onRoomInfo(){const r=ON.room;if(!r||!ON.code)return;
   const seatName=u=>{const q=S&&S.players&&S.players.find(x=>x.uid===u);if(q)return q.name;const s=Object.values(r.seats||{}).find(x=>x&&x.uid===u);return s?(s.name||'ผู้เล่น'):'—'};
@@ -3059,11 +3061,12 @@ function onRoomInfo(){const r=ON.room;if(!r||!ON.code)return;
     const st=!q.uid?'🤖 บอท':left[q.uid]?'🚪 ออกจากเกม (บอทเล่นแทน)':q.afk?'💤 ติดสถานะ Bot':!onLive(q.uid)?'⚪ ออฟไลน์':
       PAR()&&S.rp==='h'?(q.done?'✅ จบเทิร์นแล้ว':'🟢 กำลังเล่น'):'🟢 ออนไลน์';
     const tags=[q.uid&&q.uid===r.host?'👑 เจ้าของห้อง':'',q.uid&&q.uid===ctl?'🎮 คุมรอบ':'',q.id===S.cur&&!(PAR()&&S.rp==='h')?'▶ ตานี้':''].filter(Boolean).join(' · ');
-    return `<tr><td><b>${esc(q.name)}</b>${me(q.uid)}${tags?`<br><span class="muted" style="font-size:12px">${tags}</span>`:''}</td><td>${st}</td></tr>`}).join(''):
+    const pv=q.uid&&ON.pres[q.uid],old=pv&&pv!==BUILD?`<br><span class="neg" style="font-size:12px">⚠ เปิดเวอร์ชันเก่า ให้รีเฟรช</span>`:'';
+    return `<tr><td><b>${esc(q.name)}</b>${me(q.uid)}${old}${tags?`<br><span class="muted" style="font-size:12px">${tags}</span>`:''}</td><td>${st}</td></tr>`}).join(''):
     Object.keys(r.seats||{}).slice(0,r.n||6).map(i=>{const s=r.seats[i]||{};return `<tr><td>ที่นั่ง ${+i+1}</td><td>${s.uid?esc(s.name||'ผู้เล่น')+me(s.uid)+(s.uid===r.host?' · 👑':''):s.t==='b'?'🤖 บอท':'ว่าง'}</td></tr>`}).join('');
   const phase=!inGame?'ล็อบบี้ (ยังไม่เริ่มเกม)':!PAR()?`เล่นทีละคน · รอบที่ ${S.round}`:S.rp==='h'?`รอบที่ ${S.round} · ผู้เล่นทุกคนเล่นพร้อมกัน`:S.rp==='b'?`รอบที่ ${S.round} · ช่วงบอทเล่น`:`รอบที่ ${S.round}`;
   ask({npc:false,title:`🏠 ห้อง ${esc(ON.code)}`,body:`<div class="kv"><b>เจ้าของห้อง</b><span>👑 ${esc(seatName(r.host))}${me(r.host)}${onLive(r.host)?'':' · ออฟไลน์'}</span>
-    ${inGame?`<b>เครื่องที่คุมรอบ</b><span>🎮 ${ctl?esc(seatName(ctl))+me(ctl):'— (ไม่มีใครออนไลน์)'}</span>`:''}<b>สถานะ</b><span>${phase}</span></div>
+    ${inGame?`<b>เครื่องที่คุมรอบ</b><span>🎮 ${ctl?esc(seatName(ctl))+me(ctl):'— (ไม่มีใครออนไลน์)'}</span>`:''}<b>สถานะ</b><span>${phase}</span><b>เวอร์ชัน</b><span class="muted">${BUILD}</span></div>
     <table class="pdt" style="width:100%;margin-top:8px">${rows}</table>
     <p class="muted" style="font-size:12px">เครื่องที่คุมรอบจะสั่งเริ่มช่วงบอทและรอบใหม่ ปกติเป็นเจ้าของห้อง · ถ้าเจ้าของห้องออฟไลน์หรือติดสถานะ Bot ผู้เล่นคนอื่นที่ยังเล่นอยู่จะคุมแทนอัตโนมัติ</p>`,
     opts:[{v:'share',l:'📤 แชร์ลิงก์ห้อง'},{v:'ok',l:'ปิด',c:'pri'}]}).then(x=>{if(x.v==='share')onShare()})}
