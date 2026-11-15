@@ -1063,6 +1063,23 @@ body.fs #gameView:not(.mapmin){grid-template-columns:minmax(288px,1.2fr) minmax(
 body:has(#setupView .setup.onl) header{position:relative;z-index:5}
 .icw{width:1.25em;height:1.25em;vertical-align:-.25em;object-fit:contain}
 .ycard img{width:clamp(80px,22vw,120px);height:auto;display:block;margin:0 auto}
+
+/* ===== ช่องบนกระดาน: ไม่แสดงชื่อ (กดดูเอง) · ภาพฉากส่วนบน · ตัวละครยืนส่วนล่าง ===== */
+.board .cell .lbl{display:none!important}
+.board:not(.v3d) .cell .zimg,.board:not(.v3d) .cell .cimg{position:absolute;left:50%;right:auto!important;top:6%;bottom:auto!important;transform:translateX(-50%)!important;width:auto!important;height:50%;max-width:94%!important;object-fit:contain;opacity:1}
+.board:not(.v3d) .cell .ico{top:6%;bottom:auto;left:50%;right:auto;transform:translateX(-50%);opacity:.85}
+.board:not(.v3d) .cell.corner .zimg,.board:not(.v3d) .cell.corner .cimg{height:54%}
+.board:not(.v3d) .cell .toks{top:auto!important;bottom:2%!important;transform:translateX(-50%)!important}
+.board:not(.v3d) .cell[style*="grid-column:1;"] .toks,.board:not(.v3d) .cell[style*="grid-column:13;"] .toks{transform:none!important}
+.board.v3d .cell .zimg,.board.v3d .cell .cimg{height:50cqmin!important;width:auto!important;max-width:none!important;opacity:1}
+.board.v3d .cell[data-side="2"] .zimg,.board.v3d .cell[data-side="2"] .cimg{top:3%!important;bottom:auto!important;right:50%!important;left:auto!important;transform:translateX(50%)!important}
+.board.v3d .cell[data-side="0"] .zimg,.board.v3d .cell[data-side="0"] .cimg{bottom:3%!important;top:auto!important;right:50%!important;left:auto!important;transform:translateX(50%) rotate(180deg)!important}
+.board.v3d .cell[data-side="1"] .zimg,.board.v3d .cell[data-side="1"] .cimg{left:3%!important;right:auto!important;top:50%!important;bottom:auto!important;transform:translateY(-50%) rotate(-90deg)!important}
+.board.v3d .cell[data-side="3"] .zimg,.board.v3d .cell[data-side="3"] .cimg{right:3%!important;left:auto!important;top:50%!important;bottom:auto!important;transform:translateY(-50%) rotate(90deg)!important}
+.board.v3d .cell[data-side="2"] .toks{left:50%!important;right:auto!important;bottom:6%!important;top:auto!important;transform:translateX(-50%)!important}
+.board.v3d .cell[data-side="0"] .toks{left:50%!important;right:auto!important;bottom:62%!important;top:auto!important;transform:translateX(-50%)!important}
+.board.v3d .cell[data-side="1"] .toks{left:72%!important;right:auto!important;bottom:30%!important;top:auto!important;transform:translateX(-50%)!important}
+.board.v3d .cell[data-side="3"] .toks{left:28%!important;right:auto!important;bottom:30%!important;top:auto!important;transform:translateX(-50%)!important}
 </style>
 </head>
 <body>
@@ -2293,6 +2310,8 @@ function cellBody(k){const q=SQ(k),pr=S.props[k];
 }
 function cellInfo(k){if(MODAL)return;ask({title:esc(SQ(k).n),body:cellBody(k)})}
 let MAPMIN=false;try{MAPMIN=localStorage.getItem('ff-mapmin')==='1'}catch(e){}
+/* ภาพประจำช่องที่ดิน (img/prop-<รหัสช่อง>.webp) — ใส่รหัสช่องที่มีภาพแล้ว */
+const PROPIMG=new Set([]);
 function toggleMap(){MAPMIN=!MAPMIN;try{localStorage.setItem('ff-mapmin',MAPMIN?'1':'0')}catch(e){}render()}
 function render(){
   if(!S)return;
@@ -2302,11 +2321,11 @@ function render(){
     const now=Date.now(),toks=S.players.filter(q=>q.ring+q.pos===k).map(q=>{const hp=FXT.hop&&FXT.hop.id===q.id&&now-FXT.hop.t<340;return `<span class="tok pic ${q.id===p.id&&(!hp||(V3.on&&!MAPMIN))?'cur':''} ${hp?'hop':''}" style="${tokStyle(q)};${hp?`animation-delay:-${now-FXT.hop.t}ms`:''}" title="${esc(q.name)}"></span>`}).join('');
     const tr=FXT.trail[k]&&now-FXT.trail[k]<1100?now-FXT.trail[k]:-1;const ico=b.t==='prop'?'ZIMG:'+(b.z||zoneOfCell(k)):k==='o0'?'LOGO':SQICO[b.t]||'';
     const zc=ZONES[b.z||zoneOfCell(k)].c;
-    h+=`<div class="cell ${k[0]==='i'?'inner':''} ${corner?'corner':''} ${b.t==='road'?'road '+roadDir(k):''} t-${b.t} ${k[0]==='o'&&!['pay','jobless','charity','road'].includes(b.t)?'zoned':''} ${p.ring+p.pos===k?'here':''} ${tr>=0?'trail':''}" data-k="${k}" data-side="${Math.floor(i/(RING_LEN[k[0]]/4))%4}" style="grid-row:${r};grid-column:${c};--zc:${zc};${tr>=0?`--td:-${tr}ms`:''}" onclick="cellInfo('${k}')">
+    h+=`<div class="cell ${k[0]==='i'?'inner':''} ${corner?'corner':''} ${b.t==='road'?'road '+roadDir(k):''} t-${b.t} ${k[0]==='o'&&!['pay','jobless','charity','road'].includes(b.t)?'zoned':''} ${p.ring+p.pos===k?'here':''} ${tr>=0?'trail':''}" data-k="${k}" data-side="${Math.floor(i/(RING_LEN[k[0]]/4))%4}" style="grid-row:${r};grid-column:${c};--zc:${zc};${tr>=0?`--td:-${tr}ms`:''}" title="${esc(b.n)}" aria-label="${esc(b.n)}" onclick="cellInfo('${k}')">
       <div class="stripe" style="background:${zc};opacity:${b.t==='prop'?1:.35}"></div>
       <div class="lbl">${b.t==='road'?'ถนน':b.n}</div>
       ${pr?`<div class="own" style="background:${P(pr.o).color}"></div>${pr.l?`<div class="lv">${'★'.repeat(pr.l)}</div>`:''}`:''}
-      ${ico.startsWith('ZIMG:')?`<img class="zimg" src="img/zone-${ico.slice(5)}.webp" alt="">`:ico==='LOGO'?`<span class="ico"><i class="logo" style="--lc:#be1e2d"></i></span>`:ico.startsWith('IMG:')?`<img class="cimg" src="img/${ico.slice(4)}.webp" alt="">`:ico?`<span class="ico">${ico}</span>`:''}<div class="toks">${toks}</div></div>`}
+      ${ico.startsWith('ZIMG:')?`<img class="zimg${PROPIMG.has(k)?' pimgc':''}" src="img/${PROPIMG.has(k)?'prop-'+k:'zone-'+ico.slice(5)}.webp" alt="">`:ico==='LOGO'?`<span class="ico"><i class="logo" style="--lc:#be1e2d"></i></span>`:ico.startsWith('IMG:')?`<img class="cimg" src="img/${ico.slice(4)}.webp" alt="">`:ico?`<span class="ico">${ico}</span>`:''}<div class="toks">${toks}</div></div>`}
   const act=canAct();
   let ctr=`<div class="who"><span class="tok pic big" style="${tokStyle(p)}"></span>${esc(p.name)}${badges(p)}${p.bot?' <span class="muted" style="font-size:.7em">(บอท)</span>':''}</div>
     <div class="job">${S.jobs[p.job].n} · อยู่${RINGN[p.ring]} · เงินสด <span class="num">${B(p.cash)}</span>${p.jobless?` · <span class="jl">ตกงานอีก ${p.jobless} เดือน</span>`:''}</div>
