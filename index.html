@@ -1047,6 +1047,7 @@ body.fs #gameView:not(.mapmin){grid-template-columns:minmax(288px,1.2fr) minmax(
 .pwait{font-size:15px}
 .newsimg{display:block;width:clamp(84px,24vw,120px);height:auto;margin:0 auto 6px}
 .netimg{display:block;width:clamp(96px,28vw,150px);margin:4px auto 2px}
+.mghi{width:1.9em;height:1.9em;vertical-align:middle;margin-right:4px;object-fit:contain}
 </style>
 </head>
 <body>
@@ -2459,7 +2460,7 @@ function spark(arr){const w=64,h=20,mn=Math.min(...arr),mx=Math.max(...arr),sp=m
 let LOTS=1;
 /* แถวสินทรัพย์ในตาราง (ใช้ร่วม: ตลาดหุ้นและสินค้า / กองทุนในแท็บธนาคาร) acc สะสมทุน-มูลค่าพอร์ต */
 const MICO=a=>a.k==='cry'?`<span class="mico cico" style="--cc:${a.c}" aria-hidden="true">${a.g}</span>`:`<img class="mico" src="img/${ICO(a)}.webp" alt="">`;
-const ICO=a=>a.k==='fund'?(a.s==='MMF'||a.s==='BOND'?'as-saving':a.s==='GOLDF'?'as-gold':'as-stock'):a.k==='stock'?(a.s==='REIT'?'as-estate':'as-stock'):a.s==='GOLD'?'as-gold':'as-commod';
+const ICO=a=>a.k==='fund'?(a.s==='MMF'||a.s==='BOND'?'as-saving':a.s==='GOLDF'?'as-gold':'as-stock'):a.k==='stock'?(a.s==='REIT'?'as-estate':'as-stock'):a.s==='GOLD'?'as-gold':a.k==='cry'?'as-crypto':a.s==='OIL'?'as-oil':a.s==='RICE'?'as-rice':a.s==='STEEL'?'as-steel':'as-commod';
 function cryTag(a){if(!cryLive(a,S))return `<span class="mk neg">ยังไม่เข้าตลาด · อีก ${cryFrom(a.s)-cryIdx()} รอบ</span>`;const b=(S.cryBase||{})[a.s];if(!b)return '';const x=S.prices[a.s]/b;return `<span class="mk ${x>=1?'pos':'neg'}" title="เทียบราคาตอนเริ่มเกม/เข้าตลาด">ตั้งแต่เริ่ม ${x>=10?'×'+Math.round(x).toLocaleString():x>=1.995?'×'+x.toFixed(1):(x>=1?'+':'−')+Math.abs(Math.round((x-1)*100))+'%'}</span>`}
 function mrow(a,p,dis,acc){
   const pr=S.prices[a.s],hs=S.hist[a.s],prev=hs.length>1?hs[hs.length-2]:pr,ch=(pr-prev)/prev*100,h=p.stocks[a.s];
@@ -2472,7 +2473,7 @@ function renderMkt(){
   const acc={tc:0,tv:0};
   return `<p class="trhint">👆 แตะชื่อหุ้นหรือสินค้า เพื่อเลือก <b>ซื้อ / ขาย</b> แล้วกดปุ่มจำนวน · ค่าธรรมเนียม 1%<br>📅 ราคาทุกตัวเดินตาม<b>ราคาจริง</b>ช่วงที่สุ่มจาก 10 ปีที่ผ่านมา (เดือนที่ ${(S.cmo??0)+1}) · ชื่อในเกมเป็นชื่อสมมติ เฉลยตอนจบเกม${S.freeComm?' <b class="pos">(เทิร์นนี้ฟรี)</b>':''}${act?'':' · <span class="neg">ซื้อขายได้เฉพาะในเทิร์นของคุณ</span>'}</p>
   <div class="mlist">
-  ${[['stock','📈 หุ้น'],['com','🛢️ สินค้าโภคภัณฑ์'],['cry','🪙 คริปโต']].map(([k,t])=>`<h4 class="mgh">${t}${k==='cry'?` <span class="crydate">ราคาจริง (บาท) · 1 รอบ = 1 เดือน</span>`:''}</h4>`+ASSETS.filter(a=>a.k===k).map(a=>mrow(a,p,dis,acc)).join('')).join('')}</div>
+  ${[['stock','หุ้น','as-stock'],['com','สินค้าโภคภัณฑ์','as-commod'],['cry','คริปโต','as-crypto']].map(([k,t,im])=>`<h4 class="mgh"><img class="mghi" src="img/${im}.webp" alt="">${t}${k==='cry'?` <span class="crydate">ราคาจริง (บาท) · 1 รอบ = 1 เดือน</span>`:''}</h4>`+ASSETS.filter(a=>a.k===k).map(a=>mrow(a,p,dis,acc)).join('')).join('')}</div>
   ${acc.tc?`<div class="ln" style="margin-top:6px"><span><b>รวมพอร์ต ${esc(p.name)}</b><br><span class="muted" style="font-size:12px">ทุน ${B(acc.tc)} · มูลค่าตอนนี้ ${B(acc.tv)}</span></span><b class="num ${acc.tv>=acc.tc?'pos':'neg'}">${acc.tv>=acc.tc?'+':'−'}${B(Math.abs(acc.tv-acc.tc)).replace('−','')} (${acc.tv>=acc.tc?'+':''}${((acc.tv-acc.tc)/acc.tc*100).toFixed(1)}%)</b></div>`:''}
   <p class="muted" style="font-size:12px;margin:4px 0 0">ทุนเฉลี่ยรวมค่าคอมมิชชันแล้ว</p>
   <h3 style="margin:14px 0 6px;font-size:14px">🪧 ป้ายประกาศขายในตลาดกลาง</h3>
