@@ -1036,7 +1036,7 @@ body.fs #gameView:not(.mapmin){grid-template-columns:minmax(288px,1.2fr) minmax(
 .lb-n{overflow-wrap:anywhere}
 #gameView[hidden],#setupView[hidden]{display:none!important}
 #olCode:placeholder-shown{letter-spacing:normal;font-size:16px}
-.roomtag{margin-left:8px;font-size:12px;padding:2px 8px;border-radius:999px;background:#fff3c4;border:1px solid #e8d48a;white-space:nowrap}
+.roomtag{cursor:pointer;margin-left:8px;font-size:12px;padding:2px 8px;border-radius:999px;background:#fff3c4;border:1px solid #e8d48a;white-space:nowrap}
 
 /* แจ้งเตือน: กลางบนจอ ขนาดตามจอ แตะเพื่อปิด */
 .toast{top:max(12px,env(safe-area-inset-top));bottom:auto!important;left:50%;transform:translate(-50%,-12px);
@@ -3046,8 +3046,27 @@ function onEnter(code){
   ON.unsub.push(ON.be.conn(c=>{if(!c||ON.code!==code)return;Promise.resolve(ON.be.onDisc(`rooms/${code}/on/${uid}`,null)).then(()=>ON.be.set(`rooms/${code}/on/${uid}`,true))}));
   ON.unsub.push(ON.be.on('rooms/'+code,r=>onRoom(r)));onTag()}
 function onTag(){let t=$('#roomTag');if(!ON.code){if(t)t.remove();return}
-  if(!t){t=document.createElement('span');t.id='roomTag';t.className='roomtag';const h=document.querySelector('header .logo')?.parentElement||document.querySelector('header');h.appendChild(t)}
-  t.textContent='ห้อง '+ON.code}
+  if(!t){t=document.createElement('span');t.id='roomTag';t.className='roomtag';t.setAttribute('role','button');t.title='ดูข้อมูลห้อง';t.onclick=onRoomInfo;const h=document.querySelector('header .logo')?.parentElement||document.querySelector('header');h.appendChild(t)}
+  t.textContent='ห้อง '+ON.code+' ⓘ'}
+/* ป้ายเลขห้อง → ข้อมูลห้อง: เจ้าของห้อง · เครื่องที่คุมรอบ · สถานะผู้เล่นแต่ละคน */
+function onRoomInfo(){const r=ON.room;if(!r||!ON.code)return;
+  const seatName=u=>{const q=S&&S.players&&S.players.find(x=>x.uid===u);if(q)return q.name;const s=Object.values(r.seats||{}).find(x=>x&&x.uid===u);return s?(s.name||'ผู้เล่น'):'—'};
+  const me=u=>u===ON.user.uid?' (คุณ)':'';
+  const inGame=r.status!=='lobby'&&S&&S.players&&!$('#gameView').hidden;
+  const ctl=inGame&&ON.play?(PAR()?parMasterUid():onDriverUid()):null;
+  const left=r.left||{};
+  const rows=inGame?S.players.map(q=>{
+    const st=!q.uid?'🤖 บอท':left[q.uid]?'🚪 ออกจากเกม (บอทเล่นแทน)':q.afk?'💤 ติดสถานะ Bot':!onLive(q.uid)?'⚪ ออฟไลน์':
+      PAR()&&S.rp==='h'?(q.done?'✅ จบเทิร์นแล้ว':'🟢 กำลังเล่น'):'🟢 ออนไลน์';
+    const tags=[q.uid&&q.uid===r.host?'👑 เจ้าของห้อง':'',q.uid&&q.uid===ctl?'🎮 คุมรอบ':'',q.id===S.cur&&!(PAR()&&S.rp==='h')?'▶ ตานี้':''].filter(Boolean).join(' · ');
+    return `<tr><td><b>${esc(q.name)}</b>${me(q.uid)}${tags?`<br><span class="muted" style="font-size:12px">${tags}</span>`:''}</td><td>${st}</td></tr>`}).join(''):
+    Object.keys(r.seats||{}).slice(0,r.n||6).map(i=>{const s=r.seats[i]||{};return `<tr><td>ที่นั่ง ${+i+1}</td><td>${s.uid?esc(s.name||'ผู้เล่น')+me(s.uid)+(s.uid===r.host?' · 👑':''):s.t==='b'?'🤖 บอท':'ว่าง'}</td></tr>`}).join('');
+  const phase=!inGame?'ล็อบบี้ (ยังไม่เริ่มเกม)':!PAR()?`เล่นทีละคน · รอบที่ ${S.round}`:S.rp==='h'?`รอบที่ ${S.round} · ผู้เล่นทุกคนเล่นพร้อมกัน`:S.rp==='b'?`รอบที่ ${S.round} · ช่วงบอทเล่น`:`รอบที่ ${S.round}`;
+  ask({npc:false,title:`🏠 ห้อง ${esc(ON.code)}`,body:`<div class="kv"><b>เจ้าของห้อง</b><span>👑 ${esc(seatName(r.host))}${me(r.host)}${onLive(r.host)?'':' · ออฟไลน์'}</span>
+    ${inGame?`<b>เครื่องที่คุมรอบ</b><span>🎮 ${ctl?esc(seatName(ctl))+me(ctl):'— (ไม่มีใครออนไลน์)'}</span>`:''}<b>สถานะ</b><span>${phase}</span></div>
+    <table class="pdt" style="width:100%;margin-top:8px">${rows}</table>
+    <p class="muted" style="font-size:12px">เครื่องที่คุมรอบจะสั่งเริ่มช่วงบอทและรอบใหม่ ปกติเป็นเจ้าของห้อง · ถ้าเจ้าของห้องออฟไลน์หรือติดสถานะ Bot ผู้เล่นคนอื่นที่ยังเล่นอยู่จะคุมแทนอัตโนมัติ</p>`,
+    opts:[{v:'share',l:'📤 แชร์ลิงก์ห้อง'},{v:'ok',l:'ปิด',c:'pri'}]}).then(x=>{if(x.v==='share')onShare()})}
 async function onRoom(r){
   if(!r){toast('ห้องนี้ถูกลบแล้ว');await ON.be.remove('users/'+ON.user.uid+'/room');onHome();return}
   const np=r.on||{},now=Date.now();ON.gone=ON.gone||{};
