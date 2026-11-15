@@ -1768,7 +1768,7 @@ async function pickPile(k){
   if(k==='life')await lifeCard(p,draw('life'));
   else if(k==='learn')await learnCard(p);
   else if(k==='net')await netCard(p);
-  else await oppCard(p,draw('opp'));
+  else{let c=draw('opp');for(let i=0;i<6&&c&&c.ty==='netinv'&&!p.net.on;i++)c=draw('opp');await oppCard(p,c)} /* ยังไม่สมัครธุรกิจ A: ไม่ได้การ์ดคนรู้จักสนใจธุรกิจ A (เลิกการ์ดชวนสมัคร) */
   if(checkWin())return;
   if(S.autoPilot){endTurn();return}
   S.picks=(S.picks||0)+1;
@@ -2284,8 +2284,7 @@ async function oppCard(p,c,src){
       opts:[{v:1,l:loanLbl(p,pr,`1 บาท ${B(pr)}`),c:'pri',dis:nb.lack},{v:3,l:loanLbl(p,pr*3,`3 บาท ${B(pr*3)}`),dis:nb.lack},{v:0,l:'ข้าม'}],bot:p.cash>pr*2+fin(p).expenses?1:0});
     if(v){adj(p,{t:-(c.nt||0),h:-(c.nh||0),k:-(c.nk||0)},true);loanFor(p,pr*v);p.cash-=pr*v;addHold(p,'GOLD',v,pr*v);log(`🥇 ${esc(p.name)} ซื้อทองคำ ${v} บาท`)}
   }else if(c.ty==='netinv'){
-    if(!p.net.on){const v=await choose({actor:p,kind:'opp',title:'เพื่อนชวนสมัครธุรกิจ A ฟรี',body:'<p>ยกเว้นค่าสมัคร ฿900 เปิดแท็บธุรกิจ A ได้ทันที</p>',opts:[{v:'y',l:'สมัครฟรี',c:'pri'},{v:'n',l:'ปฏิเสธ'}],bot:Math.random()<.4?'y':'n'});
-      if(v==='y')netJoin(p,0)}
+    if(!p.net.on){await choose({actor:p,kind:'opp',title:'คนรู้จักสนใจธุรกิจ A',body:'<p>ต้องเป็นสมาชิกธุรกิจ A ก่อน การ์ดนี้ถึงจะเพิ่ม PV ให้</p><p class="muted">สมัครได้ที่แท็บธุรกิจ A หรือตอนเปิดกองการ์ดธุรกิจเครือข่าย A</p>',opts:[{v:'ok',l:'รับทราบ',c:'pri'}],bot:'ok'})}
     else{const l=LEGS.find(x=>!p.net.legs[x])||LEGS[Math.floor(Math.random()*6)];p.net.legs[l]+=6000;p.net.pas+=1000;log(`🤝 ${esc(p.name)} คนรู้จักเข้าสายงาน ${l} +6,000 PV`);netRankCheck(p);await choose({actor:p,kind:'opp',title:'คนรู้จักสนใจธุรกิจ A',body:`<p class="pos">สายงาน ${l} +6,000 PV · Passive +฿1,000 ต่อเดือน</p>`,opts:[{v:'ok',l:'เยี่ยม',c:'pri'}],bot:'ok'})}
   }else if(c.ty==='buyer'){
     const items=[];for(const k in S.props)if(S.props[k].o===p.id)items.push({k:'p',i:k,n:SQ(k).n,cost:S.props[k].inv});
@@ -2536,7 +2535,7 @@ function renderPlayers(){
         <span class="pnums"><span>เงินสด <b class="num">${B(q.cash)}</b></span><span>ทรัพย์สิน <b class="num pos">${B(f.passive)}</b> / รายจ่าย <b class="num neg">${B(f.expenses)}</b></span><span class="muted">❤${q.st.h} ⏳${q.st.t} 📚${q.st.k}</span></span>
         <span class="bar ${pct>=100?'win':''}"><i style="width:${pct}%"></i></span></span>
       <span class="ppct num">${Math.round(pct)}%</span></button>`}).join('')}</div>
-    ${S.winner==null?'<div class="btnrow" style="justify-content:flex-start;margin-top:8px"><button class="sm" onclick="confirmEnd()">🏁 จบเกมและสรุปผล</button></div>':''}
+    ${S.winner==null&&!ON.play?'<div class="btnrow" style="justify-content:flex-start;margin-top:8px"><button class="sm" onclick="confirmEnd()">🏁 จบเกมและสรุปผล</button></div>':''}
     <p class="muted" style="font-size:12px;margin:8px 0 0">🏆 ชนะ Lv.1 = รายได้จากทรัพย์สินมากกว่ารายจ่ายรวม · 💎 ชนะ Lv.2 = ธุรกิจ A ระดับไดมอนด์ (เกมจบเมื่อมีคนถึง Lv.2 หรือกดจบเกม) · ตัวเลขหน้าชื่อคืออันดับความใกล้ชนะ (รายได้จากทรัพย์สิน ÷ รายจ่าย) · แตะเพื่อดูงบการเงินของคนนั้น</p>`;
 }
 function passiveDetail(p,k){const s=SKILLDB[k];if(!s)return '';const v=s.val;
@@ -3060,7 +3059,7 @@ function onTag(){let t=$('#roomTag');if(!ON.code){if(t)t.remove();return}
   if(!t){t=document.createElement('span');t.id='roomTag';t.className='roomtag';t.setAttribute('role','button');t.title='ดูข้อมูลห้อง';t.onclick=onRoomInfo;const h=document.querySelector('header .logo')?.parentElement||document.querySelector('header');h.appendChild(t)}
   t.textContent='ห้อง '+ON.code+' ⓘ'}
 /* เวอร์ชันของไฟล์เกม (เปลี่ยนทุกครั้งที่แก้ระบบออนไลน์) · ส่งไปกับสถานะออนไลน์ เพื่อดูว่าใครยังเปิดเวอร์ชันเก่า */
-const BUILD='2026-11-16.1';
+const BUILD='2026-11-16.2';
 /* ป้ายเลขห้อง → ข้อมูลห้อง: เจ้าของห้อง · เครื่องที่คุมรอบ · สถานะผู้เล่นแต่ละคน */
 function onRoomInfo(){const r=ON.room;if(!r||!ON.code)return;
   const seatName=u=>{const q=S&&S.players&&S.players.find(x=>x.uid===u);if(q)return q.name;const s=Object.values(r.seats||{}).find(x=>x&&x.uid===u);return s?(s.name||'ผู้เล่น'):'—'};
@@ -3080,7 +3079,14 @@ function onRoomInfo(){const r=ON.room;if(!r||!ON.code)return;
     ${inGame?`<b>เครื่องที่คุมรอบ</b><span>🎮 ${ctl?esc(seatName(ctl))+me(ctl):'— (ไม่มีใครออนไลน์)'}</span>`:''}<b>สถานะ</b><span>${phase}</span><b>เวอร์ชัน</b><span class="muted">${BUILD}</span></div>
     <table class="pdt" style="width:100%;margin-top:8px">${rows}</table>
     <p class="muted" style="font-size:12px">เครื่องที่คุมรอบจะสั่งเริ่มช่วงบอทและรอบใหม่ ปกติเป็นเจ้าของห้อง · ถ้าเจ้าของห้องออฟไลน์หรือติดสถานะ Bot ผู้เล่นคนอื่นที่ยังเล่นอยู่จะคุมแทนอัตโนมัติ</p>`,
-    opts:[{v:'share',l:'📤 แชร์ลิงก์ห้อง'},{v:'ok',l:'ปิด',c:'pri'}]}).then(x=>{if(x.v==='share')onShare()})}
+    opts:[{v:'share',l:'📤 แชร์ลิงก์ห้อง'},
+      ...(inGame&&S.winner==null&&(PAR()?parMaster():iDrive())?[{v:'end',l:'🏁 จบเกมและสรุปผล'}]:[]),
+      ...(r.host===ON.user.uid?[{v:'close',l:'🗑 ปิดห้อง'}]:inGame?[{v:'leave',l:'🚪 ออกจากเกม'}]:[]),
+      {v:'ok',l:'ปิด',c:'pri'}]}).then(x=>{const v=x&&x.v||x;if(v==='share')onShare();else if(v==='end')setTimeout(confirmEnd,50);else if(v==='close')setTimeout(onCloseRoom,50);else if(v==='leave')setTimeout(onLeave,50)})}
+/* เจ้าของห้องปิดห้อง: ลบห้องทิ้ง ทุกเครื่องกลับหน้าแรก (เครื่องอื่นจะเห็น "ห้องนี้ถูกลบแล้ว") */
+async function onCloseRoom(){const r=ON.room,code=ON.code;if(!r||r.host!==ON.user.uid||MODAL)return;
+  const v=await choose({title:'ปิดห้อง?',body:`<p>ห้อง ${esc(code)} จะถูกลบ เกมนี้จะหายไป และทุกคนในห้องจะกลับไปหน้าแรก</p><p class="muted">ถ้าอยากดูสรุปผลก่อน ให้กด "จบเกมและสรุปผล" ก่อนปิดห้อง</p>`,opts:[{v:'n',l:'ยกเลิก'},{v:'y',l:'ปิดห้อง',c:'pri'}]});
+  if(v!=='y')return;onStop();try{await ON.be.remove('rooms/'+code)}catch(e){}await ON.be.remove('users/'+ON.user.uid+'/room');localStorage.removeItem('fg-online');ON.play=false;toast('ปิดห้องแล้ว');onHome()}
 async function onRoom(r){
   if(!r){toast('ห้องนี้ถูกลบแล้ว');await ON.be.remove('users/'+ON.user.uid+'/room');onHome();return}
   const np=r.on||{},now=Date.now();ON.gone=ON.gone||{};
