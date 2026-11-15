@@ -3060,7 +3060,7 @@ function onTag(){let t=$('#roomTag');if(!ON.code){if(t)t.remove();return}
   if(!t){t=document.createElement('span');t.id='roomTag';t.className='roomtag';t.setAttribute('role','button');t.title='ดูข้อมูลห้อง';t.onclick=onRoomInfo;const h=document.querySelector('header .logo')?.parentElement||document.querySelector('header');h.appendChild(t)}
   t.textContent='ห้อง '+ON.code+' ⓘ'}
 /* เวอร์ชันของไฟล์เกม (เปลี่ยนทุกครั้งที่แก้ระบบออนไลน์) · ส่งไปกับสถานะออนไลน์ เพื่อดูว่าใครยังเปิดเวอร์ชันเก่า */
-const BUILD='2026-11-15.4';
+const BUILD='2026-11-16.1';
 /* ป้ายเลขห้อง → ข้อมูลห้อง: เจ้าของห้อง · เครื่องที่คุมรอบ · สถานะผู้เล่นแต่ละคน */
 function onRoomInfo(){const r=ON.room;if(!r||!ON.code)return;
   const seatName=u=>{const q=S&&S.players&&S.players.find(x=>x.uid===u);if(q)return q.name;const s=Object.values(r.seats||{}).find(x=>x&&x.uid===u);return s?(s.name||'ผู้เล่น'):'—'};
@@ -3141,13 +3141,18 @@ function onSave(){if(!ON.play||!ON.code)return;
 async function onPush(now){clearTimeout(ON.pushT);if(!S||!ON.code)return;
   const o={...S};delete o.view;delete o.viewPick;o.log=(S.log||[]).slice(0,40);
   const z=await zEnc(JSON.stringify(o));ON.ver++;
-  await ON.be.set(`rooms/${ON.code}/st`,{z,v:ON.ver,by:ON.user.uid,h:{r:S.round,c:S.cur}});
+  const rec={z,v:ON.ver,by:ON.user.uid,h:{r:S.round,c:S.cur}},par=!!S.par;
+  /* กันเครื่องที่ค้าง/หลับไปนาน (สถานะเก่า) ส่งทับเกมล่าสุด: ถ้าบนเซิร์ฟเวอร์ไปถึงรอบ/ตาที่ใหม่กว่าแล้ว ไม่ส่ง แล้วโหลดของล่าสุดมาแทน */
+  const ahead=c=>{const h=c&&c.h;if(!h||now===true)return false;return par?h.r>rec.h.r:(h.r>rec.h.r||(h.r===rec.h.r&&h.c>rec.h.c))};
+  let stale=null;
+  const x=await ON.be.tx(`rooms/${ON.code}/st`,cur=>{if(cur&&ahead(cur)){stale=cur;return undefined}return rec});
+  if(stale||(x&&x.ok===false&&x.val&&ahead(x.val))){const cur=stale||x.val;log(`🔄 สถานะในเครื่องนี้เก่ากว่าเกมล่าสุด (รอบ ${S.round}) โหลดเกมล่าสุดแทน`);await onState(cur,true);return}
   if(S.winner!=null&&ON.room&&ON.room.status!=='end'){const st=standings();
     await ON.be.update('rooms/'+ON.code,{status:'end',win:{name:st[0][0].name,job:S.jobs[st[0][0].job].n,rank:st.map(x=>x[0].name)}})}}
-async function onState(st){
+async function onState(st,force){
   if(!st||!st.z)return;
-  const fresh=!S||$('#gameView').hidden;if(!fresh&&st.by===ON.user.uid)return;
-  const parNew=S&&o0par(st);
+  const fresh=!S||$('#gameView').hidden;if(!force&&!fresh&&st.by===ON.user.uid)return;
+  const parNew=S&&(o0par(st)||!!force);if(force&&MODAL&&typeof MODAL_CANCEL==='function')try{MODAL_CANCEL()}catch(e){}
   if(!fresh&&!parNew&&iDrive()&&(MODAL||S.phase==='busy'))return;
   /* ตาของเราเอง: เราเป็นคนคุม ไม่รับสถานะเก่าที่ยังเป็นตาเดิมจากเครื่องอื่น */
   if(!fresh&&!parNew&&!(S&&S.par)&&cp()&&cp().uid===ON.user.uid&&S.winner==null){const hd=st.h;if(hd&&hd.r===S.round&&hd.c===S.cur)return}
