@@ -258,3 +258,4 @@ flowchart LR
 | 2026-11-15 | Claude (แก๊ง) | ภาพพื้นหญ้าเปล่า P001 `img/tile-grass.webp` (c 44%, r .603) เป็นพื้นใต้ช่องวงนอกที่ยังไม่มีภาพของตัวเอง + ช่องว่างหัวมุม 8 จุด (`TILE_BASE_ON=true`) · ไอคอนช่องพิเศษยังตั้งอยู่บนหญ้า · `tile-road.webp` เลิกใช้แต่ยังเก็บไว้ · คลัง prompt ภาพช่องอยู่ใน Project doc `claude/image-prompts.md` (P001–P021) |
 | 2026-11-15 | Claude (แก๊ง) | ภาพช่อง P007 ลานจอดรถบรรทุก → `img/prop-o11.webp` (c 44.4, r .603 ใน `PROPR`) · สคริปต์ตัดภาพช่อง: `/home/claude/shots/tile.py` (ตัดพื้นขาว ย่อกว้าง 420) — ภาพจาก Gemini กรอบเดียวกับ P001 ใช้ r .603 / c ≈44 ได้เลย |
 | 2026-11-15 | Claude (แก๊ง) | ภาพช่อง P008 ห้องเช่าคนงาน → `img/prop-o13.webp` (c 47.4) · สคริปต์ `shots/addtile.py` ลงทะเบียนภาพ, `shots/deploy.sh` ทดสอบ+commit |
+| 2026-11-15 | Claude (แก๊ง) | ภาพช่อง P009 โกดังสินค้า → `img/prop-o14.webp` (c 47.2) |
