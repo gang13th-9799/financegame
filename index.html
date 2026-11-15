@@ -299,7 +299,7 @@ body.hasend{padding-bottom:80px}
 .modal .mf{padding:10px 16px 14px;display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end;border-top:1px solid var(--line)}
 .modal .handoff{background:var(--surface2);border-radius:8px;padding:6px 10px;font-size:13px;margin-top:8px}
 .modal.k-life{border-top:6px solid #c96a2b}.modal.k-learn{border-top:6px solid #2f7fb5}.modal.k-opp{border-top:6px solid var(--gold)}
-.modal.k-news{border-top:6px solid #5d6b76}.modal.k-win{border-top:6px solid var(--gold)}
+.modal.k-news{border-top:6px solid #5d6b76;--cbc:#5d6b76;--cbimg:url(img/back-news.webp)}.modal.k-win{border-top:6px solid var(--gold)}
 .kv{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:13px}
 .kv b{font-weight:600}
 .fld{display:flex;flex-direction:column;gap:4px;margin:8px 0}
@@ -1514,7 +1514,7 @@ function ask({actor=null,kind='',title,body='',opts=[{v:'ok',l:'ตกลง',c:
     const lastOk=()=>([...opts].reverse().find(o=>!o.dis)||opts[opts.length-1]).v;
     if(S&&S.autoPilot&&!(actor&&actor.bot)){res({v:lastOk(),form:{}});return}
     if(actor&&actor.bot){const b=opts.find(o=>o.v===bot&&!o.dis)||opts[opts.length-1];setTimeout(()=>{if(opts.length>1){const st=x=>String(x).replace(/<[^>]*>/g,'');log(`🤖 ${esc(actor.name)}: ${esc(st(title))} → ${esc(st(b.l))}`)}render();res({v:b.v,form:{}})},S.speed*.35);return}
-    MODAL=true;const m=$('#modal');m.className='modal'+(kind?' k-'+kind:'')+(['life','learn','opp','netc'].includes(kind)&&!RM&&!noflip?' cardflip':'');
+    MODAL=true;const m=$('#modal');m.className='modal'+(kind?' k-'+kind:'')+(['life','learn','opp','netc','news'].includes(kind)&&!RM&&!noflip?' cardflip':'');
     const kindName={mkt:'ตลาดกลาง',netc:'การ์ดธุรกิจเครือข่าย',life:'การ์ดดำเนินชีวิต',learn:'การ์ดเรียนรู้',opp:'การ์ดโอกาสชีวิต',news:'ข่าวตลาด',win:'จบเกม'}[kind]||'';
     const isBot=actor&&actor.bot;
     const plr=(actor&&!actor.bot&&jobIdx(actor)>=0)?actor:(!actor&&S&&S.players&&S.winner==null&&!$('#gameView').hidden&&!cp().bot&&jobIdx(cp())>=0&&kind!=='win'?cp():null);
