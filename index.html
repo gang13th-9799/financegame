@@ -3172,7 +3172,10 @@ function onQ(qs){if(!qs)return;for(const id in qs){const q=qs[id];if(q.to!==ON.u
 const PAR=()=>!!(ON.play&&S&&S.par);
 const PARH=()=>PAR()&&S.rp==='h';
 function parMe(){return S&&S.players.find(q=>q.uid&&q.uid===ON.user.uid)}
-function parMasterUid(){const r=ON.room;if(!r||!S)return null;if(onLive(r.host))return r.host;const h=S.players.find(q=>!q.bot&&q.uid&&onLive(q.uid));return h?h.uid:null}
+/* เครื่องคุมรอบ: เจ้าของห้อง ถ้าออนไลน์และไม่ติดสถานะ Bot · ไม่งั้นคนแรกที่ออนไลน์และยังเล่นอยู่ (กันเครื่องที่ล็อกจอ/พักแอปคุมรอบแล้วค้าง) */
+function parMasterUid(){const r=ON.room;if(!r||!S)return null;const now=Date.now(),away=u=>{const q=S.players.find(x=>x.uid===u);return !!(q&&(q.afk||q._afkb||(S.rp==='h'&&!q.done&&now>(q.tEnd||0)+20000)))};
+  if(onLive(r.host)&&!away(r.host))return r.host;const h=S.players.find(q=>!q.bot&&q.uid&&onLive(q.uid)&&!away(q.uid));if(h)return h.uid;
+  if(onLive(r.host))return r.host;const k=S.players.find(q=>q.uid&&onLive(q.uid)&&(!q.bot||q._afkb));return k?k.uid:null}
 function parMaster(){return parMasterUid()===ON.user.uid}
 const PAR_HAND={life:4,learn:6,opp:4,netc:4,news:2};
 function parDeck(k){const DEF={life:LIFE,learn:LEARN,opp:OPP,news:NEWS,netc:NETDB}[k];if(!S.decks[k]||S.decks[k].some(i=>i>=DEF.length))S.decks[k]=[];if(!S.decks[k].length)S.decks[k]=shuffle(DEF.map((_,i)=>i));return S.decks[k]}
@@ -3187,7 +3190,8 @@ function parLocalTurn(){const me=parMe();if(!me)return;S.cur=me.id;S.picks=me.pk
 function parStartRound(){
   const now=Date.now();S.rp='h';S.rt0=now;S.nq=[];delete S.bq;
   const hum=S.players.filter(q=>!q.bot);
-  for(const q of hum){q.done=!!q.afk||!onLive(q.uid);q.acted=false;q.tEnd=now+TURN_MS;delete q.ph;delete q.pk;delete q.fc;q.hired=false}
+  for(const q of hum){if(!q.afk&&!onLive(q.uid)){q.afk=true;ON.be.set(`rooms/${ON.code}/afk/${q.uid}`,true);log(`💤 ${esc(q.name)} ไม่ได้ออนไลน์ ติดสถานะ Bot · ระบบทอยลูกเต๋าให้`)}
+    q.done=!!q.afk;q.acted=false;q.tEnd=now+TURN_MS;delete q.ph;delete q.pk;delete q.fc;q.hired=false}
   parDeal(hum.filter(q=>!q.done));
   log(`🔔 <b>เริ่มรอบที่ ${S.round}</b> · ผู้เล่นทุกคนเล่นพร้อมกัน คนละ 3 นาที`);
   const c=ON.code;['p','pr','lg','led','nq','mk'].forEach(k=>ON.be.remove(`rooms/${c}/${k}`));
@@ -3220,7 +3224,9 @@ async function parOnP(map){if(!map||!PARH())return;ON.pz=ON.pz||{};let ch=false;
   for(const i in map){const e=map[i];if(!e||e.r!==S.round||ON.pz[i]===e.z)continue;
     const mine=e.by===ON.user.uid;if(mine&&ON.ownRound===S.round){ON.pz[i]=e.z;continue}
     let o;try{o=JSON.parse(await zDec(e.z))}catch(x){continue}
-    if(!PARH()||e.r!==S.round)return;ON.pz[i]=e.z;S.players[+i]=o;ch=true;
+    if(!PARH()||e.r!==S.round)return;ON.pz[i]=e.z;const was=S.players[+i];
+    if(was&&was.afk&&!o.afk&&!(ON.afkMap&&ON.afkMap[was.uid]===false)){o.afk=true;o.done=true}
+    S.players[+i]=o;ch=true;
     if(mine){ON.ownRound=S.round;parLocalTurn()}}
   if(ch){render();if(parMaster())parCheck()}}
 function parOnMk(map){if(!map||!S)return;let ch=false;for(const id in map){const L=[...(S.mk||[]),...(S.nw||[])].find(x=>x.id===id);if(L&&L.sold==null){L.sold=map[id];ch=true}}if(ch)render()}
@@ -3253,7 +3259,7 @@ function parApplyNews(list){const lines=[];
 /* ---------- หัวห้อง: ทุกคนจบแล้ว → บอท ---------- */
 function parCheck(){if(!PARH()||!parMaster()||ON.parBusy)return;const now=Date.now();
   const hum=S.players.filter(q=>!q.bot);
-  const ok=hum.every(q=>q.done||(!onLive(q.uid)&&q.uid!==ON.user.uid)||now>(q.tEnd||0)+15000);
+  const ok=hum.every(q=>q.done||q.afk||(!onLive(q.uid)&&q.uid!==ON.user.uid)||now>(q.tEnd||0)+15000);
   if(ok)parBots()}
 async function parBots(){ON.parBusy=1;try{
   const c=ON.code;S.rp='b';
@@ -3274,7 +3280,7 @@ function parRoundEnd(){
   parApplyNews(S.nq||[]);S.nq=[];parUndeal();
   endRound();if(checkWin())return;parStartRound()}
 /* ---------- สถานะ Bot (ไม่ได้เล่น) ---------- */
-function parOnAfk(map){if(!PAR())return;map=map||{};let ch=false;
+function parOnAfk(map){if(!PAR())return;map=map||{};ON.afkMap=map;let ch=false;
   for(const q of S.players)if(q.uid&&map[q.uid]===false&&q.afk){q.afk=false;ch=true}
   if(ch){render();if(parMaster()&&S.rp==='b')save()}parOverlay()}
 async function parUnafk(){const me=parMe();if(!me)return;me.afk=false;await ON.be.set(`rooms/${ON.code}/afk/${ON.user.uid}`,false);
@@ -3284,8 +3290,9 @@ async function parUnafk(){const me=parMe();if(!me)return;me.afk=false;await ON.b
 function parOverlay(){let el=$('#afkov');const me=PAR()&&parMe(),on=!!(me&&me.afk&&S.winner==null&&!$('#gameView').hidden);
   if(!el){if(!on)return;el=document.createElement('div');el.id='afkov';el.className='afkov';document.body.appendChild(el)}
   el.hidden=!on;if(on)el.innerHTML=`<div class="afk-box"><div class="afk-ic">💤</div><h2>คุณติดสถานะ Bot</h2><p>ไม่ได้เล่นภายใน 3 นาที ระบบจะทอยลูกเต๋าให้และทำเฉพาะสิ่งที่กติกาบังคับ (เช่น ตกช่องตกงาน) ไม่ซื้อ ไม่จั่วการ์ดให้</p><button class="pri" onclick="parUnafk()">ปลดสถานะ Bot</button></div>`}
-function parWaitHtml(){const me=parMe(),now=Date.now();const rest=S.players.filter(q=>!q.bot&&!q.done&&q!==me);
-  return `<div class="prompt pwait">⏳ <b>รอผู้เล่นอื่น</b>${rest.length?` · ${rest.map(q=>`${esc(q.name)} ${Math.max(0,Math.ceil(((q.tEnd||now)-now)/1000))} วิ`).join(' · ')}`:''}</div>`}
+function parWaitHtml(){const me=parMe(),now=Date.now();const rest=S.players.filter(q=>!q.bot&&!q.done&&q!==me),afk=S.players.filter(q=>!q.bot&&q.afk);
+  const az=afk.length?` · 💤 ติดสถานะ Bot: ${afk.map(q=>esc(q.name)).join(', ')} (บอทเล่นแทนช่วงถัดไป)`:'';
+  return `<div class="prompt pwait">⏳ <b>รอผู้เล่นอื่น</b>${rest.length?` · ${rest.map(q=>`${esc(q.name)} ${Math.max(0,Math.ceil(((q.tEnd||now)-now)/1000))} วิ`).join(' · ')}`:' · ทุกคนจบเทิร์นแล้ว กำลังเริ่มช่วงบอท…'}${az}</div>`}
 function parBotHtml(p){const n=(S.bq||[]).length;return `<div class="prompt">🤖 <b>รอ Bot</b> · ${esc(p.name)} กำลังเล่น${n?` (เหลืออีก ${n})`:''}</div>`}
 async function parClaim(k,rec){const x=await ON.be.tx(`rooms/${ON.code}/pr/${k}`,cur=>cur==null?rec:undefined);const ok=!!(x.ok&&x.val&&x.val.o===rec.o);
   if(!ok&&x.val){S.props[k]=x.val;render()}if(ok){ON.prSent=ON.prSent||{};ON.prSent[k]=JSON.stringify(rec)}return ok}
