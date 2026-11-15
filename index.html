@@ -1045,6 +1045,8 @@ body.fs #gameView:not(.mapmin){grid-template-columns:minmax(288px,1.2fr) minmax(
 .afk-box{background:#fffdf3;border-radius:22px;padding:22px 20px;max-width:420px;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,.3)}
 .afk-box .afk-ic{font-size:48px}.afk-box h2{margin:6px 0}.afk-box button{margin-top:12px;font-size:18px;min-height:48px;padding:0 28px}
 .pwait{font-size:15px}
+.newsimg{display:block;width:clamp(84px,24vw,120px);height:auto;margin:0 auto 6px}
+.netimg{display:block;width:clamp(96px,28vw,150px);margin:4px auto 2px}
 </style>
 </head>
 <body>
@@ -1548,7 +1550,7 @@ function fxFloat(t,cls='up',delay=0){if(RM)return;setTimeout(()=>{const e=docume
 function fxBanner(p){if(RM)return;const e=document.createElement('div');e.className='fxb';e.innerHTML=`<div>${jobIdx(p)>=0?`<img src="img/c${jobIdx(p)}-wave.webp" style="height:64px;margin:-18px 0 -8px" alt="">`:''}<i class="logo" style="font-size:22px"></i>ตาของ ${esc(p.name)}</div>`;$('#fx').appendChild(e);setTimeout(()=>e.remove(),1800)}
 function fxCoins(n=10){if(RM)return;for(let i=0;i<n;i++){const e=document.createElement('div');e.className='coin';e.textContent=i%3?'🪙':'💵';e.style.left=(innerWidth/2-11)+'px';e.style.top=(innerHeight*.45)+'px';const a=Math.random()*Math.PI*2,r=80+Math.random()*120;e.style.setProperty('--dx',Math.cos(a)*r+'px');e.style.setProperty('--dy',(Math.sin(a)*r-60)+'px');e.style.setProperty('--r',(Math.random()*360-180)+'deg');e.style.animationDelay=(i*40)+'ms';$('#fx').appendChild(e);setTimeout(()=>e.remove(),1500+i*40)}}
 const FXT={trail:{},hop:null};
-const SQICO={pay:'IMG:sq-pay',rest:'IMG:sq-rest',charity:'IMG:sq-charity',jobless:'IMG:sq-jobless',mkt:'IMG:sq-market',news:'📰',exch:'IMG:as-stock',bizc:'IMG:as-biz',splurge:'IMG:sq-luxury',crisis:'⚡',net:'🤝'};
+const SQICO={pay:'IMG:sq-pay',rest:'IMG:sq-rest',charity:'IMG:sq-charity',jobless:'IMG:sq-jobless',mkt:'IMG:sq-market',news:'IMG:sq-news',exch:'IMG:as-stock',bizc:'IMG:as-biz',splurge:'IMG:sq-luxury',crisis:'IMG:sq-crisis',net:'IMG:sq-net'};
 const ZICO={o0:'🌾',o1:'🏭',o2:'🏖️',o3:'🏘️',i0:'🏙️',i1:'🛍️',i2:'🏢',i3:'🏦'};
 
 /* ===================== SETUP ===================== */
@@ -1985,7 +1987,7 @@ async function newsCard(p){
   for(const s in n.e){const a=AS(s),old=S.prices[s];let np=old*(1+n.e[s]/100);np=roundP(a,np);if(MKT[s]){S.adj=S.adj||{};S.adj[s]=(S.adj[s]||1)*(1+n.e[s]/100)}S.prices[s]=np;S.hist[s].push(np);if(S.hist[s].length>20)S.hist[s].shift();
     parts.push(`<div class="ln"><span>${a.n} <span class="muted">${s}</span></span><span class="num ${n.e[s]>0?'pos':'neg'}">${n.e[s]>0?'+':''}${n.e[s]}% → ${a.k==='stock'?'฿'+np.toFixed(1):B(np)}</span></div>`)}
   log(`📰 ข่าว: ${n.t}`);render();
-  await choose({actor:p,kind:'news',title:n.t,body:parts.join('')+`<p class="muted">เปิดแท็บตลาดเพื่อซื้อขายได้ระหว่างเทิร์นของคุณ</p>`,opts:[{v:'ok',l:'รับทราบ',c:'pri'}],bot:'ok'});
+  await choose({actor:p,kind:'news',title:n.t,body:newsImg(Object.values(n.e).reduce((a,b)=>a+b,0)<0)+parts.join('')+`<p class="muted">เปิดแท็บตลาดเพื่อซื้อขายได้ระหว่างเทิร์นของคุณ</p>`,opts:[{v:'ok',l:'รับทราบ',c:'pri'}],bot:'ok'});
 }
 /* ===== ข่าวตลาดในกองการ์ดโอกาส (40 ใบ: หุ้น/กองทุน/คริปโต/สินค้า อย่างละ 10 ดี 5 ร้าย 5) — เปิดแล้วมีผลกับผู้เล่นทุกคน
    e = % ราคาเปลี่ยน (เก็บใน S.adj จึงติดไปกับราคาจริงเดือนต่อ ๆ ไป) · cash = เงินสดที่ผู้เล่นทุกคนได้/เสีย */
@@ -2031,6 +2033,7 @@ const OPP_NEWS=[
  {t:'ดอลลาร์แข็งค่า ทองคำร่วง',ty:'mnews',cat:'cm',tone:'b',e:{GOLD:-10}},
  {t:'เศรษฐกิจโลกชะลอ สินค้าโภคภัณฑ์ร่วง',ty:'mnews',cat:'cm',tone:'b',e:{OIL:-15,STEEL:-12,RICE:-5,GOLD:4}}];
 const MNCAT={st:['📈','ข่าวหุ้น'],fd:['📊','ข่าวกองทุน'],cy:['🪙','ข่าวคริปโต'],cm:['🛢️','ข่าวสินค้าโภคภัณฑ์']};
+function newsImg(bad){return `<img class="newsimg" src="img/${bad?'sq-crisis':'sq-news'}.webp" alt="">`}
 function shockPrices(e){const ch=[];for(const s in e){const a=AS(s);if(!a||!cryLive(a,S))continue;const old=S.prices[s];let np=roundP(a,old*(1+e[s]/100));if(MKT[s]||a.k==='cry'){S.adj=S.adj||{};S.adj[s]=(S.adj[s]||1)*(1+e[s]/100)}S.prices[s]=np;S.hist[s].push(np);if(S.hist[s].length>20)S.hist[s].shift();ch.push({s,a,old,np,pct:e[s]})}syncDiv();return ch}
 async function mnewsCard(p,c){
   if(PAR()){await parQueueNews(p,'m',c);return}
@@ -2040,7 +2043,7 @@ async function mnewsCard(p,c){
   log(`${ico} ${esc(p.name)} เปิดข่าว: ${esc(c.t)} · ${ch.map(x=>`${x.a.s} ${x.pct>0?'+':''}${x.pct}%`).join(' ')}${c.cash?` · ทุกคน${c.cash>0?'ได้':'จ่าย'} ${B(Math.abs(c.cash))}`:''}`);
   if(c.cash)ruleNote(p,c.cash>0?'ข่าวดี: ทุกคนได้เงิน':'ข่าวร้าย: ทุกคนจ่ายเงิน',`${c.cnote} ${B(Math.abs(c.cash))} (${esc(c.t)})`);
   render();
-  const body=`${chips([chip(ico,cn,'','tag'),chip(c.tone==='g'?'🟢':'🔴',c.tone==='g'?'ข่าวดี · ราคาขึ้น':'ข่าวร้าย · ราคาลง','',c.tone==='g'?'gain':'cost')])}
+  const body=`${newsImg(c.tone!=='g')}${chips([chip(ico,cn,'','tag'),chip(c.tone==='g'?'🟢':'🔴',c.tone==='g'?'ข่าวดี · ราคาขึ้น':'ข่าวร้าย · ราคาลง','',c.tone==='g'?'gain':'cost')])}
    <div class="mnl">${ch.map(x=>`<div class="ln"><span>${x.a.n} <span class="muted">${x.a.s}</span></span><span class="num ${x.pct>0?'pos':'neg'}">${x.pct>0?'+':''}${x.pct}% → ${fmtP(x.a,x.np)}</span></div>`).join('')||'<p class="muted">สินทรัพย์ในข่าวยังไม่เข้าตลาด</p>'}</div>
    <h4 style="margin:10px 0 4px;font-size:13px">ผลกระทบต่อผู้เล่นทุกคน</h4>
    <div class="mnl">${rows.map(r=>`<div class="ln"><span>${esc(r.q.name)}</span><span class="num ${r.dv+(c.cash||0)>0?'pos':r.dv+(c.cash||0)<0?'neg':'muted'}">${r.dv?`พอร์ต ${r.dv>0?'+':'−'}${B(Math.abs(r.dv)).replace('−','')}`:'ไม่ได้ถือ'}${c.cash?` · เงินสด ${c.cash>0?'+':'−'}${B(Math.abs(c.cash))}`:''}</span></div>`).join('')}</div>
@@ -2433,7 +2436,7 @@ function netAct(a){
 }
 function renderNet(){
   const q=P(S.view),mine=q.id===S.cur&&canAct();
-  if(!q.net.on)return `<div class="netlock"><h3>ธุรกิจ A · ธุรกิจเครือข่าย</h3>
+  if(!q.net.on)return `<div class="netlock"><img class="netimg" src="img/sq-net.webp" alt=""><h3>ธุรกิจ A · ธุรกิจเครือข่าย</h3>
     <p>${esc(q.name)} ยังไม่ได้สมัคร ต้องเสียค่าสมัคร <b>${B(NET_FEE)}</b> เพื่อเปิดแท็บนี้</p>
     <ul class="rules"><li>สร้างสายงาน A–F ด้วยการ์ดจากกอง "ธุรกิจ A" ทำยอด PV ให้ถึงขั้นบันไดโบนัส 3–21%</li><li>รายได้ Passive มาจากการ์ดสร้างธุรกิจ และได้โบนัสพินเมื่อขึ้นระดับ</li><li>ระดับ: ${NET_RANKS.map(r=>r.n).join(' → ')}</li></ul>
     ${q.id===S.cur?`<button class="pri" ${mine&&q.cash>=NET_FEE?'':'disabled'} onclick="netAct('join')">สมัครธุรกิจ A ${B(NET_FEE)}</button>`:''}</div>`;
@@ -3057,7 +3060,7 @@ async function parQueueNews(p,kind,c){
   const e={k:kind,c,by:p.name};
   if(PARH()){const id=Date.now().toString(36)+Math.random().toString(36).slice(2,5);ON.be.set(`rooms/${ON.code}/nq/${id}`,e)}else{S.nq=S.nq||[];S.nq.push(e)}
   log(`📰 ${esc(p.name)} เปิดข่าว: ${esc(c.t)} · มีผลตอนจบรอบ`);render();
-  await choose({actor:p,kind:'news',title:c.t,body:`<p>ข่าวนี้จะมีผลกับราคาตลาด${c.cash?' และเงินของผู้เล่นทุกคน':''} <b>ตอนจบรอบ</b> (ระหว่างรอบราคาคงที่ ทุกคนซื้อขายราคาเดียวกัน)</p>`,opts:[{v:'ok',l:'รับทราบ',c:'pri'}],bot:'ok'})}
+  await choose({actor:p,kind:'news',title:c.t,body:`${newsImg(c.tone?c.tone!=='g':Object.values(c.e||{}).reduce((a,b)=>a+b,0)<0)}<p>ข่าวนี้จะมีผลกับราคาตลาด${c.cash?' และเงินของผู้เล่นทุกคน':''} <b>ตอนจบรอบ</b> (ระหว่างรอบราคาคงที่ ทุกคนซื้อขายราคาเดียวกัน)</p>`,opts:[{v:'ok',l:'รับทราบ',c:'pri'}],bot:'ok'})}
 function parApplyNews(list){const lines=[];
   for(const e of list){const c=e.c;if(!c||!c.e)continue;const ch=shockPrices(c.e);
     if(c.cash)for(const q of S.players){if(c.cash>0)q.cash+=c.cash;else pay(q,-c.cash)}
