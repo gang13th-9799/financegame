@@ -1812,6 +1812,7 @@ function endTurn(early){
   if(tn)setTimeout(()=>{if(!MODAL)ask({npc:'think',title:'⏰ หมดเวลา 3 นาที',body:`<p><b>${esc(tn.name)}</b> ใช้เวลาครบ 3 นาที ระบบจึงจบเทิร์นให้อัตโนมัติ${tn.phase==='roll'?' (ยังไม่ได้ทอยลูกเต๋า)':` · จั่วการ์ดไป ${tn.picks}/${PICKS} ใบ`}</p><p class="muted">นาฬิกานับถอยหลังอยู่กลางกระดาน ใต้ค่าพลัง · ระหว่างเปิดหน้าตั้งค่านาฬิกาจะหยุดเดิน</p>`})},50);
   const p=cp();p.hired=false;
   if(early&&!S.autoPilot&&Date.now()<S.turnEnd){const sx=adj(p,{t:1},true);if(sx){log(`⏱ ${esc(p.name)} จบเทิร์นก่อนเวลา${sx}`);if(!p.bot)toast(`⏱ จบไว ได้เวลา +1`)}}
+  if(p._afkb){p.bot=false;delete p._afkb}
   S.autoPilot=false;
   S.cur=(S.cur+1)%S.players.length;if(S.cur===0)endRound();
   S.phase='roll';viewFollow();S.turnEnd=Date.now()+TURN_MS;render();save();
@@ -1819,7 +1820,8 @@ function endTurn(early){
   if(cp().bot&&iDrive()){ON.turnKey=S.round+':'+S.cur;botTurn()}
 }
 function timeUp(){
-  const p=cp();S.autoPilot=true;S.timeoutNote={name:p.name,picks:S.picks||0,phase:S.phase};log(`⏰ ${esc(p.name)} หมดเวลา 3 นาที จบเทิร์นอัตโนมัติ (จั่วการ์ดไป ${S.picks||0}/${PICKS} ใบ)`);toast(`⏰ ${p.name} หมดเวลา! จบเทิร์นอัตโนมัติ`);
+  const p=cp();if(ON.play&&!PAR()&&p.uid&&!p.bot&&!p.afk&&S.phase==='roll'){p.afk=true;ON.be.set(`rooms/${ON.code}/afk/${p.uid}`,true);log(`💤 ${esc(p.name)} ไม่ได้เล่นภายใน 3 นาที ติดสถานะ Bot`)}
+  S.autoPilot=true;S.timeoutNote={name:p.name,picks:S.picks||0,phase:S.phase};log(`⏰ ${esc(p.name)} หมดเวลา 3 นาที จบเทิร์นอัตโนมัติ (จั่วการ์ดไป ${S.picks||0}/${PICKS} ใบ)`);toast(`⏰ ${p.name} หมดเวลา! จบเทิร์นอัตโนมัติ`);
   if(MODAL_CANCEL){MODAL_CANCEL();setTimeout(()=>{if(S&&S.autoPilot&&!MODAL&&['roll','card','free'].includes(S.phase))endTurn()},1500);return}
   if(['roll','card','free'].includes(S.phase))endTurn();
 }
@@ -3049,7 +3051,7 @@ function onTag(){let t=$('#roomTag');if(!ON.code){if(t)t.remove();return}
   if(!t){t=document.createElement('span');t.id='roomTag';t.className='roomtag';t.setAttribute('role','button');t.title='ดูข้อมูลห้อง';t.onclick=onRoomInfo;const h=document.querySelector('header .logo')?.parentElement||document.querySelector('header');h.appendChild(t)}
   t.textContent='ห้อง '+ON.code+' ⓘ'}
 /* เวอร์ชันของไฟล์เกม (เปลี่ยนทุกครั้งที่แก้ระบบออนไลน์) · ส่งไปกับสถานะออนไลน์ เพื่อดูว่าใครยังเปิดเวอร์ชันเก่า */
-const BUILD='2026-11-15.3';
+const BUILD='2026-11-15.4';
 /* ป้ายเลขห้อง → ข้อมูลห้อง: เจ้าของห้อง · เครื่องที่คุมรอบ · สถานะผู้เล่นแต่ละคน */
 function onRoomInfo(){const r=ON.room;if(!r||!ON.code)return;
   const seatName=u=>{const q=S&&S.players&&S.players.find(x=>x.uid===u);if(q)return q.name;const s=Object.values(r.seats||{}).find(x=>x&&x.uid===u);return s?(s.name||'ผู้เล่น'):'—'};
@@ -3170,11 +3172,23 @@ function onDrive(){if(!ON.play||!S||S.winner!=null||$('#gameView').hidden)return
   const left=(ON.room&&ON.room.left)||{};let ch=false;
   for(const q of S.players)if(!q.bot&&q.uid&&left[q.uid]){q.bot=true;q.name+=' 🤖';log(`🚪 ${esc(q.name)} ออกจากเกม บอทเล่นแทน`);ch=true}
   if(ch){render();save()}
+  seqOfflineAfk();
   const p=cp(),key=S.round+':'+S.cur;
+  /* โหมดเล่นทีละคน: ถึงตาคนที่ติดสถานะ Bot → บอททอยแทนทันที (ตอบ "ไม่" ทุกคำถาม ไม่จั่วการ์ด) ไม่ต้องรอหมด 3 นาที */
+  if(!p.bot&&p.afk&&S.winner==null&&!MODAL){p.bot=true;p._afkb=1;ON.turnKey=key;if(S.phase==='busy')S.phase='card';log(`🤖 ${esc(p.name)} ติดสถานะ Bot · ระบบทอยลูกเต๋าให้`);render();save();
+    if(S.phase==='roll')botTurn();else if(S.phase==='card'||S.phase==='free')sleep(S.speed*.4).then(()=>endTurn(true));return}
   /* ขับแทนผู้เล่นที่หลุด: ถ้าค้างกลางการ์ด ปลดล็อกให้หมดเวลาจบเทิร์นได้ */
   if(!p.bot){if(p.uid!==ON.user.uid&&S.phase==='busy'&&!MODAL){S.phase='card';render();save()}return}
   if(ON.turnKey===key||MODAL)return;ON.turnKey=key;if(S.phase==='busy')S.phase='card';
   if(S.phase==='roll')botTurn();else if(S.phase==='card')sleep(S.speed).then(()=>pickPile(botPile(p)));else if(S.phase==='free')sleep(S.speed).then(()=>endTurn(true))}
+/* โหมดเล่นทีละคน: เครื่องที่ถือตา ให้ผู้เล่นที่ออฟไลน์เกิน 1 นาทีติดสถานะ Bot */
+function seqOfflineAfk(){if(!ON.play||PAR()||!S||S.winner!=null)return;const now=Date.now(),left=(ON.room&&ON.room.left)||{};ON.gone=ON.gone||{};let ch=false;
+  for(const q of S.players){if(q.bot||!q.uid||q.afk||left[q.uid]||q.uid===ON.user.uid)continue;
+    if(ON.pres[q.uid]){delete ON.gone[q.uid];continue}
+    if(!ON.gone[q.uid]){ON.gone[q.uid]=now;continue}
+    if(now-ON.gone[q.uid]<60000)continue;
+    q.afk=true;ch=true;ON.be.set(`rooms/${ON.code}/afk/${q.uid}`,true);log(`💤 ${esc(q.name)} ออฟไลน์เกิน 1 นาที ติดสถานะ Bot`)}
+  if(ch){render();save()}}
 /* ถามผู้เล่นอีกเครื่อง (เช่น ข้อเสนอซื้อขายระหว่างผู้เล่น) */
 async function onRemoteChoose(o){
   const to=o.actor.uid,opts=o.opts||[{v:'ok',l:'ตกลง'}];const fb=(opts.find(x=>['n','no','skip','cancel','x'].includes(x.v))||opts[opts.length-1]).v;
@@ -3313,15 +3327,15 @@ function parOfflineAfk(){if(!PAR()||!parMaster()||S.winner!=null)return;const no
     if(now-ON.gone[q.uid]<OFFLINE_AFK_MS)continue;
     q.afk=true;if(S.rp==='h')q.done=true;ch=true;ON.be.set(`rooms/${ON.code}/afk/${q.uid}`,true);log(`💤 ${esc(q.name)} ออฟไลน์เกิน 1 นาที ติดสถานะ Bot`)}
   if(ch){render();if(S.rp==='b')save();else if(S.rp==='h')parCheck()}}
-function parOnAfk(map){if(!PAR())return;map=map||{};ON.afkMap=map;let ch=false;
+function parOnAfk(map){if(!ON.play||!S||!S.players)return;map=map||{};ON.afkMap=map;let ch=false;
   for(const q of S.players){if(q.uid&&map[q.uid]===false&&q.afk){q.afk=false;ch=true}
     else if(q.uid&&map[q.uid]===true&&!q.afk&&!q.bot){q.afk=true;if(PARH()&&q.uid!==ON.user.uid)q.done=true;ch=true}}
-  if(ch){render();if(parMaster()&&S.rp==='b')save()}parOverlay()}
+  if(ch){render();if(PAR()?parMaster()&&S.rp==='b':iDrive())save()}parOverlay()}
 async function parUnafk(){const me=parMe();if(!me)return;me.afk=false;await ON.be.set(`rooms/${ON.code}/afk/${ON.user.uid}`,false);
   if(PARH()&&me.done&&Date.now()<S.rt0+TURN_MS-15000){me.done=false;me.acted=false;me.tEnd=S.rt0+TURN_MS;parLocalTurn();toast('กลับมาเล่นแล้ว · ทันรอบนี้')}
   else toast('ปลดสถานะ Bot แล้ว · กลับมาเล่นได้ตั้งแต่รอบถัดไป');
   render();if(PARH())parPushMe(true);parOverlay()}
-function parOverlay(){let el=$('#afkov');const me=PAR()&&parMe(),on=!!(me&&me.afk&&S.winner==null&&!$('#gameView').hidden);
+function parOverlay(){let el=$('#afkov');const me=ON.play&&S&&S.players&&parMe(),on=!!(me&&me.afk&&S.winner==null&&!$('#gameView').hidden);
   if(!el){if(!on)return;el=document.createElement('div');el.id='afkov';el.className='afkov';document.body.appendChild(el)}
   el.hidden=!on;if(on)el.innerHTML=`<div class="afk-box"><div class="afk-ic">💤</div><h2>คุณติดสถานะ Bot</h2><p>ไม่ได้เล่นภายใน 3 นาที ระบบจะทอยลูกเต๋าให้และทำเฉพาะสิ่งที่กติกาบังคับ (เช่น ตกช่องตกงาน) ไม่ซื้อ ไม่จั่วการ์ดให้</p><button class="pri" onclick="parUnafk()">ปลดสถานะ Bot</button></div>`}
 function parWaitHtml(){const me=parMe(),now=Date.now();const rest=S.players.filter(q=>!q.bot&&!q.done&&q!==me),afk=S.players.filter(q=>!q.bot&&q.afk);
