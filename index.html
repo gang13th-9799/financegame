@@ -1052,6 +1052,9 @@ body.fs #gameView:not(.mapmin){grid-template-columns:minmax(288px,1.2fr) minmax(
 /* พื้นหลังหน้าออนไลน์ (ล็อกอิน/หน้าหลัก/ล็อบบี้) */
 #setupView:has(.setup.onl)::before{content:"";position:fixed;inset:0;z-index:-1;background:url(img/online-hero.webp) center 70%/cover no-repeat}
 @media (orientation:portrait){#setupView:has(.setup.onl)::before{background-image:url(img/online-hero-tall.webp);background-position:center bottom}}
+/* จอเกือบสี่เหลี่ยม (4:3 แนวนอน · 3:4 แนวตั้ง เช่น iPad, Fold จอใน) ใช้ภาพที่ครอปมาเฉพาะ */
+@media (orientation:landscape) and (max-aspect-ratio:3/2){#setupView:has(.setup.onl)::before{background-image:url(img/online-hero-43.webp);background-position:center bottom}}
+@media (orientation:portrait) and (min-aspect-ratio:2/3){#setupView:has(.setup.onl)::before{background-image:url(img/online-hero-34.webp);background-position:center bottom}}
 .setup.onl{background:rgba(255,253,245,.9);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);margin-top:clamp(16px,6vh,64px)}
 .setup.onl .ol-card{background:rgba(255,255,255,.72)}
 body:has(#setupView .setup.onl) header{position:relative;z-index:5}
