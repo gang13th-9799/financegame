@@ -2420,8 +2420,8 @@ function cellBody(k){const q=SQ(k),pr=S.props[k];
 function cellInfo(k){if(MODAL)return;ask({title:esc(SQ(k).n),body:cellBody(k)})}
 let MAPMIN=false;try{MAPMIN=localStorage.getItem('ff-mapmin')==='1'}catch(e){}
 /* ภาพประจำช่องที่ดิน (img/prop-<รหัสช่อง>.webp) — ใส่รหัสช่องที่มีภาพแล้ว */
-const PROPIMG={o1:46.6,o3:50.3,o4:45.8,o6:39.7,o8:46.6,o11:44.4,o13:47.4,o14:47.2,o16:47.2,o18:64.5,o21:49.2};/* ค่า = จุดกึ่งกลางพื้นข้าวหลามตัดของภาพ (% จากบน) ใช้วางภาพ isometric ให้ตรงกลางช่อง */
-const PROPR={o11:.603,o13:.603,o14:.603,o16:.603,o18:.603,o21:.603},TILE_ROAD={c:44,r:.603};/* r = สัดส่วนสูง/กว้างของพื้นข้าวหลามตัดในภาพ (ภาพเกษตรชุดแรก .766) — ภาพทุกภาพถูกยืดให้ตรงกับมุมกล้องเดียวกัน */
+const PROPIMG={o1:46.6,o3:50.3,o4:45.8,o6:39.7,o8:46.6,o11:44.4,o13:47.4,o14:47.2,o16:47.2,o18:64.5,o21:49.2,o23:50.6,o24:50.6};/* ค่า = จุดกึ่งกลางพื้นข้าวหลามตัดของภาพ (% จากบน) ใช้วางภาพ isometric ให้ตรงกลางช่อง */
+const PROPR={o11:.603,o13:.603,o14:.603,o16:.603,o18:.603,o21:.603,o23:.603,o24:.603},TILE_ROAD={c:44,r:.603};/* r = สัดส่วนสูง/กว้างของพื้นข้าวหลามตัดในภาพ (ภาพเกษตรชุดแรก .766) — ภาพทุกภาพถูกยืดให้ตรงกับมุมกล้องเดียวกัน */
 function tileSty(k,c,r){let d=0;try{const q=cellPos(k);d=q[0]+q[1]}catch(e){}const sd=Math.floor(+k.slice(1)/(RING_LEN[k[0]]/4))%4;return `--b:${c}%;--s:${(1/r).toFixed(4)};--m:${sd%2?-1:1};--d:${d}`}
 const TILE_BASE_ON=true;/* พื้นหญ้าเปล่า (P001) ใต้ช่องวงนอกที่ยังไม่มีภาพของตัวเอง */
 function tileBase(k){return TILE_BASE_ON&&k[0]==='o'&&!(k in PROPIMG)?`<img class="zimg pimgc tbase" style="${tileSty(k,TILE_ROAD.c,TILE_ROAD.r)}" src="img/tile-grass.webp" alt="">`:''}
