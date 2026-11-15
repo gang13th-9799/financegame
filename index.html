@@ -1084,6 +1084,13 @@ body:has(#setupView .setup.onl) header{position:relative;z-index:5}
 .board.v3d .cell[data-side="0"] .toks{left:50%!important;right:auto!important;bottom:62%!important;top:auto!important;transform:translateX(-50%)!important}
 .board.v3d .cell[data-side="1"] .toks{left:72%!important;right:auto!important;bottom:30%!important;top:auto!important;transform:translateX(-50%)!important}
 .board.v3d .cell[data-side="3"] .toks{left:28%!important;right:auto!important;bottom:30%!important;top:auto!important;transform:translateX(-50%)!important}
+
+/* แท็บหลักในตั้งค่า */
+.dbtabs.smain{margin-bottom:6px}.dbtabs.smain button{font-size:1.02em}
+.setmain{display:grid;gap:10px;max-width:640px}
+.srow{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:12px 14px;border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.6)}
+.srow-t{display:grid;gap:2px;min-width:0;flex:1 1 220px}.srow-t small{font-size:.86em}
+.srow-c{flex:0 1 auto;display:flex;gap:6px;flex-wrap:wrap}.srow-c .ol-row input{min-width:10ch}
 </style>
 </head>
 <body>
@@ -2641,7 +2648,7 @@ function renderBank(){
 }
 
 /* ===================== SETTINGS: edit database (list + form CRUD) ===================== */
-let SET_TAB='jobs',SET_EDIT=null,SET_DEL=null,SET_Q='';
+let SET_TAB='jobs',SET_EDIT=null,SET_DEL=null,SET_Q='',SET_MAIN='acct';
 function openSettings(){if(MODAL)return;SET_EDIT=null;SET_DEL=null;$('#setov').hidden=false;renderSettings()}
 function closeSettings(){$('#setov').hidden=true;if(S)render()}
 function rowTitle(k,r){return k==='jobs'||k==='skills'?r.n:r.t}
@@ -2655,9 +2662,27 @@ function rowSummary(k,r){
   if(k==='life'&&r.sp==='jobless')return 'เหตุการณ์พิเศษ: ตกงาน';
   return DBCOLS[k].cols.slice(1).filter(([c])=>+r[c]).map(([c,l])=>`${l} ${(+r[c]).toLocaleString()}`).join(' · ')||'ไม่มีผล';
 }
+/* ===== ตั้งค่า: แท็บหลัก บัญชี · การแสดงผลหน้าจอ · ฐานข้อมูล ===== */
+function setHead(){return `<div class="sh"><h2>ตั้งค่า</h2><button onclick="closeSettings()">ปิด</button></div><div class="dbtabs smain" role="tablist">${[['acct','👤 บัญชี'],['disp','🖥️ การแสดงผลหน้าจอ'],['db','🗂️ ฐานข้อมูล']].map(([k,l])=>`<button role="tab" aria-selected="${SET_MAIN===k}" class="${SET_MAIN===k?'on':''}" onclick="SET_MAIN='${k}';SET_EDIT=null;SET_DEL=null;renderSettings()">${l}</button>`).join('')}</div>`}
+function setRow(t,d,ctl){return `<div class="srow"><div class="srow-t"><b>${t}</b>${d?`<small class="muted">${d}</small>`:''}</div><div class="srow-c">${ctl}</div></div>`}
+function renderSetAcct(){const u=ON.user,inRoom=!!ON.code;let b='';
+  if(u){const kind=u.anon?'บัญชีแขก':u.email?'อีเมล · '+esc(u.email):'Google / Facebook';
+    b+=setRow('ชื่อที่แสดงในเกม',kind,`<div class="ol-row"><input id="setMe" maxlength="16" value="${esc(ON.name||'')}"><button class="sm" onclick="setRename()">บันทึก</button></div>`);
+    if(inRoom)b+=setRow(`ห้อง ${ON.code}`,ON.play?'กำลังเล่นอยู่':'อยู่ในล็อบบี้',`<button class="sm" onclick="closeSettings();onLeave()">${ON.room&&ON.room.host===u.uid&&!ON.play?'ยกเลิกห้อง':'ออกจากห้อง'}</button>`);
+    if(u.anon)b+=setRow('ผูกบัญชี Google','บัญชีแขกถ้าล้างข้อมูลเบราว์เซอร์หรือเปลี่ยนเครื่อง จะกลับเข้าห้องเดิมไม่ได้',`<button class="sm" onclick="onLink().then(renderSettings)">🔗 ผูก Google</button>`);
+    b+=setRow('ออกจากระบบ',inRoom?'ตัวละครยังอยู่ในห้อง ล็อกอินบัญชีเดิมกลับมาเล่นต่อได้':'',`<button class="pri" onclick="onLogout()">ออกจากระบบ</button>`)}
+  else b+=setRow('ยังไม่ได้เข้าสู่ระบบ','เข้าสู่ระบบเพื่อเล่นออนไลน์กับเพื่อนและจำห้องเกมไว้',onAvail()?`<button class="pri" onclick="closeSettings();onBoot()">เข้าสู่ระบบ</button>`:'<span class="muted">ยังไม่ได้ตั้งค่าโหมดออนไลน์</span>');
+  return b}
+function renderSetDisp(){const fs=document.body.classList.contains('fs');
+  return setRow('ขนาดตัวอักษร',`ตอนนี้ ${Math.round(TZ_STEPS[TZI]*100)}%`,`<div class="seg"><button ${TZI===0?'disabled':''} onclick="$('#tzMinus').click();renderSettings()">A−</button><button ${TZI===TZ_STEPS.length-1?'disabled':''} onclick="$('#tzPlus').click();renderSettings()">A+</button></div>`)
+   +setRow('มุมมองแผนที่','3D ตัวละครยืนบนกระดาน · 2D มองจากด้านบน',`<div class="seg"><button class="${V3.on?'on':''}" onclick="if(!V3.on)toggleV3();renderSettings()">3D</button><button class="${!V3.on?'on':''}" onclick="if(V3.on)toggleV3();renderSettings()">2D</button></div>`)
+   +setRow('ขนาดแผนที่','ย่อแผนที่ให้แท็บข้อมูลกว้างขึ้น',`<div class="seg"><button class="${!MAPMIN?'on':''}" onclick="if(MAPMIN)toggleMap();renderSettings()">ปกติ</button><button class="${MAPMIN?'on':''}" onclick="if(!MAPMIN)toggleMap();renderSettings()">ย่อ</button></div>`)
+   +setRow('เต็มจอ','ซ่อนแถบเบราว์เซอร์ ให้เกมใช้พื้นที่ทั้งจอ',`<button class="sm" onclick="toggleFS();setTimeout(renderSettings,300)">${fs?'ย่อจอ':'⛶ เต็มจอ'}</button>`)}
+async function setRename(){const n=$('#setMe').value.trim().slice(0,16);if(!n||!ON.user)return;ON.name=n;await ON.be.update('users/'+ON.user.uid,{name:n});toast('บันทึกชื่อแล้ว · มีผลกับห้องที่สร้าง/เข้าใหม่')}
 function renderSettings(){
+  if(SET_MAIN!=='db'){$('#setov').innerHTML=setHead()+`<div class="setwrap setmain">${SET_MAIN==='acct'?renderSetAcct():renderSetDisp()}</div>`;return}
   const k=SET_TAB,def=DBCOLS[k],rows=DB[k];
-  const head=`<div class="sh"><h2>ตั้งค่า · แก้ไขฐานข้อมูล</h2><button onclick="closeSettings()">ปิด</button></div>`;
+  const head=setHead()+(ON.play?'<p class="dbnote">ระหว่างเล่นออนไลน์ การแก้ฐานข้อมูลมีผลเฉพาะเครื่องนี้ ไม่ส่งถึงเพื่อนในห้อง</p>':'');
   const tabs=`<div class="dbtabs"><button class="${k==='jobs'?'on':''}" onclick="dbTab('jobs')">1. อาชีพ</button><button class="${k!=='jobs'&&k!=='skills'?'on':''}" onclick="dbTab(SET_TAB==='jobs'||SET_TAB==='skills'?'life':SET_TAB)">2. การ์ด</button><button class="${k==='skills'?'on':''}" onclick="dbTab('skills')">3. ทักษะ</button></div>
     ${k!=='jobs'&&k!=='skills'?`<div class="dbtabs">${['life','learn','opp','net'].map(key=>`<button class="sm ${key===k?'on':''}" onclick="dbTab('${key}')">${DBCOLS[key].name.replace('การ์ด','กอง')} (${DB[key].length})</button>`).join('')}</div>`:''}`;
   if(SET_EDIT!==null){
@@ -2822,6 +2847,12 @@ async function onBoot(){
   catch(e){v.innerHTML=`<div class="setup onl"><h2>เชื่อมต่อไม่ได้</h2><p class="neg">${esc(e.message||String(e))}</p><div class="btnrow"><button onclick="onBoot()">ลองใหม่</button><button onclick="onExit()">เล่นเครื่องนี้แทน</button></div></div>`;return}
   if(!ON.authOn){ON.authOn=1;ON.be.onAuth(onAuthed)}
 }
+async function onLogout(){const u=ON.user;if(!u)return;const fromSet=!$('#setov').hidden;$('#setov').hidden=true;
+  const warn=u.anon?'<p class="neg">บัญชีแขก: ออกจากระบบแล้วจะ<b>กลับเข้าห้องเดิมไม่ได้</b> ถ้ายังไม่ได้ผูก Google</p>':'';
+  if(await choose({title:'ออกจากระบบ?',body:`${warn}<p>${ON.code?`ตัวละครของคุณยังอยู่ในห้อง ${ON.code} · ระหว่างที่ไม่อยู่ ระบบจะเล่นแทนตามสถานะ Bot · ล็อกอินบัญชีเดิมกลับมาเล่นต่อได้`:'ออกจากบัญชีนี้บนเครื่องนี้'}</p>`,opts:[{v:'n',l:'ยกเลิก'},{v:'y',l:'ออกจากระบบ',c:'pri'}]})!=='y'){if(fromSet)openSettings();return}
+  $('#setov').hidden=true;const code=ON.code;onStop();
+  if(code)try{await ON.be.remove(`rooms/${code}/on/${u.uid}`)}catch(e){}
+  try{await ON.be.out()}catch(e){onErr(e)}toast('ออกจากระบบแล้ว')}
 function onExit(){localStorage.removeItem('fg-online');onStop();ON.play=false;showSetup()}
 function onStop(){ON.unsub.forEach(f=>{try{f()}catch(e){}});ON.unsub=[];ON.room=null;ON.code=null;ON.play=false;ON.subbed=0;ON.turnKey='';ON.ver=0;onTag()}
 async function onAuthed(u){
@@ -2873,7 +2904,7 @@ function onHome(){
    <div class="ol-card"><h3>เข้าห้องเพื่อน</h3><div class="ol-row"><input id="olCode" inputmode="numeric" maxlength="5" placeholder="เลขห้อง 5 หลัก" oninput="this.value=this.value.replace(/[^0-9]/g,'')"><button class="pri" onclick="onJoin($('#olCode').value)">เข้าห้อง</button></div></div>
    <div class="btnrow" style="justify-content:flex-start">${u.anon?`<button class="sm" onclick="onLink()">🔗 ผูกบัญชี Google (กันข้อมูลหาย)</button>`:''}<button class="sm" onclick="ON.be.out()">ออกจากระบบ</button><button class="sm" onclick="onExit()">← เล่นบนเครื่องนี้ (ออฟไลน์)</button></div></div>`}
 async function onRename(){const n=$('#olMe').value.trim().slice(0,16);if(!n)return;ON.name=n;await ON.be.update('users/'+ON.user.uid,{name:n});onHome();toast('บันทึกชื่อแล้ว')}
-async function onLink(){try{await ON.be.link();ON.user.anon=false;toast('ผูกบัญชี Google แล้ว');onHome()}catch(e){onErr(e)}}
+async function onLink(){try{await ON.be.link();ON.user.anon=false;toast('ผูกบัญชี Google แล้ว');if(!ON.code)onHome()}catch(e){onErr(e)}}
 
 /* ---------- ห้อง ---------- */
 async function onCreate(){
@@ -2928,7 +2959,7 @@ function onLobby(r){
    ${[...Array(n).keys()].map(seat).join('')}
    <div class="btnrow" style="justify-content:flex-start;margin-top:12px">
     ${host?`<button class="pri" onclick="onStart()">เริ่มเกม${open?` (ที่ว่าง ${open} ที่ → บอท)`:''}</button>`:''}
-    <button onclick="onLeave()">${host?'ยกเลิกห้อง':'ออกจากห้อง'}</button></div>
+    <button onclick="onLeave()">${host?'ยกเลิกห้อง':'ออกจากห้อง'}</button><button class="sm" onclick="onLogout()">ออกจากระบบ</button></div>
    <p class="muted" style="font-size:12px">ถ้าเผลอปิดหน้าจอหรือรีเฟรช ให้เปิดเว็บแล้วเข้าสู่ระบบบัญชีเดิม ระบบจะพากลับเข้าห้องนี้เอง</p></div>`}
 async function onSetN(k){const r=ON.room;if(!r||r.host!==ON.user.uid)return;const up={n:k};
   for(let i=k;i<6;i++){const s=(r.seats||{})[i];if(s&&s.uid){up[`mem/${s.uid}`]=null;up[`seats/${i}`]={t:'h'}}}
