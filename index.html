@@ -148,7 +148,7 @@ body.hasend{padding-bottom:80px}
 @keyframes pickFloat{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-6px) rotate(.8deg)}}
 .mf button.hire{background:#fff4d6;border-color:#e9b949;color:#7a5200;font-weight:700}
 .chips{display:flex;flex-wrap:wrap;gap:7px;justify-content:center;margin:8px 0}
-.chip{display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:66px;padding:6px 9px 5px;border-radius:14px;background:#fff;border:2px solid #eadfc4;box-shadow:0 2px 0 #eadfc4;line-height:1.15}
+div.chip{display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:66px;padding:6px 9px 5px;border-radius:14px;background:#fff;border:2px solid #eadfc4;box-shadow:0 2px 0 #eadfc4;line-height:1.15}
 .chip .ci{font-size:22px}.chip .cv{font-family:var(--display);font-weight:800;font-size:15px;white-space:nowrap}.chip .cs{font-size:10.5px;color:#8a8170;white-space:nowrap}
 .chip.gain .cv{color:#1f9d55}.chip.gain2 .cv{color:#2a7fb8}.chip.cost .cv{color:#d64545}.chip.use .cv{color:#c2410c}.chip.ok .cv{color:#1f9d55}
 .chip.tag{background:#f6f0ff;border-color:#d9c8f5;box-shadow:0 2px 0 #d9c8f5}.chip.tag .cv{font-size:13px}
@@ -509,7 +509,7 @@ select,input,textarea{border-radius:12px;border:2px solid var(--line)}
 .npcname{margin-top:-2px;margin-bottom:4px}
 .modal.haspose .mb{padding-top:8px}
 .chips{gap:8px;margin:10px 0;align-items:stretch}
-.chip{min-width:78px;max-width:132px;padding:7px 10px 6px;text-align:center}
+div.chip{min-width:78px;max-width:132px;padding:7px 10px 6px;text-align:center}
 .chip .cs{white-space:normal;line-height:1.2;margin-top:2px;max-width:112px;word-break:break-word}
 .zchip{display:flex;width:max-content;max-width:100%;margin:8px auto 2px;padding:4px 12px 4px 4px;background:#fff;border:1.5px solid #eadfc4;border-radius:999px;font-size:12.5px;color:#6d6351;line-height:1.2}
 .zchip img{height:26px;width:26px;object-fit:cover;border-radius:50%}
@@ -555,7 +555,7 @@ select,input,textarea{border-radius:12px;border:2px solid var(--line)}
 @media (max-height:560px){.ov.withfig{--fh:clamp(150px,70vh,300px);--ovl:56px}.ov.withfig .mwrap{padding-top:0;max-width:640px}.ov.withfig .modal{max-height:calc(100dvh - 32px);margin-right:clamp(110px,22vw,200px)}.ov.withfig .ovfig{top:auto;bottom:0;right:-8px}.ov.withfig .modal.haspose .mh{padding-right:16px}}
 /* flat chips v2 */
 .chips{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:0;margin:10px 0;background:#fff;border:1px solid #ece2cb;border-radius:12px;overflow:hidden;justify-content:stretch}
-.chip{display:grid;grid-template-columns:30px 1fr;grid-template-areas:"i v" "i s";column-gap:8px;align-items:center;justify-items:start;text-align:left;min-width:0;max-width:none;padding:9px 10px;margin:0;background:none!important;border:none!important;border-radius:0!important;box-shadow:none!important;animation:none!important;outline:1px solid #f2eadb}
+div.chip{display:grid;grid-template-columns:30px 1fr;grid-template-areas:"i v" "i s";column-gap:8px;align-items:center;justify-items:start;text-align:left;min-width:0;max-width:none;padding:9px 10px;margin:0;background:none!important;border:none!important;border-radius:0!important;box-shadow:none!important;animation:none!important;outline:1px solid #f2eadb}
 .chip .ci{grid-area:i;font-size:22px;line-height:1;display:flex;justify-content:center}.chip .ci .ii{width:28px!important;height:28px!important}
 .chip .cv{grid-area:v;font-size:15px}.chip .cs{grid-area:s;font-size:11px;max-width:none;margin:0;color:#8a8170}
 .chip.bad .cv,.chip.bad .cs{color:#c62828}.chip.bad{background:#fff5f5!important}
