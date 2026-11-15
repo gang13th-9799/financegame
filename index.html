@@ -1052,7 +1052,7 @@ body.fs #gameView:not(.mapmin){grid-template-columns:minmax(288px,1.2fr) minmax(
 .rbanner b{display:block;font-size:clamp(24px,6vw,40px);color:#b8202f}.rbanner span{display:block;margin-top:4px;font-size:clamp(14px,3.6vw,18px)}
 .afkov{position:fixed;inset:0;z-index:9990;background:rgba(90,92,96,.72);backdrop-filter:grayscale(1);-webkit-backdrop-filter:grayscale(1);display:grid;place-items:center;padding:16px}
 .afkov[hidden]{display:none}
-.subtabs{display:flex;gap:4px;padding:3px;margin:0 0 10px;background:#f1ead6;border-radius:999px;position:sticky;top:0;z-index:3}
+.subtabs{overflow-x:auto;scrollbar-width:none;display:flex;gap:4px;padding:3px;margin:0 0 10px;background:#f1ead6;border-radius:999px;position:sticky;top:0;z-index:3}
 .subtabs button{flex:1;min-height:34px;padding:4px 8px;border:none!important;border-radius:999px;background:transparent!important;box-shadow:none!important;transform:none!important;color:var(--muted);font-size:13px;white-space:nowrap;font-family:var(--display)}
 .subtabs button.on{background:#fff!important;color:var(--ink);font-weight:700;box-shadow:0 1px 3px rgba(0,0,0,.12)!important}
 .jl.afkc{background:#eef0f4;color:#3f4652;border:1px solid #c5cad3}
@@ -1167,9 +1167,7 @@ body:has(#setupView .setup.onl) header{position:relative;z-index:5}
     <div class="tabs" role="tablist">
       <button id="t-pl" class="on" data-tab="pl">ผู้เล่น</button>
       <button id="t-net" data-tab="net">ธุรกิจ A</button>
-      <button id="t-npcm" data-tab="npcm">ตลาด</button>
       <button id="t-news" data-tab="news">ข่าวสาร</button>
-      <button id="t-mkt" data-tab="mkt">เทรด</button>
       <button id="t-bank" data-tab="bank">ธนาคาร</button>
       <button id="t-log" data-tab="log">บันทึกเกม</button>
     </div>
@@ -1499,8 +1497,11 @@ const EXP=new Set();
 function viewFollow(){if(ON.play){viewFollowOnline();return}const c=S.players[S.cur];if(c&&!c.bot){S.view=S.cur;S.viewPick=0;return}const v=S.players.find(q=>q.id===S.view);if(!v||(v.bot&&!S.viewPick)){const h=S.players.find(q=>!q.bot);if(h)S.view=h.id}}
 function togglePc(id){S.view=id;S.viewPick=1;if(id!==S.cur){EXP.has(id)?EXP.delete(id):EXP.add(id)}render()}
 function toggleAll(){const o=S.players.filter(q=>q.id!==S.cur);if(o.every(q=>EXP.has(q.id)))o.forEach(q=>EXP.delete(q.id));else o.forEach(q=>EXP.add(q.id));render()}
-/* แท็บผู้เล่นมีแท็บย่อย: รายชื่อ (pl) · งบการเงิน (fin) · ทักษะ (sk) — PL_SUB จำแท็บย่อยล่าสุด */
-const PL_TABS=[['pl','👥 รายชื่อ'],['fin','📊 งบการเงิน'],['sk','🃏 ทักษะ']];let PL_SUB='fin';
+/* แท็บหลักที่มีแท็บย่อย (ปุ่มแท็บหลัก data-tab = ชื่อกลุ่ม) · SUB_LAST จำแท็บย่อยล่าสุดของแต่ละกลุ่ม
+   ผู้เล่น: รายชื่อ (pl) · งบการเงิน (fin) · ทักษะ (sk) · ธนาคาร: ธนาคาร (bank) · กองทุน (fund) · ตลาด NPC (npcm) · เทรด (mkt) */
+const SUB_TABS={pl:[['pl','👥 รายชื่อ'],['fin','📊 งบการเงิน'],['sk','🃏 ทักษะ']],bank:[['bank','🏦 ธนาคาร'],['fund','📈 กองทุน'],['npcm','🏪 ตลาด'],['mkt','🔁 เทรด']]};
+const SUB_LAST={pl:'fin',bank:'bank'};
+const subGroup=t=>Object.keys(SUB_TABS).find(g=>SUB_TABS[g].some(x=>x[0]===t));
 let S=null, TAB='fin', MODAL=false, MODAL_CANCEL=null;
 const TURN_MS=180000;
 
@@ -2506,10 +2507,11 @@ function render(){
   if(!V3.on||MAPMIN){$('#hud').hidden=true}
   $('#legend').innerHTML=Object.entries(ZONES).map(([z,v])=>`<span><i style="background:${v.c}"></i>${v.n}</span>`).join('')+`<span><i style="background:#9da3a8"></i>ถนนคอนกรีต เข้า/ออกเมือง</span><span><i style="background:#ffd338"></i>เงินเดือน</span><span><i style="background:#46206a"></i>ตกงาน</span><span><i style="background:#f5862a"></i>บริจาค</span>`;
 
-  const inPl=PL_TABS.some(x=>x[0]===TAB);if(inPl)PL_SUB=TAB;
-  document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.tab===TAB||(inPl&&b.dataset.tab==='pl')));
-  {const nm=(S.mk||[]).filter(x=>x.sold==null).length,nn=(S.nw||[]).length,a=$('#t-npcm'),b=$('#t-news');if(a)a.innerHTML=`ตลาด${nm?` <span class="tabn">${nm}</span>`:''}`;if(b)b.innerHTML=`ข่าวสาร${nn?` <span class="tabn">${nn}</span>`:''}`}
-  $('#panel').innerHTML=(inPl?`<div class="subtabs" role="tablist">${PL_TABS.map(([k,l])=>`<button class="${k===TAB?'on':''}" role="tab" onclick="TAB='${k}';render()">${l}</button>`).join('')}</div>`:'')+(TAB==='pl'?renderPlayers():TAB==='sk'?renderSkills():TAB==='fin'?renderFin():TAB==='net'?renderNet():TAB==='npcm'?renderNpcMarket():TAB==='news'?renderNewsTab():TAB==='mkt'?renderMkt():TAB==='bank'?renderBank():`<div class="log">${S.log.map(l=>`<div>${l}</div>`).join('')}</div>`);
+  const grp=subGroup(TAB);if(grp)SUB_LAST[grp]=TAB;
+  document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.tab===TAB||(!!grp&&b.dataset.tab===grp)));
+  const nm=(S.mk||[]).filter(x=>x.sold==null).length,nn=(S.nw||[]).length,tn=n=>n?` <span class="tabn">${n}</span>`:'';
+  {const a=$('#t-bank'),b=$('#t-news');if(a)a.innerHTML=`ธนาคาร${tn(nm)}`;if(b)b.innerHTML=`ข่าวสาร${tn(nn)}`}
+  $('#panel').innerHTML=(grp?`<div class="subtabs" role="tablist">${SUB_TABS[grp].map(([k,l])=>`<button class="${k===TAB?'on':''}" role="tab" onclick="TAB='${k}';render()">${l}${k==='npcm'?tn(nm):''}</button>`).join('')}</div>`:'')+(TAB==='pl'?renderPlayers():TAB==='sk'?renderSkills():TAB==='fin'?renderFin():TAB==='net'?renderNet():TAB==='npcm'?renderNpcMarket():TAB==='news'?renderNewsTab():TAB==='mkt'?renderMkt():TAB==='bank'?renderBank():TAB==='fund'?renderBank('fund'):`<div class="log">${S.log.map(l=>`<div>${l}</div>`).join('')}</div>`);
 }
 function renderSkills(){
   const desc=k=>(EFFTXT[SKILLDB[k].eff]||(()=>''))(SKILLDB[k].val);
@@ -2721,14 +2723,23 @@ function bankDo(kind){
     p.dep-=v;p.cash+=v;log(`💰 ${nm} ถอนเงินฝาก ${B(v)} · เหลือ ${B(p.dep)}`);toast(`ถอน ${B(v)} แล้ว`)}
   render();save();checkWin();
 }
-function renderBank(){
+function renderBank(mode){
   const act=canAct(),p=act?cp():P(S.view),dis=act?'':'disabled',dep=p.dep||0,lim=loanLim(p),room=Math.max(0,lim-p.loan);
   const li=Math.round(p.loan*LOAN_R),di=Math.round(dep*DEP_R),net=di-li,acc={tc:0,tv:0};
   const quick=(id,arr)=>arr.filter(x=>x[1]>0).map(([l,v])=>`<button class="sm" ${dis} onclick="bankFill('${id}',${v})">${l}</button>`).join('');
   const inp=(id,ph)=>`<input id="${id}" type="text" inputmode="numeric" autocomplete="off" placeholder="${ph}" ${dis} oninput="this.value=this.value.replace(/[^0-9]/g,'')" onkeydown="if(event.key==='Enter')this.closest('.bkrow').querySelector('button.pri').click()">`;
   const usage=Math.min(100,p.loan/lim*100);
+  const fund=()=>`<section class="fcard bkc bkfund"><h3>📊 กองทุนรวม <span class="muted" style="font-size:12px;font-weight:500">ค่าธรรมเนียม 1%${S.freeComm?' <b class="pos">(เทิร์นนี้ฟรี)</b>':''}</span></h3>
+   <p class="trhint">👆 แตะชื่อกองทุน เพื่อเลือก <b>ซื้อ / ขาย</b> แล้วกดปุ่มจำนวนหน่วย</p>
+   <div class="mlist">${ASSETS.filter(a=>a.k==='fund').map(a=>mrow(a,p,dis,acc)).join('')}</div>
+   ${acc.tc?`<div class="ln" style="margin-top:6px"><span><b>รวมกองทุนของ ${esc(p.name)}</b><br><span class="muted" style="font-size:12px">ทุน ${B(acc.tc)} · มูลค่าตอนนี้ ${B(acc.tv)}</span></span><b class="num ${acc.tv>=acc.tc?'pos':'neg'}">${acc.tv>=acc.tc?'+':'−'}${B(Math.abs(acc.tv-acc.tc)).replace('−','')} (${acc.tv>=acc.tc?'+':''}${((acc.tv-acc.tc)/acc.tc*100).toFixed(1)}%)</b></div>`:''}
+   <p class="bknote">ราคา (NAV) เดินตาม<b>ราคาจริง</b>ของกองทุนจริงช่วงเดียวกับหุ้นและคริปโต (เฉลยตอนจบเกม) · ความเสี่ยงต่ำ = ราคานิ่งแต่โตช้า · กองทุนปันผลนับเป็นรายได้จากทรัพย์สินทุกเดือน</p>
+</section>`;
+  const note=act?'':'<p class="muted" style="margin:10px 0 0">ทำธุรกรรมได้เฉพาะในเทิร์นของผู้เล่นที่เป็นคน</p>';
+  if(mode==='fund')return `<div class="bank">
+  <div class="bkhead"><img src="img/npc-wave.webp" alt=""><div><b>กองทุนรวม · ${esc(p.name)}</b><span class="muted">ซื้อขายกองทุนรวม · เงินสด ${B(p.cash)}</span></div></div>${fund()}${note}</div>`;
   return `<div class="bank">
-  <div class="bkhead"><img src="img/npc-wave.webp" alt=""><div><b>ธนาคาร · ${esc(p.name)}</b><span class="muted">กู้เพิ่ม ชำระคืน ฝากประจำ และซื้อขายกองทุนรวม · ดอกเบี้ยคิดทุกครั้งที่รับเงินเดือน</span></div></div>
+  <div class="bkhead"><img src="img/npc-wave.webp" alt=""><div><b>ธนาคาร · ${esc(p.name)}</b><span class="muted">กู้เพิ่ม ชำระคืน และฝากประจำ · ดอกเบี้ยคิดทุกครั้งที่รับเงินเดือน · ซื้อขายกองทุนรวมที่แท็บย่อย 📈 กองทุน</span></div></div>
   <div class="tiles">
    <div class="tile"><span>เงินสด</span><b class="num">${B(p.cash)}</b></div>
    <div class="tile"><span>หนี้ธนาคาร</span><b class="num ${p.loan?'neg':''}">${B(p.loan)}</b></div>
@@ -2757,13 +2768,7 @@ function renderBank(){
    <div class="bkq">${quick('bkWd',[['10,000',dep>=10000?10000:0]])}<button class="sm bkall" ${dis||(!dep?'disabled':'')} onclick="bankDo('wdall')">ถอนทั้งหมด ${B(dep)}</button></div>
   </section>
   </div>
-  <section class="fcard bkc bkfund"><h3>📊 กองทุนรวม <span class="muted" style="font-size:12px;font-weight:500">ค่าธรรมเนียม 1%${S.freeComm?' <b class="pos">(เทิร์นนี้ฟรี)</b>':''}</span></h3>
-   <p class="trhint">👆 แตะชื่อกองทุน เพื่อเลือก <b>ซื้อ / ขาย</b> แล้วกดปุ่มจำนวนหน่วย</p>
-   <div class="mlist">${ASSETS.filter(a=>a.k==='fund').map(a=>mrow(a,p,dis,acc)).join('')}</div>
-   ${acc.tc?`<div class="ln" style="margin-top:6px"><span><b>รวมกองทุนของ ${esc(p.name)}</b><br><span class="muted" style="font-size:12px">ทุน ${B(acc.tc)} · มูลค่าตอนนี้ ${B(acc.tv)}</span></span><b class="num ${acc.tv>=acc.tc?'pos':'neg'}">${acc.tv>=acc.tc?'+':'−'}${B(Math.abs(acc.tv-acc.tc)).replace('−','')} (${acc.tv>=acc.tc?'+':''}${((acc.tv-acc.tc)/acc.tc*100).toFixed(1)}%)</b></div>`:''}
-   <p class="bknote">ราคา (NAV) เดินตาม<b>ราคาจริง</b>ของกองทุนจริงช่วงเดียวกับหุ้นและคริปโต (เฉลยตอนจบเกม) · ความเสี่ยงต่ำ = ราคานิ่งแต่โตช้า · กองทุนปันผลนับเป็นรายได้จากทรัพย์สินทุกเดือน</p>
-  </section>
-  ${act?'':'<p class="muted" style="margin:10px 0 0">ทำธุรกรรมได้เฉพาะในเทิร์นของผู้เล่นที่เป็นคน</p>'}
+  ${note}
   </div>`;
 }
 
@@ -2884,7 +2889,7 @@ function dbImport(){
 }
 
 /* ===================== WIRE UP ===================== */
-document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{TAB=b.dataset.tab==='pl'?PL_SUB:b.dataset.tab;render()});
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{TAB=SUB_LAST[b.dataset.tab]||b.dataset.tab;render()});
 $('#btnSet').onclick=openSettings;
 $('#btnRules').onclick=()=>{if(!MODAL)ask({npc:'wave',title:'กติกาเกม',body:RULES})};
 $('#btnNew').onclick=async()=>{if(MODAL)return;if(ON.play){onLeave();return}if(!S||$('#gameView').hidden){showSetup();return}const v=await choose({title:'เริ่มเกมใหม่?',body:'<p>เกมปัจจุบันจะถูกแทนที่</p>',opts:[{v:'y',l:'เริ่มใหม่',c:'pri'},{v:'n',l:'ยกเลิก'}]});if(v==='y')showSetup()};
