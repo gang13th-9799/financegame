@@ -1002,7 +1002,17 @@ body.fs #gameView:not(.mapmin){grid-template-columns:minmax(288px,1.2fr) minmax(
 .bwrap.v3d.cardtime .hud .pile.deck{max-width:min(21cqw,calc(var(--bh,600px) * .2))}
 .bwrap.v3d.cardtime .hud .ci-fig{max-height:calc(var(--bh,600px) * .26)}
 @media (orientation:portrait){
- body.fs #gameView:not(.mapmin){grid-template-rows:minmax(0,min(calc(100vw + 30px),64dvh)) minmax(0,1fr)!important}
+ body.fs #gameView:not(.mapmin){grid-template-rows:minmax(0,min(calc(100vw + 30px),46dvh)) minmax(0,1fr)!important}
+ /* เต็มจอแนวตั้ง: หัวเว็บแถวเดียว (เลื่อนซ้าย-ขวา) ให้แท็บข้อมูลได้พื้นที่มากขึ้น */
+ body.fs>header{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;gap:6px;padding:3px 8px}
+ body.fs>header::-webkit-scrollbar{display:none}
+ body.fs>header>*{flex:none}
+ body.fs>header h1{font-size:0;gap:0} /* เหลือแค่โลโก้ ปุ่มจะได้เห็นครบ */
+ body.fs>header button{padding:4px 10px;min-height:32px}
+}
+/* จอแนวตั้งสั้น (9:16 เช่น 360×640): แผนที่เล็กลงอีก แท็บข้อมูลยาวขึ้น */
+@media (orientation:portrait) and (min-aspect-ratio:9/17){
+ body.fs #gameView:not(.mapmin){grid-template-rows:minmax(0,min(calc(100vw + 30px),42dvh)) minmax(0,1fr)!important}
 }
 
 /* ===== โหมดออนไลน์ ===== */
