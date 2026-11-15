@@ -1052,6 +1052,9 @@ body.fs #gameView:not(.mapmin){grid-template-columns:minmax(288px,1.2fr) minmax(
 .rbanner b{display:block;font-size:clamp(24px,6vw,40px);color:#b8202f}.rbanner span{display:block;margin-top:4px;font-size:clamp(14px,3.6vw,18px)}
 .afkov{position:fixed;inset:0;z-index:9990;background:rgba(90,92,96,.72);backdrop-filter:grayscale(1);-webkit-backdrop-filter:grayscale(1);display:grid;place-items:center;padding:16px}
 .afkov[hidden]{display:none}
+.subtabs{display:flex;gap:4px;padding:3px;margin:0 0 10px;background:#f1ead6;border-radius:999px;position:sticky;top:0;z-index:3}
+.subtabs button{flex:1;min-height:34px;padding:4px 8px;border:none!important;border-radius:999px;background:transparent!important;box-shadow:none!important;transform:none!important;color:var(--muted);font-size:13px;white-space:nowrap;font-family:var(--display)}
+.subtabs button.on{background:#fff!important;color:var(--ink);font-weight:700;box-shadow:0 1px 3px rgba(0,0,0,.12)!important}
 .jl.afkc{background:#eef0f4;color:#3f4652;border:1px solid #c5cad3}
 .afk-box{background:#fffdf3;border-radius:22px;padding:22px 20px;max-width:420px;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,.3)}
 .afk-box .afk-ic{font-size:48px}.afk-box h2{margin:6px 0}.afk-box button{margin-top:12px;font-size:18px;min-height:48px;padding:0 28px}
@@ -1162,9 +1165,7 @@ body:has(#setupView .setup.onl) header{position:relative;z-index:5}
   </section>
   <section>
     <div class="tabs" role="tablist">
-      <button id="t-pl" data-tab="pl">ผู้เล่น</button>
-      <button id="t-sk" data-tab="sk">ทักษะ</button>
-      <button id="t-fin" class="on" data-tab="fin">งบการเงิน</button>
+      <button id="t-pl" class="on" data-tab="pl">ผู้เล่น</button>
       <button id="t-net" data-tab="net">ธุรกิจ A</button>
       <button id="t-npcm" data-tab="npcm">ตลาด</button>
       <button id="t-news" data-tab="news">ข่าวสาร</button>
@@ -1498,6 +1499,8 @@ const EXP=new Set();
 function viewFollow(){if(ON.play){viewFollowOnline();return}const c=S.players[S.cur];if(c&&!c.bot){S.view=S.cur;S.viewPick=0;return}const v=S.players.find(q=>q.id===S.view);if(!v||(v.bot&&!S.viewPick)){const h=S.players.find(q=>!q.bot);if(h)S.view=h.id}}
 function togglePc(id){S.view=id;S.viewPick=1;if(id!==S.cur){EXP.has(id)?EXP.delete(id):EXP.add(id)}render()}
 function toggleAll(){const o=S.players.filter(q=>q.id!==S.cur);if(o.every(q=>EXP.has(q.id)))o.forEach(q=>EXP.delete(q.id));else o.forEach(q=>EXP.add(q.id));render()}
+/* แท็บผู้เล่นมีแท็บย่อย: รายชื่อ (pl) · งบการเงิน (fin) · ทักษะ (sk) — PL_SUB จำแท็บย่อยล่าสุด */
+const PL_TABS=[['pl','👥 รายชื่อ'],['fin','📊 งบการเงิน'],['sk','🃏 ทักษะ']];let PL_SUB='fin';
 let S=null, TAB='fin', MODAL=false, MODAL_CANCEL=null;
 const TURN_MS=180000;
 
@@ -2503,9 +2506,10 @@ function render(){
   if(!V3.on||MAPMIN){$('#hud').hidden=true}
   $('#legend').innerHTML=Object.entries(ZONES).map(([z,v])=>`<span><i style="background:${v.c}"></i>${v.n}</span>`).join('')+`<span><i style="background:#9da3a8"></i>ถนนคอนกรีต เข้า/ออกเมือง</span><span><i style="background:#ffd338"></i>เงินเดือน</span><span><i style="background:#46206a"></i>ตกงาน</span><span><i style="background:#f5862a"></i>บริจาค</span>`;
 
-  document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.tab===TAB));
+  const inPl=PL_TABS.some(x=>x[0]===TAB);if(inPl)PL_SUB=TAB;
+  document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.tab===TAB||(inPl&&b.dataset.tab==='pl')));
   {const nm=(S.mk||[]).filter(x=>x.sold==null).length,nn=(S.nw||[]).length,a=$('#t-npcm'),b=$('#t-news');if(a)a.innerHTML=`ตลาด${nm?` <span class="tabn">${nm}</span>`:''}`;if(b)b.innerHTML=`ข่าวสาร${nn?` <span class="tabn">${nn}</span>`:''}`}
-  $('#panel').innerHTML=TAB==='pl'?renderPlayers():TAB==='sk'?renderSkills():TAB==='fin'?renderFin():TAB==='net'?renderNet():TAB==='npcm'?renderNpcMarket():TAB==='news'?renderNewsTab():TAB==='mkt'?renderMkt():TAB==='bank'?renderBank():`<div class="log">${S.log.map(l=>`<div>${l}</div>`).join('')}</div>`;
+  $('#panel').innerHTML=(inPl?`<div class="subtabs" role="tablist">${PL_TABS.map(([k,l])=>`<button class="${k===TAB?'on':''}" role="tab" onclick="TAB='${k}';render()">${l}</button>`).join('')}</div>`:'')+(TAB==='pl'?renderPlayers():TAB==='sk'?renderSkills():TAB==='fin'?renderFin():TAB==='net'?renderNet():TAB==='npcm'?renderNpcMarket():TAB==='news'?renderNewsTab():TAB==='mkt'?renderMkt():TAB==='bank'?renderBank():`<div class="log">${S.log.map(l=>`<div>${l}</div>`).join('')}</div>`);
 }
 function renderSkills(){
   const desc=k=>(EFFTXT[SKILLDB[k].eff]||(()=>''))(SKILLDB[k].val);
@@ -2880,7 +2884,7 @@ function dbImport(){
 }
 
 /* ===================== WIRE UP ===================== */
-document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{TAB=b.dataset.tab;render()});
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{TAB=b.dataset.tab==='pl'?PL_SUB:b.dataset.tab;render()});
 $('#btnSet').onclick=openSettings;
 $('#btnRules').onclick=()=>{if(!MODAL)ask({npc:'wave',title:'กติกาเกม',body:RULES})};
 $('#btnNew').onclick=async()=>{if(MODAL)return;if(ON.play){onLeave();return}if(!S||$('#gameView').hidden){showSetup();return}const v=await choose({title:'เริ่มเกมใหม่?',body:'<p>เกมปัจจุบันจะถูกแทนที่</p>',opts:[{v:'y',l:'เริ่มใหม่',c:'pri'},{v:'n',l:'ยกเลิก'}]});if(v==='y')showSetup()};
