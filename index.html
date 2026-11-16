@@ -1205,6 +1205,9 @@ body:has(#setupView .setup.onl) header{position:relative;z-index:5}
 <div class="toast" id="toast"></div>
 
 <script>
+/* เวลากลางของเซิร์ฟเวอร์: ออนไลน์ใช้ .info/serverTimeOffset ของ Firebase ให้ทุกเครื่องนับเวลาเทิร์นตรงกัน (นาฬิกามือถือแต่ละเครื่องเพี้ยนได้หลายสิบวินาที) · ออฟไลน์ FG_OFF=0 */
+var FG_OFF=0;function NOW(){return Date.now()+FG_OFF}
+
 /* ===================== DATA ===================== */
 let JOBS=[];
 const JOBIMG=['พนักงานส่งของ','ครู','พยาบาล','ผู้จัดการ','วิศวกร','ทนายความ','นักบิน','แพทย์'];
@@ -1359,7 +1362,7 @@ async function netCard(p){
       const sx=hx?adj(p,{h:hx},true):'';log(`🔻 ${esc(p.name)}: ${esc(t)}${monthly?` รายจ่าย +${B(cost)}/เดือน`:` จ่าย ${B(cost)}`}${sx}`);
       await choose({actor:p,kind:'netc',title:esc(t),body:info+(monthly?`<p class="neg">รายจ่ายเพิ่ม ${B(cost)} ทุกเดือน</p>`:'')+(sx?`<p>${sx.slice(3)}</p>`:''),opts:[ok1()],bot:'ok'});return}
     const ok=await buyFlow(p,cost,{kind:'netc',verb:'ทำ',no:'ข้าม',...NEED,cf:Pv||A,title:esc(t),body:info});
-    if(ok){p.active+=A;if(Pv)p.deals.push({id:Date.now()+Math.random(),t,ty:'biz',cost,cf:Pv});log(`💼 ${esc(p.name)}: ${esc(t)}${A?` รายได้เสริม +${B(A)}/เดือน`:''}${Pv?` Passive +${B(Pv)}`:''}`)}
+    if(ok){p.active+=A;if(Pv)p.deals.push({id:NOW()+Math.random(),t,ty:'biz',cost,cf:Pv});log(`💼 ${esc(p.name)}: ${esc(t)}${A?` รายได้เสริม +${B(A)}/เดือน`:''}${Pv?` Passive +${B(Pv)}`:''}`)}
     return;
   }
   if(cat==='ความรู้ธุรกิจ'){
@@ -1370,7 +1373,7 @@ async function netCard(p){
   const invest=!leg&&Pv&&!pv&&/ลงทุน/.test(t);
   const ok=await buyFlow(p,cost,{kind:'netc',verb:'ทำ',no:'ข้าม',...NEED,cf:Pv||A||1,title:esc(t),body:info});
   if(!ok)return;
-  if(invest){p.deals.push({id:Date.now()+Math.random(),t,ty:/คอนโด/.test(t)?'re':'fund',cost,cf:Pv});log(`✨ ${esc(p.name)} ลงทุน ${esc(t)}`);return}
+  if(invest){p.deals.push({id:NOW()+Math.random(),t,ty:/คอนโด/.test(t)?'re':'fund',cost,cf:Pv});log(`✨ ${esc(p.name)} ลงทุน ${esc(t)}`);return}
   const nb=1+skV(p,'net')/100;
   const m=t.match(/ได้\s*([\d,]+)\s*PV/i);
   if(leg){const goal=m?Math.round(+m[1].replace(/,/g,'')*nb):0;n.legs[leg]=goal?Math.max(n.legs[leg],goal):n.legs[leg]+Math.round(pv*nb)}else n.ppv+=Math.round(pv*nb);
@@ -1502,7 +1505,7 @@ function lifeApply(p,c){
   if(+c.spct){const a=rnd100(p.salary*c.spct/100);p.salary+=a;parts.push(`เงินเดือน ${a>0?'+':''}${B(a)} ต่อเดือน`)}
   if(+c.mexp){const mx=lifeCost(p,+c.mexp);p.exp.extra=(p.exp.extra||0)+mx;parts.push(`รายจ่าย +${B(mx)} ต่อเดือน`)}
   if(+c.act){p.active=(p.active||0)+ +c.act;parts.push(`รายได้เสริม +${B(+c.act)} ต่อเดือน`)}
-  if(+c.pas){p.deals.push({id:Date.now()+Math.random(),t:c.t,ty:'biz',cost:Math.max(0,-(+c.cash||0)),cf:+c.pas});parts.push(`Passive +${B(+c.pas)} ต่อเดือน`)}
+  if(+c.pas){p.deals.push({id:NOW()+Math.random(),t:c.t,ty:'biz',cost:Math.max(0,-(+c.cash||0)),cf:+c.pas});parts.push(`Passive +${B(+c.pas)} ต่อเดือน`)}
   if(+c.kid){if(p.kids>=KIDMAX)parts.push(`มีลูกครบ ${KIDMAX} คนแล้ว`);else{p.kids++;parts.push(`ค่าเลี้ยงดูบุตร +${B(p.kidCost)} ต่อเดือน`)}}
   return (parts.join(' · ')||'—')+adj(p,{h:+c.h||0,t:+c.tt||0,k:+c.k||0});
 }
@@ -1722,7 +1725,7 @@ function newGame(speed){
     players:seats.map((s,i)=>{const j=S0jobs[jobs[i]];return {id:i,uid:s.uid||null,name:s.n,bot:s.bot,color:COLORS[i],job:jobs[i],salary:j.sal,cash:j.cash,
       exp:{...j.e,extra:0},active:0,debt:{home:j.e.home*100,car:j.e.car*25,card:j.e.card*20},kids:0,kidCost:j.kc||rnd100(j.sal*.06),loan:0,dep:0,warn:0,deals:[],stocks:{},skills:[],
       net:netNew(),ring:'o',pos:0,jobless:0,charity:0,st:{h:j.h,t:j.t,k:j.k}}})};
-  S.turnEnd=Date.now()+TURN_MS;
+  S.turnEnd=NOW()+TURN_MS;
   for(const a of ASSETS){S.prices[a.s]=a.p;S.hist[a.s]=[a.p]}cryInit();
   log('เริ่มเกม! ทุกคนสุ่มได้อาชีพแล้ว');
   startView();save();
@@ -1739,7 +1742,7 @@ function resume(){
   for(const a of ASSETS)if(S.prices[a.s]==null){S.prices[a.s]=a.p;S.hist[a.s]=[a.p]}for(const q of S.players)q.dep=q.dep||0;
   if(S.winner!=null){render();return}
   if(S.phase==='busy')S.phase='card';
-  S.autoPilot=false;S.turnEnd=Date.now()+TURN_MS;
+  S.autoPilot=false;S.turnEnd=NOW()+TURN_MS;
   if(PAR()){render();if(!S.rp&&parMaster())parStartRound();return}
   render();const p=cp();if(!p.bot)return;
   if(S.phase==='roll')botTurn();
@@ -1748,7 +1751,7 @@ function resume(){
 }
 
 /* ===================== TURN FLOW ===================== */
-async function confirmEndTurn(){const p=cp();const early=Date.now()<S.turnEnd;const nx=S.players[(S.cur+1)%S.players.length];
+async function confirmEndTurn(){const p=cp();const early=NOW()<S.turnEnd;const nx=S.players[(S.cur+1)%S.players.length];
   const v=await choose({actor:p,pose:'wave',title:'จบเทิร์นใช่ไหม?',body:`<p>ยืนยันจบเทิร์นของ <b>${esc(p.name)}</b> จบแล้วย้อนกลับมาซื้อขายหรือทำรายการในเทิร์นนี้ไม่ได้</p>${S.phase==='card'?`<p class="neg">ยังจั่วการ์ดไม่ครบ (${S.picks||0}/${picksMax()} ใบ) สิทธิ์ที่เหลือจะหายไป</p>`:''}<div class="kv"><b>เงินสดตอนนี้</b><span class="num">${B(p.cash)}</span><b>คนถัดไป</b><span>${esc(nx.name)}${nx.bot?' (บอท)':''}</span></div>${early&&p.st.t<10?'<p class="pos">⏱ จบก่อนหมดเวลา ได้ ⏳ เวลา +1</p>':''}`,opts:[{v:'y',l:'✅ ยืนยัน จบเทิร์น',c:'pri'},{v:'n',l:'ยังก่อน'}],bot:'y'});
   if(v==='y'&&canAct()&&(S.phase==='free'||S.phase==='card')){if(S.phase==='card')log(`${esc(p.name)} หยุดจั่วการ์ดที่ ${S.picks||0}/${picksMax()} ใบ`);endTurn(true)}}
 function canAct(){return S&&S.winner==null&&!cp().bot&&onMine()&&!MODAL&&['roll','card','free'].includes(S.phase)}
@@ -1762,14 +1765,14 @@ async function rollTurn(n){
   log(`🎲 ${esc(p.name)} ทอย ${n} ลูก ได้ ${steps}`);
   let left=steps;camOn(p);walkStart(p);
   while(left>0){
-    p.pos=(p.pos+1)%RING_LEN[p.ring];left--;const q=SQ(p.ring+p.pos);FXT.trail[p.ring+p.pos]=Date.now();FXT.hop={id:p.id,t:Date.now()};
+    p.pos=(p.pos+1)%RING_LEN[p.ring];left--;const q=SQ(p.ring+p.pos);FXT.trail[p.ring+p.pos]=NOW();FXT.hop={id:p.id,t:NOW()};
     render();camFollow(p);walkTo(p);await sleep(p.bot?(V3.on&&!MAPMIN?240:130):(V3.on&&!MAPMIN&&!RM?STEP_MS:260));if(q.t==='pay')await payday(p);
     if(q.t==='road'&&left>0){
       const [nr,ni]=roadPair(p.ring,p.pos);
       const into=nr==='i';
       const v=await choose({actor:p,title:`ถนน ${ZONES[q.z].n}`,body:`<p>${into?'เลี้ยวเข้า<b>เมืองหลวง</b>: สร้างธุรกิจง่าย แต่ค่าครองชีพ ×1.3 ที่ดินและอสังหาฯ แพง':'ออกไป<b>ต่างจังหวัด</b>: ค่าครองชีพ ×0.85 ที่ดินและอสังหาฯ ราคาถูก'}</p><p class="muted">เดินข้ามถนนไปอีกชั้นนับเป็น 1 ก้าว · เหลืออีก ${left} ก้าว</p>`,
         opts:[{v:'go',l:into?'เข้าเมืองหลวง':'ออกต่างจังหวัด',c:'pri'},{v:'stay',l:'เดินต่อชั้นเดิม'}],bot:botRoad(p,into)});
-      if(v==='go'){p.ring=nr;p.pos=ni;left--;FXT.trail[p.ring+p.pos]=Date.now();FXT.hop={id:p.id,t:Date.now()};log(`🛣 ${esc(p.name)} ${into?'เข้าเมืองหลวง':'ออกต่างจังหวัด'}`);render();camFollow(p);await sleep(150)}
+      if(v==='go'){p.ring=nr;p.pos=ni;left--;FXT.trail[p.ring+p.pos]=NOW();FXT.hop={id:p.id,t:NOW()};log(`🛣 ${esc(p.name)} ${into?'เข้าเมืองหลวง':'ออกต่างจังหวัด'}`);render();camFollow(p);await sleep(150)}
     }
   }
   if(CAM.active){await sleep(p.bot?250:550);camOff()}
@@ -1839,12 +1842,12 @@ function endTurn(early){
   if(S.winner!=null)return;if(PAR()){parEndTurn(early);return}S.bonusPicks=0;const tn=S.autoPilot&&S.timeoutNote;S.timeoutNote=null;S.freeComm=false;S.picks=0;
   if(tn)setTimeout(()=>{if(!MODAL)ask({npc:'think',title:'⏰ หมดเวลา 3 นาที',body:`<p><b>${esc(tn.name)}</b> ใช้เวลาครบ 3 นาที ระบบจึงจบเทิร์นให้อัตโนมัติ${tn.phase==='roll'?' (ยังไม่ได้ทอยลูกเต๋า)':` · จั่วการ์ดไป ${tn.picks}/${PICKS} ใบ`}</p><p class="muted">นาฬิกานับถอยหลังอยู่กลางกระดาน ใต้ค่าพลัง · ระหว่างเปิดหน้าตั้งค่านาฬิกาจะหยุดเดิน</p>`})},50);
   const p=cp();p.hired=false;
-  if(early&&!S.autoPilot&&Date.now()<S.turnEnd){const sx=adj(p,{t:1},true);if(sx){log(`⏱ ${esc(p.name)} จบเทิร์นก่อนเวลา${sx}`);if(!p.bot)toast(`⏱ จบไว ได้เวลา +1`)}}
+  if(early&&!S.autoPilot&&NOW()<S.turnEnd){const sx=adj(p,{t:1},true);if(sx){log(`⏱ ${esc(p.name)} จบเทิร์นก่อนเวลา${sx}`);if(!p.bot)toast(`⏱ จบไว ได้เวลา +1`)}}
   turnPassiveTime(p);
   if(p._afkb){p.bot=false;delete p._afkb}
   S.autoPilot=false;
   S.cur=(S.cur+1)%S.players.length;if(S.cur===0)endRound();
-  S.phase='roll';viewFollow();S.turnEnd=Date.now()+TURN_MS;render();save();
+  S.phase='roll';viewFollow();S.turnEnd=NOW()+TURN_MS;render();save();
   if(!cp().bot)fxBanner(cp());
   if(cp().bot&&iDrive()){ON.turnKey=S.round+':'+S.cur;botTurn()}
 }
@@ -1861,7 +1864,7 @@ setInterval(()=>{
   if(p.bot){if(el)el.textContent='';return}
   if(ON.play&&S.par&&(p.done||S.phase==='wait')){if(el)el.textContent='';return}
   if(!$('#setov').hidden){S.turnEnd+=500;return}
-  const ms=S.turnEnd-Date.now(),s=Math.max(0,Math.ceil(ms/1000));
+  const ms=S.turnEnd-NOW(),s=Math.max(0,Math.ceil(ms/1000));
   if(el){el.textContent=`⏱ ${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`;el.classList.toggle('low',s<=30)}
   if(ms<=0&&!S.autoPilot&&iDrive())timeUp();
 },500);
@@ -2295,7 +2298,7 @@ async function oppCard(p,c,src){
     const warn=c.ty==='scam'&&knowsScam(p)?`<p class="neg"><b>⚠ ทักษะรู้ทันกลโกงเตือน:</b> ผลตอบแทนสูงผิดปกติ นี่คือแชร์ลูกโซ่ ไม่นับเป็นรายได้จากทรัพย์สิน และพร้อมล่มทุกเดือน</p>`:'';
     const tyN=c.ty==='scam'?'การลงทุน':OPP_TY[c.ty];
     const ok=await buyFlow(p,cost,{kind:'opp',pre:c._pre||null,needT:c.nt||0,needH:c.nh||0,needK:c.nk||0,cf:c.ty==='scam'?(knowsScam(p)?-1:c.cf):c.cf+(c.act||0),title:c.t,body:`${chips([chip(OPPICO[c.ty]||'💼',tyN,'','tag'),c.ty==='scam'?chip('📈',`+${B(c.cf)}`,'อ้าง/เดือน','gain'):'',c.ty!=='scam'&&(c.cf||!c.act)?chip('📈',`+${B(dealCf(p,c))}`,'Passive/เดือน','gain'):'',c.act?chip('💼',`+${B(c.act)}`,'Active/เดือน','gain2'):''].filter(Boolean))}${src?`<p class="muted">${src}</p>`:''}${cap?chips([chip('🏙️','−20%','เมืองหลวง','gain')]):''}${warn}`});
-    if(ok){p.deals.push({id:Date.now()+Math.random(),t:c.t,ty:c.ty,cost,cf:c.cf,act:c.act||0});log(`✨ ${esc(p.name)} ลงทุน ${esc(c.t)} ${B(cost)}${c.cf?` · Passive +${B(c.cf)}`:''}${c.act?` · Active +${B(c.act)}`:''}`)}
+    if(ok){p.deals.push({id:NOW()+Math.random(),t:c.t,ty:c.ty,cost,cf:c.cf,act:c.act||0});log(`✨ ${esc(p.name)} ลงทุน ${esc(c.t)} ${B(cost)}${c.cf?` · Passive +${B(c.cf)}`:''}${c.act?` · Active +${B(c.act)}`:''}`)}
   }else if(c.ty==='ipo'){
     const pr=Math.round(S.prices.GROW*.6*10)/10;
     const nb=needBox(p,Math.round(pr*5000),c.nt||0,c.nk||0,c.nh||0,true);
@@ -2474,7 +2477,7 @@ function render(){
   $('#roundLbl').textContent=`รอบที่ ${S.round}`;
   const p=cp(),bd=$('#board');let h='';
   for(const k in SQ_MAP){const b=SQ(k),[r,c]=cellPos(k),pr=S.props[k],i=+k.slice(1),corner=i%(RING_LEN[k[0]]/4)===0;
-    const now=Date.now(),toks=S.players.filter(q=>q.ring+q.pos===k).map(q=>{const hp=FXT.hop&&FXT.hop.id===q.id&&now-FXT.hop.t<340;return `<span class="tok pic ${q.id===p.id&&(!hp||(V3.on&&!MAPMIN))?'cur':''} ${hp?'hop':''}" style="${tokStyle(q)};${hp?`animation-delay:-${now-FXT.hop.t}ms`:''}" title="${esc(q.name)}"></span>`}).join('');
+    const now=NOW(),toks=S.players.filter(q=>q.ring+q.pos===k).map(q=>{const hp=FXT.hop&&FXT.hop.id===q.id&&now-FXT.hop.t<340;return `<span class="tok pic ${q.id===p.id&&(!hp||(V3.on&&!MAPMIN))?'cur':''} ${hp?'hop':''}" style="${tokStyle(q)};${hp?`animation-delay:-${now-FXT.hop.t}ms`:''}" title="${esc(q.name)}"></span>`}).join('');
     const tr=FXT.trail[k]&&now-FXT.trail[k]<1100?now-FXT.trail[k]:-1;const ico=b.t==='prop'?'ZIMG:'+(b.z||zoneOfCell(k)):k==='o0'?'LOGO':SQICO[b.t]||'';
     const zc=ZONES[b.z||zoneOfCell(k)].c;
     h+=`<div class="cell ${k[0]==='i'?'inner':''} ${corner?'corner':''} ${b.t==='road'?'road '+roadDir(k):''} t-${b.t} ${k[0]==='o'&&!['pay','jobless','charity','road'].includes(b.t)?'zoned':''} ${p.ring+p.pos===k?'here':''} ${tr>=0?'trail':''}" data-k="${k}" data-side="${Math.floor(i/(RING_LEN[k[0]]/4))%4}" style="grid-row:${r};grid-column:${c};--d:${r+c};--zc:${zc};${tr>=0?`--td:-${tr}ms`:''}" title="${esc(b.n)}" aria-label="${esc(b.n)}" onclick="cellInfo('${k}')">
@@ -2879,7 +2882,7 @@ function dbMove(){
   if(S)log(`⚙ ย้ายการ์ด "${esc(moved.t)}" จาก${def.name}ไป${DBCOLS[to].name}`);
   SET_TAB=to;SET_EDIT=DB[to].length-1;SET_DEL=null;SET_Q='';toast(`ย้ายไป${DBCOLS[to].name}แล้ว ตรวจแก้แล้วกดบันทึก`);renderSettings();
 }
-function dbBlank(){const r={};if(SET_TAB==='life'){return {t:'',cash:0,cpct:0,spct:0,mexp:0,kid:0,h:0,tt:0,k:0,act:0,pas:0,opt:0,nt:0,nh:0,nk:0,sp:''}}if(SET_TAB==='opp'){return {t:'',ty:'biz',cost:0,cf:0,act:0,nt:2,nh:0,nk:0}}if(SET_TAB==='learn'){return {t:'',ty:Object.keys(SKILLDB)[0]||'scam_course',cost:0,nt:1,nh:0,nk:0,kg:2}}if(SET_TAB==='skills'){return {key:'skill'+(DB.skills.length+1),n:'',kind:'passive',eff:'rent',val:10,uses:1}}DBCOLS[SET_TAB].cols.forEach(([c,,t,o])=>r[c]=t==='n'?0:t==='o'?o[0]:'');if(SET_TAB==='net'){r.id='c-'+Date.now().toString().slice(-6);r.nt=1}if(SET_TAB==='jobs'){r.h=5;r.t=4;r.k=4}return r}
+function dbBlank(){const r={};if(SET_TAB==='life'){return {t:'',cash:0,cpct:0,spct:0,mexp:0,kid:0,h:0,tt:0,k:0,act:0,pas:0,opt:0,nt:0,nh:0,nk:0,sp:''}}if(SET_TAB==='opp'){return {t:'',ty:'biz',cost:0,cf:0,act:0,nt:2,nh:0,nk:0}}if(SET_TAB==='learn'){return {t:'',ty:Object.keys(SKILLDB)[0]||'scam_course',cost:0,nt:1,nh:0,nk:0,kg:2}}if(SET_TAB==='skills'){return {key:'skill'+(DB.skills.length+1),n:'',kind:'passive',eff:'rent',val:10,uses:1}}DBCOLS[SET_TAB].cols.forEach(([c,,t,o])=>r[c]=t==='n'?0:t==='o'?o[0]:'');if(SET_TAB==='net'){r.id='c-'+NOW().toString().slice(-6);r.nt=1}if(SET_TAB==='jobs'){r.h=5;r.t=4;r.k=4}return r}
 function dbTab(k){SET_TAB=k;SET_EDIT=null;SET_DEL=null;SET_Q='';renderSettings()}
 function dbSaveRow(){
   const def=DBCOLS[SET_TAB],r={};
@@ -2947,6 +2950,7 @@ async function beFirebase(){
   const B=`https://www.gstatic.com/firebasejs/${FBV}/`;
   const [A,AU,D]=await Promise.all([import(B+'firebase-app.js'),import(B+'firebase-auth.js'),import(B+'firebase-database.js')]);
   const app=A.initializeApp(FB_CONFIG),auth=AU.getAuth(app),db=D.getDatabase(app),r=p=>D.ref(db,p);
+  D.onValue(r('.info/serverTimeOffset'),x=>{const v=+x.val();if(isFinite(v))FG_OFF=v});
   const U=u=>u&&{uid:u.uid,name:u.displayName||(u.email||'').split('@')[0]||'',anon:u.isAnonymous,email:u.email||''};
   return {
     onAuth:cb=>AU.onAuthStateChanged(auth,u=>cb(U(u))),
@@ -2985,7 +2989,7 @@ function beMock(){
     update:async(p,v)=>W(d=>{for(const k in v)setP(d,p+'/'+k,v[k])}),
     on:(p,cb)=>{const s={p,cb,last:undefined};subs.add(s);setTimeout(fire);return ()=>subs.delete(s)},
     tx:async(p,f)=>{let ok=false,val;W(d=>{const cur=getP(d,p);let nv=f(null);if(nv===undefined&&cur==null)return;if(cur!=null)nv=f(JSON.parse(JSON.stringify(cur)));if(nv!==undefined){setP(d,p,nv);ok=true}val=getP(d,p)});return {ok,val}},
-    onDisc:(p,v)=>disc.push([p,v]),now:()=>Date.now(),conn:cb=>{setTimeout(()=>cb(true));return ()=>{}}
+    onDisc:(p,v)=>disc.push([p,v]),now:()=>NOW(),conn:cb=>{setTimeout(()=>cb(true));return ()=>{}}
   }}
 
 /* ---------- บีบอัดสถานะเกม ---------- */
@@ -3050,7 +3054,7 @@ async function lbAward(code=ON.code,G=S,late=false){if(ON.spec)return;
   if(ON.user.anon){ON.lbAnn=({t:`⭐ เกมนี้ได้ ${c.pts} คะแนน`,b:lateTxt+tbl+'<p class="neg">บัญชีแขกไม่เก็บคะแนนสะสมและไม่ติดอันดับ · ผูกบัญชี Google ที่หน้าแรกเพื่อเริ่มสะสมคะแนน</p>'});return}
   const mk=lbMonth();let dup=false,after=null;
   try{const x=await ON.be.tx(`lb/${ON.user.uid}`,cur=>{cur=cur||{};const g=cur.g||{};if(g[gk]){dup=true;return undefined}dup=false;
-      const o={...cur,n:ON.name,pts:(cur.pts||0)+c.pts,games:(cur.games||0)+1,wins:(cur.wins||0)+(c.win?1:0),best:Math.max(cur.best||0,c.pts),t:Date.now()};
+      const o={...cur,n:ON.name,pts:(cur.pts||0)+c.pts,games:(cur.games||0)+1,wins:(cur.wins||0)+(c.win?1:0),best:Math.max(cur.best||0,c.pts),t:NOW()};
       if(cur.mk!==mk){o.mk=mk;o.mp=0;o.mg=0;o.mw=0}o.mp+=c.pts;o.mg+=1;o.mw+=c.win?1:0;
       const keys=Object.keys(g).slice(-29);o.g=Object.fromEntries(keys.map(k=>[k,g[k]]));o.g[gk]=c.pts;after=o;return o});
     if(dup)return;if(x&&x.err)throw x.err;if(x&&!x.ok)throw new Error('ไม่ได้บันทึก');LB_CACHE=null;setTimeout(lbRender,0);
@@ -3060,7 +3064,7 @@ async function lbAward(code=ON.code,G=S,late=false){if(ON.spec)return;
 /* เก็บคะแนนย้อนหลัง: เกมจบตอนเราไม่อยู่ → ถอดสถานะสุดท้ายของห้องแล้วคิดคะแนนแบบเดียวกัน (ออกจากเกมกลางคัน = ไม่ได้) */
 async function lbLate(code,r){try{if(!r||!r.st||!r.st.z||(r.left&&r.left[ON.user.uid]))return;const G=JSON.parse(await zDec(r.st.z));if(G&&G.winner!=null)await lbAward(code,G,true)}catch(e){}}
 let LB_CACHE=null,LB_TAB='m';
-async function lbLoad(){if(LB_CACHE&&Date.now()-LB_CACHE.t<60000)return LB_CACHE.d;const d=await ON.be.get('lb')||{};LB_CACHE={t:Date.now(),d};return d}
+async function lbLoad(){if(LB_CACHE&&NOW()-LB_CACHE.t<60000)return LB_CACHE.d;const d=await ON.be.get('lb')||{};LB_CACHE={t:NOW(),d};return d}
 async function lbRender(){const el=$('#lbBox');if(!el)return;
   let d;try{d=await lbLoad()}catch(e){el.innerHTML=`<p class="muted">โหลดอันดับไม่ได้ (${esc(e.code||e.message||String(e))})</p>`;return}
   const mk=lbMonth(),m=LB_TAB==='m';
@@ -3178,7 +3182,7 @@ function onTag(){let t=$('#roomTag');if(!ON.code){if(t)t.remove();return}
   if(!t){t=document.createElement('span');t.id='roomTag';t.className='roomtag';t.setAttribute('role','button');t.title='ดูข้อมูลห้อง';t.onclick=onRoomInfo;const h=document.querySelector('header .logo')?.parentElement||document.querySelector('header');h.appendChild(t)}
   t.textContent='ห้อง '+ON.code+' ⓘ'}
 /* เวอร์ชันของไฟล์เกม (เปลี่ยนทุกครั้งที่แก้ระบบออนไลน์) · ส่งไปกับสถานะออนไลน์ เพื่อดูว่าใครยังเปิดเวอร์ชันเก่า */
-const BUILD='2026-11-16.10';
+const BUILD='2026-11-16.11';
 /* ป้ายเลขห้อง → ข้อมูลห้อง: เจ้าของห้อง · เครื่องที่คุมรอบ · สถานะผู้เล่นแต่ละคน */
 function onRoomInfo(){const r=ON.room;if(!r||!ON.code)return;
   const seatName=u=>{const q=S&&S.players&&S.players.find(x=>x.uid===u);if(q)return q.name;const s=Object.values(r.seats||{}).find(x=>x&&x.uid===u);return s?(s.name||'ผู้เล่น'):'—'};
@@ -3208,7 +3212,7 @@ async function onCloseRoom(){const r=ON.room,code=ON.code;if(!r||r.host!==ON.use
   if(v!=='y')return;onStop();try{await ON.be.remove('rooms/'+code)}catch(e){}await ON.be.remove('users/'+ON.user.uid+'/room');localStorage.removeItem('fg-online');ON.play=false;toast('ปิดห้องแล้ว');onHome()}
 async function onRoom(r){
   if(!r){toast('ห้องนี้ถูกลบแล้ว');await ON.be.remove('users/'+ON.user.uid+'/room');onHome();return}
-  const np=r.on||{},now=Date.now();ON.gone=ON.gone||{};
+  const np=r.on||{},now=NOW();ON.gone=ON.gone||{};
   for(const u in ON.pres)if(!np[u]&&!ON.gone[u])ON.gone[u]=now;for(const u in np)delete ON.gone[u];
   ON.room=r;ON.pres=np;const me=onSeatOf(r,ON.user.uid);
   if(me<0){toast('คุณไม่ได้อยู่ในห้องนี้แล้ว');await ON.be.remove('users/'+ON.user.uid+'/room');onHome();return}
@@ -3249,13 +3253,13 @@ async function onLeave(){const r=ON.room,uid=ON.user.uid,code=ON.code;if(!r)retu
   await ON.be.remove('users/'+uid+'/room');onHome()}
 async function onStart(){const r=ON.room;if(!r||r.host!==ON.user.uid)return;const n=r.n||4;
   seats=[...Array(n).keys()].map(i=>{const s=(r.seats||{})[i]||{t:'h'};return s.uid?{n:s.name||('ผู้เล่น '+(i+1)),bot:false,uid:s.uid}:{n:'บอท '+(i+1),bot:true}});
-  ON.play=true;ON.ver=0;newGame(900);S.par=1;S.gid=Date.now().toString(36);await onPush(true);
+  ON.play=true;ON.ver=0;newGame(900);S.par=1;S.gid=NOW().toString(36);await onPush(true);
   await ON.be.update('rooms/'+ON.code,{status:'play',started:ON.be.now()})}
 
 /* ---------- ซิงก์เกม ---------- */
 function onMine(){if(ON.spec)return false;return !ON.play||!S||(cp()&&cp().uid===ON.user.uid)}
 /* ถือว่ายังออนไลน์ถ้าหลุดไม่เกิน 25 วิ (กันสลับแอปแป๊บเดียวแล้วโดนคนอื่นยึดตา) */
-function onLive(u){return !!u&&(!!ON.pres[u]||u===ON.user.uid||(ON.gone&&ON.gone[u]&&Date.now()-ON.gone[u]<25000))}
+function onLive(u){return !!u&&(!!ON.pres[u]||u===ON.user.uid||(ON.gone&&ON.gone[u]&&NOW()-ON.gone[u]<25000))}
 function onDriverUid(){const r=ON.room;if(!r||!S)return null;const c=cp();if(c&&!c.bot&&c.uid&&onLive(c.uid))return c.uid;
   if(onLive(r.host))return r.host;const h=S.players.find(q=>!q.bot&&q.uid&&onLive(q.uid));return h?h.uid:null}
 function iDrive(){if(ON.spec)return false;if(!ON.play)return true;if(PAR())return S.rp==='h'?!!(cp()&&cp().uid===ON.user.uid):parMaster();return onDriverUid()===ON.user.uid}
@@ -3322,7 +3326,7 @@ function onDrive(){if(!ON.play||!S||S.winner!=null||$('#gameView').hidden)return
   if(ON.turnKey===key||MODAL)return;ON.turnKey=key;if(S.phase==='busy')S.phase='card';
   if(S.phase==='roll')botTurn();else if(S.phase==='card')sleep(S.speed).then(()=>pickPile(botPile(p)));else if(S.phase==='free')sleep(S.speed).then(()=>endTurn(true))}
 /* โหมดเล่นทีละคน: เครื่องที่ถือตา ให้ผู้เล่นที่ออฟไลน์เกิน 1 นาทีติดสถานะ Bot */
-function seqOfflineAfk(){if(ON.spec||!ON.play||PAR()||!S||S.winner!=null)return;const now=Date.now(),left=(ON.room&&ON.room.left)||{};ON.gone=ON.gone||{};let ch=false;
+function seqOfflineAfk(){if(ON.spec||!ON.play||PAR()||!S||S.winner!=null)return;const now=NOW(),left=(ON.room&&ON.room.left)||{};ON.gone=ON.gone||{};let ch=false;
   for(const q of S.players){if(q.bot||!q.uid||q.afk||left[q.uid]||q.uid===ON.user.uid)continue;
     if(ON.pres[q.uid]){delete ON.gone[q.uid];continue}
     if(!ON.gone[q.uid]){ON.gone[q.uid]=now;continue}
@@ -3333,8 +3337,8 @@ function seqOfflineAfk(){if(ON.spec||!ON.play||PAR()||!S||S.winner!=null)return;
 async function onRemoteChoose(o){
   const to=o.actor.uid,opts=o.opts||[{v:'ok',l:'ตกลง'}];const fb=(opts.find(x=>['n','no','skip','cancel','x'].includes(x.v))||opts[opts.length-1]).v;
   if(!ON.pres[to]){toast(`${o.actor.name} ออฟไลน์อยู่ ระบบตอบแทนว่า "${(opts.find(x=>x.v===fb)||{}).l||fb}"`);return fb}
-  const id=Date.now().toString(36)+Math.random().toString(36).slice(2,6);
-  await ON.be.set(`rooms/${ON.code}/q/${id}`,{to,title:o.title||'',body:o.body||'',opts,kind:o.kind||'',actor:o.actor.id,pose:o.pose||'',at:Date.now()});
+  const id=NOW().toString(36)+Math.random().toString(36).slice(2,6);
+  await ON.be.set(`rooms/${ON.code}/q/${id}`,{to,title:o.title||'',body:o.body||'',opts,kind:o.kind||'',actor:o.actor.id,pose:o.pose||'',at:NOW()});
   toast(`⏳ รอ ${o.actor.name} ตอบ…`);
   return await new Promise(res=>{let done=false;const fin=v=>{if(done)return;done=true;try{un()}catch(e){}ON.be.remove(`rooms/${ON.code}/a/${id}`);ON.be.remove(`rooms/${ON.code}/q/${id}`);res(v)};
     const un=ON.be.on(`rooms/${ON.code}/a/${id}`,v=>{if(v!=null)fin(v)});setTimeout(()=>fin(fb),90000)})}
@@ -3351,7 +3355,7 @@ const PAR=()=>!!(ON.play&&S&&S.par);
 const PARH=()=>PAR()&&S.rp==='h';
 function parMe(){return S&&S.players.find(q=>q.uid&&q.uid===ON.user.uid)}
 /* เครื่องคุมรอบ: เจ้าของห้อง ถ้าออนไลน์และไม่ติดสถานะ Bot · ไม่งั้นคนแรกที่ออนไลน์และยังเล่นอยู่ (กันเครื่องที่ล็อกจอ/พักแอปคุมรอบแล้วค้าง) */
-function parMasterUid(){const r=ON.room;if(!r||!S)return null;const now=Date.now(),away=u=>{const q=S.players.find(x=>x.uid===u);return !!(q&&(q.afk||q._afkb||(S.rp==='h'&&!q.done&&now>(q.tEnd||0)+20000)))};
+function parMasterUid(){const r=ON.room;if(!r||!S)return null;const now=NOW(),away=u=>{const q=S.players.find(x=>x.uid===u);return !!(q&&(q.afk||q._afkb||(S.rp==='h'&&!q.done&&now>(q.tEnd||0)+20000)))};
   if(onLive(r.host)&&!away(r.host))return r.host;const h=S.players.find(q=>!q.bot&&q.uid&&onLive(q.uid)&&!away(q.uid));if(h)return h.uid;
   if(onLive(r.host))return r.host;const k=S.players.find(q=>q.uid&&onLive(q.uid)&&(!q.bot||q._afkb));return k?k.uid:null}
 function parMaster(){return !ON.spec&&parMasterUid()===ON.user.uid}
@@ -3362,11 +3366,11 @@ function parDeal(hum){
     for(const q of hum){q.hand=q.hand||{};q.hand[k]=[];for(let i=0;i<n;i++)q.hand[k].push(parDeck(k).pop())}}}
 function parUndeal(){for(const q of S.players){if(!q.hand)continue;for(const k in q.hand){const d=parDeck(k);(q.hand[k]||[]).forEach(i=>d.unshift(i))}delete q.hand}}
 /* ตั้งค่าตัวแปรประจำเทิร์นในเครื่องนี้ให้เป็นตาของเราเอง */
-function parLocalTurn(){const me=parMe();if(!me)return;S.cur=me.id;S.picks=me.pk||0;S.bonusPicks=0;S.freeComm=!!me.fc;S.autoPilot=false;S.forceRoll=0;S.turnEnd=me.tEnd||Date.now()+TURN_MS;
+function parLocalTurn(){const me=parMe();if(!me)return;S.cur=me.id;S.picks=me.pk||0;S.bonusPicks=0;S.freeComm=!!me.fc;S.autoPilot=false;S.forceRoll=0;S.turnEnd=me.tEnd||NOW()+TURN_MS;
   S.phase=me.done||me.afk?'wait':me.ph==='busy'?'card':(['roll','card','free'].includes(me.ph)?me.ph:'roll');S.view=me.id;S.viewPick=0}
 /* ---------- หัวห้อง: เริ่มรอบ ---------- */
 function parStartRound(){
-  const now=Date.now();S.rp='h';S.rt0=now;S.nq=[];delete S.bq;
+  const now=NOW();S.rp='h';S.rt0=now;S.nq=[];delete S.bq;
   const hum=S.players.filter(q=>!q.bot);
   for(const q of hum){if(!q.afk&&!onLive(q.uid)){q.afk=true;ON.be.set(`rooms/${ON.code}/afk/${q.uid}`,true);log(`💤 ${esc(q.name)} ไม่ได้ออนไลน์ ติดสถานะ Bot · ระบบทอยลูกเต๋าให้`)}
     q.done=!!q.afk;q.acted=false;q.tEnd=now+TURN_MS;delete q.ph;delete q.pk;delete q.fc;q.hired=false}
@@ -3387,14 +3391,14 @@ function parEndTurn(early){
   const p=cp();S.bonusPicks=0;S.freeComm=false;S.picks=0;p.hired=false;S.timeoutNote=null;
   if(S.rp==='h'){
     if(p.uid!==ON.user.uid||p.done)return;
-    if(early&&!S.autoPilot&&Date.now()<S.turnEnd){const sx=adj(p,{t:1},true);if(sx){log(`⏱ ${esc(p.name)} จบเทิร์นก่อนเวลา${sx}`);toast('⏱ จบไว ได้เวลา +1')}}
+    if(early&&!S.autoPilot&&NOW()<S.turnEnd){const sx=adj(p,{t:1},true);if(sx){log(`⏱ ${esc(p.name)} จบเทิร์นก่อนเวลา${sx}`);toast('⏱ จบไว ได้เวลา +1')}}
     turnPassiveTime(p);
     if(S.autoPilot&&!p.acted){p.afk=true;ON.be.set(`rooms/${ON.code}/afk/${ON.user.uid}`,true);log(`💤 ${esc(p.name)} ไม่ได้เล่นภายใน 3 นาที ติดสถานะ Bot`)}
     else if(S.autoPilot)log(`⏰ ${esc(p.name)} หมดเวลา ระบบจบเทิร์นให้`);
     S.autoPilot=false;p.done=true;S.phase='wait';render();parPushMe(true);if(parMaster())parCheck();return}
   /* ช่วงบอท (หัวห้อง) */
   turnPassiveTime(p);S.autoPilot=false;
-  if(S.bq&&S.bq.length){S.cur=S.bq.shift();S.phase='roll';S.turnEnd=Date.now()+TURN_MS;ON.turnKey=S.round+':'+S.cur;render();save();botTurn()}
+  if(S.bq&&S.bq.length){S.cur=S.bq.shift();S.phase='roll';S.turnEnd=NOW()+TURN_MS;ON.turnKey=S.round+':'+S.cur;render();save();botTurn()}
   else parRoundEnd();
 }
 /* ---------- ส่งตัวละครของเราขึ้นไป ---------- */
@@ -3417,10 +3421,10 @@ function parOnPr(map){if(!map||!PARH())return;let ch=false;for(const k in map){c
 function parOnLg(map){if(!map||!PAR())return;ON.lgSeen=ON.lgSeen||{};let ch=false;
   for(const id of Object.keys(map).sort()){if(ON.lgSeen[id])continue;ON.lgSeen[id]=1;const e=map[id];if(!e||e.by===ON.user.uid||S.log.includes(e.t))continue;S.log.unshift(e.t);ch=true}
   if(ch){if(S.log.length>200)S.log.length=200;render()}}
-function parLog(entry){if(!PARH()||!ON.code)return;const id=Date.now().toString(36)+Math.random().toString(36).slice(2,5);ON.lgSeen=ON.lgSeen||{};ON.lgSeen[id]=1;ON.be.set(`rooms/${ON.code}/lg/${id}`,{t:entry,by:ON.user.uid})}
+function parLog(entry){if(!PARH()||!ON.code)return;const id=NOW().toString(36)+Math.random().toString(36).slice(2,5);ON.lgSeen=ON.lgSeen||{};ON.lgSeen[id]=1;ON.be.set(`rooms/${ON.code}/lg/${id}`,{t:entry,by:ON.user.uid})}
 /* ---------- โอนเงิน/ทรัพย์สินให้ผู้เล่นอื่น ---------- */
 function parOwner(idx){const q=S.players[idx];if(!q)return null;if(PARH()&&!q.bot&&!q.afk&&q.uid&&onLive(q.uid)&&!q._afkb)return q.uid;return parMasterUid()}
-function parLed(to,e){e=JSON.parse(JSON.stringify(e));const id=Date.now().toString(36)+Math.random().toString(36).slice(2,6);ON.be.set(`rooms/${ON.code}/led/${id}`,{...e,to,from:cp()?cp().id:null,at:Date.now()})}
+function parLed(to,e){e=JSON.parse(JSON.stringify(e));const id=NOW().toString(36)+Math.random().toString(36).slice(2,6);ON.be.set(`rooms/${ON.code}/led/${id}`,{...e,to,from:cp()?cp().id:null,at:NOW()})}
 async function parOnLed(map){if(!map||!PAR())return;for(const id in map)await parApplyLed(id,map[id])}
 async function parApplyLed(id,e){if(!e||e.c||parOwner(e.to)!==ON.user.uid)return false;ON.ledBusy=ON.ledBusy||{};if(ON.ledBusy[id])return false;ON.ledBusy[id]=1;
   const x=await ON.be.tx(`rooms/${ON.code}/led/${id}`,cur=>cur==null?null:cur.c?undefined:{...cur,c:ON.user.uid});
@@ -3431,7 +3435,7 @@ async function parApplyLed(id,e){if(!e||e.c||parOwner(e.to)!==ON.user.uid)return
 /* ---------- การ์ดข่าว: เก็บไว้มีผลตอนจบรอบ ---------- */
 async function parQueueNews(p,kind,c){
   const e={k:kind,c,by:p.name};
-  if(PARH()){const id=Date.now().toString(36)+Math.random().toString(36).slice(2,5);ON.be.set(`rooms/${ON.code}/nq/${id}`,e)}else{S.nq=S.nq||[];S.nq.push(e)}
+  if(PARH()){const id=NOW().toString(36)+Math.random().toString(36).slice(2,5);ON.be.set(`rooms/${ON.code}/nq/${id}`,e)}else{S.nq=S.nq||[];S.nq.push(e)}
   log(`📰 ${esc(p.name)} เปิดข่าว: ${esc(c.t)} · มีผลตอนจบรอบ`);render();
   await choose({actor:p,kind:'news',title:c.t,body:`${newsImg(c.tone?c.tone!=='g':Object.values(c.e||{}).reduce((a,b)=>a+b,0)<0,c.cat)}<p>ข่าวนี้จะมีผลกับราคาตลาด${c.cash?' และเงินของผู้เล่นทุกคน':''} <b>ตอนจบรอบ</b> (ระหว่างรอบราคาคงที่ ทุกคนซื้อขายราคาเดียวกัน)</p>`,opts:[{v:'ok',l:'รับทราบ',c:'pri'}],bot:'ok'})}
 function parApplyNews(list){const lines=[];
@@ -3440,7 +3444,7 @@ function parApplyNews(list){const lines=[];
     const t=`${esc(c.t)} · ${ch.map(x=>`${x.a.s} ${x.pct>0?'+':''}${x.pct}%`).join(' ')}${c.cash?` · ทุกคน${c.cash>0?'ได้':'จ่าย'} ${B(Math.abs(c.cash))}`:''}`;log(`📰 ข่าวมีผลแล้ว (${esc(e.by)}): ${t}`);lines.push(`<li>${t}</li>`)}
   if(lines.length){S.ann=S.ann||[];S.ann.push({k:'news',t:'📰 ข่าวที่มีผลตอนจบรอบ',b:`<ul>${lines.join('')}</ul>`})}}
 /* ---------- หัวห้อง: ทุกคนจบแล้ว → บอท ---------- */
-function parCheck(){if(!PARH()||!parMaster()||ON.parBusy)return;const now=Date.now();
+function parCheck(){if(!PARH()||!parMaster()||ON.parBusy)return;const now=NOW();
   const hum=S.players.filter(q=>!q.bot);
   const ok=hum.every(q=>q.done||q.afk||(!onLive(q.uid)&&q.uid!==ON.user.uid)||now>(q.tEnd||0)+15000);
   if(ok)parBots()}
@@ -3456,7 +3460,7 @@ async function parBots(){ON.parBusy=1;try{
   if(checkWin())return;
   if(!S.bq.length){parRoundEnd();return}
   log(`🤖 ผู้เล่นทุกคนจบเทิร์นแล้ว · บอทเล่นต่อ`);
-  S.cur=S.bq.shift();S.phase='roll';S.turnEnd=Date.now()+TURN_MS;ON.turnKey=S.round+':'+S.cur;render();await onPush();botTurn();
+  S.cur=S.bq.shift();S.phase='roll';S.turnEnd=NOW()+TURN_MS;ON.turnKey=S.round+':'+S.cur;render();await onPush();botTurn();
 }finally{ON.parBusy=0}}
 function parRoundEnd(){
   for(const q of S.players)if(q._afkb){q.bot=false;delete q._afkb}
@@ -3465,7 +3469,7 @@ function parRoundEnd(){
 /* ---------- สถานะ Bot (ไม่ได้เล่น) ---------- */
 /* เครื่องคุมรอบ: ผู้เล่นที่ออฟไลน์เกิน 1 นาที → ติดสถานะ Bot (บอททอยแทนช่วงบอท) */
 const OFFLINE_AFK_MS=60000;
-function parOfflineAfk(){if(!PAR()||!parMaster()||S.winner!=null)return;const now=Date.now(),left=(ON.room&&ON.room.left)||{};ON.gone=ON.gone||{};let ch=false;
+function parOfflineAfk(){if(!PAR()||!parMaster()||S.winner!=null)return;const now=NOW(),left=(ON.room&&ON.room.left)||{};ON.gone=ON.gone||{};let ch=false;
   for(const q of S.players){if(q.bot||!q.uid||q.afk||left[q.uid]||q.uid===ON.user.uid)continue;
     if(ON.pres[q.uid]){delete ON.gone[q.uid];continue}
     if(!ON.gone[q.uid]){ON.gone[q.uid]=now;continue}
@@ -3477,13 +3481,13 @@ function parOnAfk(map){if(!ON.play||!S||!S.players)return;map=map||{};ON.afkMap=
     else if(q.uid&&map[q.uid]===true&&!q.afk&&!q.bot){q.afk=true;if(PARH()&&q.uid!==ON.user.uid)q.done=true;ch=true}}
   if(ch){render();if(PAR()?parMaster()&&S.rp==='b':iDrive())save()}parOverlay()}
 async function parUnafk(){const me=parMe();if(!me)return;me.afk=false;await ON.be.set(`rooms/${ON.code}/afk/${ON.user.uid}`,false);
-  if(PARH()&&me.done&&Date.now()<S.rt0+TURN_MS-15000){me.done=false;me.acted=false;me.tEnd=S.rt0+TURN_MS;parLocalTurn();toast('กลับมาเล่นแล้ว · ทันรอบนี้')}
+  if(PARH()&&me.done&&NOW()<S.rt0+TURN_MS-15000){me.done=false;me.acted=false;me.tEnd=S.rt0+TURN_MS;parLocalTurn();toast('กลับมาเล่นแล้ว · ทันรอบนี้')}
   else toast('ปลดสถานะ Bot แล้ว · กลับมาเล่นได้ตั้งแต่รอบถัดไป');
   render();if(PARH())parPushMe(true);parOverlay()}
 function parOverlay(){let el=$('#afkov');const me=ON.play&&S&&S.players&&parMe(),on=!!(me&&me.afk&&S.winner==null&&!$('#gameView').hidden);
   if(!el){if(!on)return;el=document.createElement('div');el.id='afkov';el.className='afkov';document.body.appendChild(el)}
   el.hidden=!on;if(on)el.innerHTML=`<div class="afk-box"><div class="afk-ic">💤</div><h2>คุณติดสถานะ Bot</h2><p>ไม่ได้เล่นภายใน 3 นาที ระบบจะทอยลูกเต๋าให้และทำเฉพาะสิ่งที่กติกาบังคับ (เช่น ตกช่องตกงาน) ไม่ซื้อ ไม่จั่วการ์ดให้</p><button class="pri" onclick="parUnafk()">ปลดสถานะ Bot</button></div>`}
-function parWaitHtml(){const me=parMe(),now=Date.now();const rest=S.players.filter(q=>!q.bot&&!q.done&&q!==me),afk=S.players.filter(q=>!q.bot&&q.afk);
+function parWaitHtml(){const me=parMe(),now=NOW();const rest=S.players.filter(q=>!q.bot&&!q.done&&q!==me),afk=S.players.filter(q=>!q.bot&&q.afk);
   const az=afk.length?` · 💤 ติดสถานะ Bot: ${afk.map(q=>esc(q.name)).join(', ')} (บอทเล่นแทนช่วงถัดไป)`:'';
   return `<div class="prompt pwait">⏳ <b>รอผู้เล่นอื่น</b>${rest.length?` · ${rest.map(q=>`${esc(q.name)} ${Math.max(0,Math.ceil(((q.tEnd||now)-now)/1000))} วิ`).join(' · ')}`:' · ทุกคนจบเทิร์นแล้ว กำลังเริ่มช่วงบอท…'}${az}</div>`}
 function parBotHtml(p){const n=(S.bq||[]).length;return `<div class="prompt">🤖 <b>รอ Bot</b> · ${esc(p.name)} กำลังเล่น${n?` (เหลืออีก ${n})`:''}</div>`}
@@ -3529,7 +3533,7 @@ function boardZoom(s,cx,cy){const w=$('#bwrap');const r=w.getBoundingClientRect(
   w.addEventListener('pointerup',up);w.addEventListener('pointercancel',up);
   w.addEventListener('click',e=>{if(BZ.moved){e.stopPropagation();e.preventDefault();BZ.moved=false}},true);
   w.addEventListener('wheel',e=>{if(!e.ctrlKey)return;e.preventDefault();const a=loc(e);boardZoom(BZ.s*(e.deltaY<0?1.12:1/1.12),a.x,a.y)},{passive:false});
-  let lt=0;w.addEventListener('touchend',e=>{const n=Date.now();if(n-lt<280&&!BZ.moved&&e.touches.length===0&&BZ.s>1.001){boardZoom(1)}lt=n});
+  let lt=0;w.addEventListener('touchend',e=>{const n=NOW();if(n-lt<280&&!BZ.moved&&e.touches.length===0&&BZ.s>1.001){boardZoom(1)}lt=n});
   window.addEventListener('resize',bzApply);
   setTimeout(()=>{const h=$('#bzhint');if(h)h.classList.add('gone')},6000);
 })();
