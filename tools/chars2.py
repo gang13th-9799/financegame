@@ -20,11 +20,13 @@ def cutout(im):
     alpha=np.clip((alpha-0.15)/0.7,0,1)
     rgba=np.dstack([a,(alpha*255)]).astype('uint8')
     return Image.fromarray(rgba,'RGBA'),fg
-def fit(im,H=420):
-    bb=im.getbbox();im=im.crop(bb);s=H/im.height
-    return im.resize((max(1,round(im.width*s)),H),Image.LANCZOS)
-def split(im,fg):
-    big=ndimage.binary_dilation(fg,iterations=12)
+def fit(im,H=720):  # ท่าทาง: สูงสุด 720px (ย่ออย่างเดียว ไม่ขยาย) ให้คมบนจอความละเอียดสูง · เดิม 420
+    bb=im.getbbox();im=im.crop(bb)
+    if im.height<=H:return im
+    return im.resize((max(1,round(im.width*H/im.height)),H),Image.LANCZOS)
+DIL={5:8,7:5}  # ชีต c5/c7 ตัวละครอยู่ชิดกัน ใช้ขยายมาสก์น้อยลง ไม่งั้นท่าบน-ล่างติดกัน
+def split(im,fg,it=12):
+    big=ndimage.binary_dilation(fg,iterations=it)
     lab,n=ndimage.label(big);objs=ndimage.find_objects(lab)
     sizes=[(fg[o]&(lab[o]==i+1)).sum() for i,o in enumerate(objs)]
     idx=sorted(range(n),key=lambda i:-sizes[i])[:8]
@@ -47,7 +49,7 @@ if __name__=='__main__':
     for key in SHEET:
         tag=f'c{key}' if key!='npc' else 'npc'
         sh,fg=cutout(Image.open(f(SHEET[key])))
-        parts,hs,bots=split(sh,fg)
+        parts,hs,bots=split(sh,fg,DIL.get(key,12))
         print(key,'parts',len(parts),'heights',hs,'bottoms',bots,'H',sh.height)
         for p,name in zip(parts,POSES): fit(p).save(OUT+f'{tag}-{name}.webp',quality=88)
         st,_=cutout(Image.open(f(STD[key])));st=st.crop(st.getbbox())

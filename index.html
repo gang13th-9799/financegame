@@ -878,12 +878,20 @@ body.pseudofs header{position:sticky;top:0}
 /* มือถือแนวตั้ง: ภาพตัวละครเหนือป๊อปอัปเล็กลง 30% */
 @media (orientation:portrait) and (max-width:600px),(orientation:portrait) and (pointer:coarse) and (max-width:1200px){.ov.withfig{--fh:clamp(77px,15.4vh,150px)}}
 /* แนวนอน (มือถือ/Fold/จอคอม): ป๊อปอัปอยู่กลางจอ ตัวละครยืนข้างซ้าย-ขวาของป๊อปอัป ขนาดเดิม */
+/* ภาพตัวละครคมชัด: ไม่เฟดขอบล่าง ไม่หรี่/ย่อคนที่ไม่ได้พูด · ส่วนที่ถูกตัดซ่อนหลังป๊อปอัป */
+.bust{-webkit-mask-image:none;mask-image:none}
+.bust:not(.spk){filter:none;transform:none}
+@keyframes bustIn2{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}
+.ov.withfig .modal{position:relative;z-index:31}
+/* แนวนอน (มือถือ/Fold/จอคอม): ป๊อปอัปกลางจอ ตัวละครเต็มตัวยืนข้างซ้าย-ขวา ใหญ่ขึ้น 50% (--fb = ความสูงเต็มตัว) */
 @media (orientation:landscape){
- .ov.withfig{--fh:clamp(110px,22vh,215px)}
- .ov.withfig .mwrap{padding-top:0;padding-left:calc(var(--fh)*.86);padding-right:calc(var(--fh)*.86);max-width:min(calc(440px * var(--tz,1) * var(--mz,1) + var(--fh) * 1.72),98vw)}
+ .ov.withfig{--fh:clamp(165px,33vh,322px);--fb:min(calc(var(--fh) * 2.05),92vh)}
+ .ov.withfig .mwrap{padding-top:0;padding-left:calc(var(--fb)*.4);padding-right:calc(var(--fb)*.4);max-width:min(calc(440px * var(--tz,1) * var(--mz,1) + var(--fb) * .8),98vw)}
  .ov.withfig .modal{max-height:calc(100dvh - 32px);margin-right:0}
- .ov.withfig .ovfig{top:auto;bottom:0;left:0;right:0;height:var(--fh)}
- .bust{width:calc(var(--fh)*.86)}
+ .ov.withfig .ovfig{top:50%;bottom:auto;left:0;right:0;height:var(--fb);transform:translateY(-50%)}
+ .bust{height:var(--fb);width:calc(var(--fb)*.4);overflow:visible}
+ .bust img{top:0;height:100%}
+ .bust .bn{bottom:2px}
 }
 
 .cinfo{display:flex;align-items:flex-end;gap:10px;width:100%;max-width:560px;background:#fff;border:1.5px solid #efe5cf;border-radius:16px;padding:8px 12px 8px 6px;text-align:left}
@@ -3336,7 +3344,7 @@ function onTag(){let t=$('#roomTag');if(!ON.code){if(t)t.remove();return}
   if(!t){t=document.createElement('span');t.id='roomTag';t.className='roomtag';t.setAttribute('role','button');t.title='ดูข้อมูลห้อง';t.onclick=onRoomInfo;const h=document.querySelector('header .logo')?.parentElement||document.querySelector('header');h.appendChild(t)}
   t.textContent='ห้อง '+ON.code+' ⓘ'}
 /* เวอร์ชันของไฟล์เกม (เปลี่ยนทุกครั้งที่แก้ระบบออนไลน์) · ส่งไปกับสถานะออนไลน์ เพื่อดูว่าใครยังเปิดเวอร์ชันเก่า */
-const BUILD='2026-11-16.33';
+const BUILD='2026-11-16.34';
 /* ป้ายเลขห้อง → ข้อมูลห้อง: เจ้าของห้อง · เครื่องที่คุมรอบ · สถานะผู้เล่นแต่ละคน */
 function onRoomInfo(){const r=ON.room;if(!r||!ON.code)return;
   const seatName=u=>{const q=S&&S.players&&S.players.find(x=>x.uid===u);if(q)return q.name;const s=Object.values(r.seats||{}).find(x=>x&&x.uid===u);return s?(s.name||'ผู้เล่น'):'—'};
