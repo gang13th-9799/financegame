@@ -26,6 +26,9 @@ header.top{position:sticky;top:0;z-index:20;background:rgba(247,241,225,.96);bac
 .srch .cnt{font-size:12px;color:var(--muted);white-space:nowrap}
 .btn{font:600 13px var(--display);border:1.5px solid var(--line);background:#fff;border-radius:999px;padding:7px 12px;cursor:pointer;color:var(--ink)}
 .btn.tocbtn{display:none}
+.btn.back{text-decoration:none;white-space:nowrap;background:var(--accent);border-color:#4b8645;color:#fff;flex:none;font-size:14px;padding:8px 14px;box-shadow:0 3px 0 #3f7a3a}
+.backfl{position:fixed;left:14px;bottom:14px;z-index:15;font-size:14px;padding:10px 16px;box-shadow:0 4px 14px rgba(0,0,0,.18),0 3px 0 #3f7a3a}
+.bt{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .wrap{display:grid;grid-template-columns:250px minmax(0,1fr);gap:20px;max-width:1180px;margin:0 auto;padding:16px}
 nav.toc{position:sticky;top:120px;align-self:start;max-height:calc(100vh - 136px);overflow:auto;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:12px}
 nav.toc h2{font:700 15px var(--display);margin:0 0 6px}
@@ -85,7 +88,7 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:10px 0 30px}
 </head>
 <body>
 <header class="top">
-  <div class="brand"><img src="img/ic-cash.webp" alt="" width="30" height="30"> Wiki เกมอิสรภาพทางการเงิน <small>กติกา · เงื่อนไข · วิธีเล่น</small></div>
+  <div class="brand"><a class="btn back" id="backBtn" href="index.html" title="กลับไปหน้าเกม">🎮 กลับไปเล่นเกม</a><img src="img/ic-cash.webp" alt="" width="30" height="30"> <span class="bt">Wiki เกมอิสรภาพทางการเงิน</span> <small>กติกา · เงื่อนไข · วิธีเล่น</small></div>
   <div class="srch">
     <button class="btn tocbtn" id="tocBtn" aria-expanded="false">☰ สารบัญ</button>
     <input id="q" type="search" placeholder="🔍 ค้นหา เช่น เงินเดือน, ตกงาน, ไดมอนด์, กู้" autocomplete="off" aria-label="ค้นหาใน wiki">
@@ -392,11 +395,14 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:10px 0 30px}
 </main>
 </div>
 <footer>Wiki อัปเดต 16 พ.ย. 2026 · ตัวเลขอิงค่าเริ่มต้นของเกม (ผู้เล่นแก้ฐานข้อมูลการ์ดเองได้ในหน้าตั้งค่า)</footer>
+<a class="btn back backfl" id="backBtn2" href="index.html" title="กลับไปหน้าเกม">🎮 กลับเกม</a>
 <button class="btn totop" onclick="scrollTo({top:0})" aria-label="กลับขึ้นบนสุด">↑</button>
 
 <script>
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 if(window.self!==window.top)document.body.classList.add('embed'); /* เปิดซ้อนในเกม: หัวเกมมีชื่อแล้ว */
+/* ปุ่มกลับเกม: เปิดซ้อนในเกม = ปิด wiki · เปิดเป็นหน้าแยก = ไปหน้าเกม */
+['#backBtn','#backBtn2'].forEach(id=>$(id).onclick=e=>{if(window.self!==window.top){e.preventDefault();try{window.parent.postMessage('fg-close-wiki','*')}catch(x){}}});
 const secs=$$('main section');
 /* สร้างสารบัญจากหัวข้อ (h2 + h3 ที่มี id) */
 $('#tocList').innerHTML=secs.map(s=>{const h=s.querySelector('h2').textContent.trim(),subs=[...s.querySelectorAll('h3[id]')];

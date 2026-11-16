@@ -1058,7 +1058,7 @@ body.fs #gameView:not(.mapmin){grid-template-columns:minmax(288px,1.2fr) minmax(
 .lbt td{padding:6px 4px}.lbt .lbn{width:30px;text-align:center}.lbt tr.lbme td{background:#fff6d8}.lbhow summary{cursor:pointer;font-size:13px;color:var(--muted);margin-top:6px}
 #wikiov{position:fixed;inset:0;z-index:9000;background:var(--bg);display:flex;flex-direction:column}#wikiov[hidden]{display:none}
 #wikiov .wkbar{display:flex;align-items:center;gap:8px;padding:6px 10px;border-bottom:1px solid var(--line);background:var(--surface)}#wikiov .wkbar b{flex:1;font-family:var(--display)}
-#wikiov .wkbtn{text-decoration:none;color:var(--ink)}#wikiov iframe{flex:1;border:0;width:100%;background:var(--bg)}body.wkopen{overflow:hidden}
+#wikiov .wkbtn{text-decoration:none;color:var(--ink)}#wikiov .wkback{background:var(--accent);border-color:#4b8645;color:#fff;font-weight:700}#wikiov iframe{flex:1;border:0;width:100%;background:var(--bg)}body.wkopen{overflow:hidden}
 .jl.afkc{background:#eef0f4;color:#3f4652;border:1px solid #c5cad3}
 .afk-box{background:#fffdf3;border-radius:22px;padding:22px 20px;max-width:420px;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,.3)}
 .afk-box .afk-ic{font-size:48px}.afk-box h2{margin:6px 0}.afk-box button{margin-top:12px;font-size:18px;min-height:48px;padding:0 28px}
@@ -2897,10 +2897,11 @@ document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{TAB=SUB_LAST
 $('#btnSet').onclick=openSettings;
 /* ปุ่มกติกา → Wiki (wiki.html) เปิดซ้อนบนหน้าเกม · ปิดด้วยปุ่ม ✕ หรือ Esc · เปิดในแท็บใหม่ได้ */
 function openWiki(q){let ov=$('#wikiov');if(!ov){ov=document.createElement('div');ov.id='wikiov';
-    ov.innerHTML=`<div class="wkbar"><b>📖 Wiki เกม</b><a class="sm wkbtn" href="wiki.html" target="_blank" rel="noopener">เปิดแท็บใหม่ ↗</a><button class="sm wkbtn" onclick="closeWiki()">✕ ปิด</button></div><iframe title="Wiki เกม"></iframe>`;document.body.appendChild(ov)}
+    ov.innerHTML=`<div class="wkbar"><b>📖 Wiki เกม</b><a class="sm wkbtn" href="wiki.html" target="_blank" rel="noopener">เปิดแท็บใหม่ ↗</a><button class="sm wkbtn wkback" onclick="closeWiki()">🎮 กลับไปเล่นเกม</button></div><iframe title="Wiki เกม"></iframe>`;document.body.appendChild(ov)}
   const f=ov.querySelector('iframe'),src='wiki.html'+(q?'?q='+encodeURIComponent(q):'');if(!f.src||q)f.src=src;ov.hidden=false;document.body.classList.add('wkopen')}
 function closeWiki(){const ov=$('#wikiov');if(ov)ov.hidden=true;document.body.classList.remove('wkopen')}
 addEventListener('keydown',e=>{if(e.key==='Escape'&&$('#wikiov')&&!$('#wikiov').hidden)closeWiki()});
+addEventListener('message',e=>{if(e.data==='fg-close-wiki')closeWiki()}); /* ปุ่ม 🎮 กลับเกม ใน wiki */
 $('#btnRules').onclick=()=>{if(!MODAL)openWiki()};
 $('#btnNew').onclick=async()=>{if(MODAL)return;if(ON.play){onLeave();return}if(!S||$('#gameView').hidden){showSetup();return}const v=await choose({title:'เริ่มเกมใหม่?',body:'<p>เกมปัจจุบันจะถูกแทนที่</p>',opts:[{v:'y',l:'เริ่มใหม่',c:'pri'},{v:'n',l:'ยกเลิก'}]});if(v==='y')showSetup()};
 loadDB();
@@ -3115,7 +3116,7 @@ function onTag(){let t=$('#roomTag');if(!ON.code){if(t)t.remove();return}
   if(!t){t=document.createElement('span');t.id='roomTag';t.className='roomtag';t.setAttribute('role','button');t.title='ดูข้อมูลห้อง';t.onclick=onRoomInfo;const h=document.querySelector('header .logo')?.parentElement||document.querySelector('header');h.appendChild(t)}
   t.textContent='ห้อง '+ON.code+' ⓘ'}
 /* เวอร์ชันของไฟล์เกม (เปลี่ยนทุกครั้งที่แก้ระบบออนไลน์) · ส่งไปกับสถานะออนไลน์ เพื่อดูว่าใครยังเปิดเวอร์ชันเก่า */
-const BUILD='2026-11-16.6';
+const BUILD='2026-11-16.7';
 /* ป้ายเลขห้อง → ข้อมูลห้อง: เจ้าของห้อง · เครื่องที่คุมรอบ · สถานะผู้เล่นแต่ละคน */
 function onRoomInfo(){const r=ON.room;if(!r||!ON.code)return;
   const seatName=u=>{const q=S&&S.players&&S.players.find(x=>x.uid===u);if(q)return q.name;const s=Object.values(r.seats||{}).find(x=>x&&x.uid===u);return s?(s.name||'ผู้เล่น'):'—'};
