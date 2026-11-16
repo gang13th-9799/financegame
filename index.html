@@ -143,7 +143,7 @@ body.hasend{padding-bottom:80px}
 .pile.deck:disabled{opacity:.55}
 .modal.k-pick{max-width:340px}
 .pickwrap{display:flex;justify-content:center;perspective:900px}
-.pickcard{width:min(62vw,230px);aspect-ratio:2/3;object-fit:cover;border-radius:14px;box-shadow:0 14px 30px rgba(0,0,0,.35),0 0 0 3px #fff;animation:pickZoom .45s cubic-bezier(.2,1.4,.4,1) both,pickFloat 2.4s ease-in-out .45s infinite}
+.pickcard{width:calc(min(62vw,230px,38dvh) / var(--tz,1));aspect-ratio:2/3;object-fit:cover;border-radius:14px;box-shadow:0 14px 30px rgba(0,0,0,.35),0 0 0 3px #fff;animation:pickZoom .45s cubic-bezier(.2,1.4,.4,1) both,pickFloat 2.4s ease-in-out .45s infinite}
 @keyframes pickZoom{0%{transform:translateY(120px) scale(.3) rotate(-8deg);opacity:0}100%{transform:none;opacity:1}}
 @keyframes pickFloat{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-6px) rotate(.8deg)}}
 .mf button.hire{background:#fff4d6;border-color:#e9b949;color:#7a5200;font-weight:700}
@@ -3231,7 +3231,7 @@ function onTag(){let t=$('#roomTag');if(!ON.code){if(t)t.remove();return}
   if(!t){t=document.createElement('span');t.id='roomTag';t.className='roomtag';t.setAttribute('role','button');t.title='ดูข้อมูลห้อง';t.onclick=onRoomInfo;const h=document.querySelector('header .logo')?.parentElement||document.querySelector('header');h.appendChild(t)}
   t.textContent='ห้อง '+ON.code+' ⓘ'}
 /* เวอร์ชันของไฟล์เกม (เปลี่ยนทุกครั้งที่แก้ระบบออนไลน์) · ส่งไปกับสถานะออนไลน์ เพื่อดูว่าใครยังเปิดเวอร์ชันเก่า */
-const BUILD='2026-11-16.17';
+const BUILD='2026-11-16.18';
 /* ป้ายเลขห้อง → ข้อมูลห้อง: เจ้าของห้อง · เครื่องที่คุมรอบ · สถานะผู้เล่นแต่ละคน */
 function onRoomInfo(){const r=ON.room;if(!r||!ON.code)return;
   const seatName=u=>{const q=S&&S.players&&S.players.find(x=>x.uid===u);if(q)return q.name;const s=Object.values(r.seats||{}).find(x=>x&&x.uid===u);return s?(s.name||'ผู้เล่น'):'—'};
