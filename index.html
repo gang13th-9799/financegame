@@ -1078,6 +1078,14 @@ body.fs #gameView:not(.mapmin){grid-template-columns:minmax(288px,1.2fr) minmax(
 @media (orientation:portrait) and (max-aspect-ratio:9/20){#setupView:has(.setup.onl)::before{background-image:url(img/online-hero-921.webp);background-position:center bottom}}
 .setup.onl{background:rgba(255,253,245,.9);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);margin-top:clamp(16px,6vh,64px)}
 .setup.onl .ol-card{background:rgba(255,255,255,.72)}
+/* หน้าล็อกอิน/หน้าแรกออนไลน์ จอแนวนอน (มือถือแนวนอน/แท็บเล็ต): ตารางอันดับซ้าย · เมนูขวา */
+@media (orientation:landscape) and (min-width:700px){
+ .setup.onl.two{max-width:min(1060px,96vw);display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:18px;align-items:start}
+ .setup.onl.two>.lbcard{order:-1;margin:0;position:sticky;top:10px}
+ .setup.onl.two>.olmain{min-width:0}
+}
+/* ป้าย "รอบที่" ใช้เฉพาะตอนอยู่ในเกม · หน้าแรก/ล็อกอิน/ตั้งค่าเกม ซ่อน (เดิมค้างเลขรอบของเกมก่อนหน้า) */
+body:has(#setupView:not([hidden])) #roundLbl{display:none}
 body:has(#setupView .setup.onl) header{position:relative;z-index:5}
 .icw{width:1.25em;height:1.25em;vertical-align:-.25em;object-fit:contain}
 .ycard img{width:clamp(80px,22vw,120px);height:auto;display:block;margin:0 auto}
@@ -3055,7 +3063,7 @@ function lbCard(){setTimeout(lbRender,0);return `<div class="ol-card lbcard"><h3
 /* ---------- หน้าล็อกอิน ---------- */
 function onLogin(mode){
   const v=$('#setupView');$('#gameView').hidden=true;v.hidden=false;
-  v.innerHTML=`<div class="setup onl">
+  v.innerHTML=`<div class="setup onl two"><div class="olmain">
    <div class="hero"><i class="logo hero-logo"></i><div><div class="hero-t">เกมอิสรภาพทางการเงิน</div><div class="muted">เล่นออนไลน์กับเพื่อน · เข้าสู่ระบบเพื่อจำห้องเกมไว้</div></div></div>
    <div class="ol-btns">
     <button class="ol-g" onclick="onSign('google')"><b class="ol-ic">G</b> เข้าสู่ระบบด้วย Google</button>
@@ -3069,7 +3077,7 @@ function onLogin(mode){
     <button class="ol-guest" onclick="onSign('guest')">👤 เล่นแบบแขก (ไม่ต้องสมัคร)</button>
    </div>
    <p class="muted" style="font-size:12px">แขก: ถ้าล้างข้อมูลเบราว์เซอร์หรือเปลี่ยนเครื่อง จะกลับเข้าห้องเดิมไม่ได้ ผูกบัญชี Google ทีหลังได้ในหน้าถัดไป</p>
-   <div class="btnrow" style="justify-content:flex-start"><button class="sm" onclick="onExit()">← เล่นบนเครื่องนี้ (ออฟไลน์)</button></div>${lbCard()}</div>`}
+   <div class="btnrow" style="justify-content:flex-start"><button class="sm" onclick="onExit()">← เล่นบนเครื่องนี้ (ออฟไลน์)</button></div></div>${lbCard()}</div>`}
 async function onSign(k){try{await ON.be[k]()}catch(e){onErr(e)}}
 async function onMail(reg){const e=$('#olE').value.trim(),p=$('#olP').value,n=reg?$('#olN').value.trim():'';if(!e||!p){toast('กรอกอีเมลและรหัสผ่าน');return}
   try{await ON.be.email(e,p,!!reg,n);if(reg&&n&&ON.user)await ON.be.update('users/'+ON.user.uid,{name:n})}catch(x){onErr(x)}}
@@ -3078,12 +3086,12 @@ async function onReset(){const e=$('#olE').value.trim();if(!e){toast('กรอ�
 /* ---------- หน้าหลักออนไลน์ ---------- */
 function onHome(){
   onStop();const v=$('#setupView');$('#gameView').hidden=true;v.hidden=false;const u=ON.user;
-  v.innerHTML=`<div class="setup onl">
+  v.innerHTML=`<div class="setup onl two"><div class="olmain">
    <div class="hero"><i class="logo hero-logo"></i><div><div class="hero-t">เล่นออนไลน์</div><div class="muted">สวัสดี <b>${esc(ON.name)}</b>${u.anon?' · บัญชีแขก':''}</div></div></div>
    <div class="fld"><label for="olMe">ชื่อที่แสดงในเกม</label><div class="ol-row"><input id="olMe" maxlength="16" value="${esc(ON.name)}"><button class="sm" onclick="onRename()">บันทึก</button></div></div>
    <div class="ol-card"><h3>สร้างห้องใหม่</h3><p class="muted">ได้เลขห้อง 5 หลักไว้ส่งให้เพื่อน แล้วเลือกได้ว่าที่นั่งไหนเป็นคนหรือบอท (2–6 ที่)</p><button class="pri" onclick="onCreate()">＋ สร้างห้อง</button></div>
    <div class="ol-card"><h3>เข้าห้องเพื่อน</h3><div class="ol-row"><input id="olCode" inputmode="numeric" maxlength="5" placeholder="เลขห้อง 5 หลัก" oninput="this.value=this.value.replace(/[^0-9]/g,'')"><button class="pri" onclick="onJoin($('#olCode').value)">เข้าห้อง</button></div></div>
-   <div class="btnrow" style="justify-content:flex-start">${u.anon?`<button class="sm" onclick="onLink()">🔗 ผูกบัญชี Google (กันข้อมูลหาย)</button>`:''}<button class="sm" onclick="ON.be.out()">ออกจากระบบ</button><button class="sm" onclick="onExit()">← เล่นบนเครื่องนี้ (ออฟไลน์)</button></div>${lbCard()}</div>`}
+   <div class="btnrow" style="justify-content:flex-start">${u.anon?`<button class="sm" onclick="onLink()">🔗 ผูกบัญชี Google (กันข้อมูลหาย)</button>`:''}<button class="sm" onclick="ON.be.out()">ออกจากระบบ</button><button class="sm" onclick="onExit()">← เล่นบนเครื่องนี้ (ออฟไลน์)</button></div></div>${lbCard()}</div>`}
 async function onRename(){const n=$('#olMe').value.trim().slice(0,16);if(!n)return;ON.name=n;await ON.be.update('users/'+ON.user.uid,{name:n});onHome();toast('บันทึกชื่อแล้ว')}
 async function onLink(){try{await ON.be.link();ON.user.anon=false;toast('ผูกบัญชี Google แล้ว');if(!ON.code)onHome()}catch(e){onErr(e)}}
 
@@ -3116,7 +3124,7 @@ function onTag(){let t=$('#roomTag');if(!ON.code){if(t)t.remove();return}
   if(!t){t=document.createElement('span');t.id='roomTag';t.className='roomtag';t.setAttribute('role','button');t.title='ดูข้อมูลห้อง';t.onclick=onRoomInfo;const h=document.querySelector('header .logo')?.parentElement||document.querySelector('header');h.appendChild(t)}
   t.textContent='ห้อง '+ON.code+' ⓘ'}
 /* เวอร์ชันของไฟล์เกม (เปลี่ยนทุกครั้งที่แก้ระบบออนไลน์) · ส่งไปกับสถานะออนไลน์ เพื่อดูว่าใครยังเปิดเวอร์ชันเก่า */
-const BUILD='2026-11-16.7';
+const BUILD='2026-11-16.8';
 /* ป้ายเลขห้อง → ข้อมูลห้อง: เจ้าของห้อง · เครื่องที่คุมรอบ · สถานะผู้เล่นแต่ละคน */
 function onRoomInfo(){const r=ON.room;if(!r||!ON.code)return;
   const seatName=u=>{const q=S&&S.players&&S.players.find(x=>x.uid===u);if(q)return q.name;const s=Object.values(r.seats||{}).find(x=>x&&x.uid===u);return s?(s.name||'ผู้เล่น'):'—'};
