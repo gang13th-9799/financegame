@@ -3231,7 +3231,7 @@ function onTag(){let t=$('#roomTag');if(!ON.code){if(t)t.remove();return}
   if(!t){t=document.createElement('span');t.id='roomTag';t.className='roomtag';t.setAttribute('role','button');t.title='ดูข้อมูลห้อง';t.onclick=onRoomInfo;const h=document.querySelector('header .logo')?.parentElement||document.querySelector('header');h.appendChild(t)}
   t.textContent='ห้อง '+ON.code+' ⓘ'}
 /* เวอร์ชันของไฟล์เกม (เปลี่ยนทุกครั้งที่แก้ระบบออนไลน์) · ส่งไปกับสถานะออนไลน์ เพื่อดูว่าใครยังเปิดเวอร์ชันเก่า */
-const BUILD='2026-11-16.18';
+const BUILD='2026-11-16.19';
 /* ป้ายเลขห้อง → ข้อมูลห้อง: เจ้าของห้อง · เครื่องที่คุมรอบ · สถานะผู้เล่นแต่ละคน */
 function onRoomInfo(){const r=ON.room;if(!r||!ON.code)return;
   const seatName=u=>{const q=S&&S.players&&S.players.find(x=>x.uid===u);if(q)return q.name;const s=Object.values(r.seats||{}).find(x=>x&&x.uid===u);return s?(s.name||'ผู้เล่น'):'—'};
@@ -3433,9 +3433,12 @@ function parBanner(){let el=$('#rbanner');if(!el){el=document.createElement('div
   const me=parMe();el.innerHTML=`<b>🔔 เริ่มรอบที่ ${S.round}</b><span>${me&&me.afk?'คุณติดสถานะ Bot · กดปลดเพื่อกลับมาเล่น':'ทุกคนเล่นพร้อมกัน · คนละ 3 นาที'}</span>`;el.classList.add('on');clearTimeout(parBanner.t);parBanner.t=setTimeout(()=>el.classList.remove('on'),2800)}
 /* ---------- จบเทิร์นของตัวเอง ---------- */
 /* ทุกเทิร์น (ตอนจบเทิร์น): รายได้จากทรัพย์สิน ≥25/50/75% ของรายจ่าย → ⏳ +1/+2/+3 */
-function turnPassiveTime(p){if(!p||S.winner!=null)return;const f=fin(p),pr=f.expenses>0?f.passive/f.expenses:0,ft=pr>=.75?3:pr>=.5?2:pr>=.25?1:0;if(!ft)return;
+function turnPassiveTime(p){if(!p||S.winner!=null)return;turnLv1Bonus(p);const f=fin(p),pr=f.expenses>0?f.passive/f.expenses:0,ft=pr>=.75?3:pr>=.5?2:pr>=.25?1:0;if(!ft)return;
   const sx=adj(p,{t:ft},true);if(!sx)return;log(`⏳ ${esc(p.name)} รายได้จากทรัพย์สิน ${Math.floor(pr*100)}% ของรายจ่าย ได้เวลาคืน${sx}`);
   if(!p.bot){toast(`⏳ Passive ${Math.floor(pr*100)}% ของรายจ่าย ได้เวลา +${ft}`);if(!p._rnPT){p._rnPT=1;ruleNote(p,'ได้เวลาคืนทุกเทิร์น',`รายได้จากทรัพย์สินถึง 25% / 50% / 75% ของรายจ่าย ได้ ⏳ +1 / +2 / +3 ทุกครั้งที่จบเทิร์น (ตอนนี้ ${Math.floor(pr*100)}%)`)}}}
+/* ชนะ Lv.1 แล้ว: ทุกครั้งที่จบเทิร์น ❤ +2 ⏳ +2 📚 +1 (เพิ่มจากโบนัสเวลาของ Passive) */
+function turnLv1Bonus(p){if(!p.badge1)return;const sx=adj(p,{h:2,t:2,k:1},true);if(!sx)return;log(`🏆 ${esc(p.name)} ชนะ Lv.1 แล้ว ได้โบนัสทุกเทิร์น${sx}`);
+  if(!p.bot){toast('🏆 โบนัสชนะ Lv.1: ❤ +2 ⏳ +2 📚 +1');if(!p._rnL1){p._rnL1=1;ruleNote(p,'โบนัสชนะ Lv.1 ทุกเทิร์น','ชนะ Lv.1 แล้ว ทุกครั้งที่จบเทิร์นได้ ❤ +2 ⏳ +2 📚 +1 (ค่าพลังเต็มที่ 10)')}}}
 function parEndTurn(early){
   const p=cp();S.bonusPicks=0;S.freeComm=false;S.picks=0;p.hired=false;S.timeoutNote=null;
   if(S.rp==='h'){
