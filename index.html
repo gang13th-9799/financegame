@@ -699,6 +699,8 @@ body.pseudofs header{position:sticky;top:0}
 /* text scale: panels, popups, notices, board labels */
 .layout>section:last-child,.rnotes,#setupView,.setov{zoom:var(--tz)}
 .modal .mh,.modal .mb,.modal .mf{zoom:calc(var(--tz) * var(--mz))}
+/* ป๊อปอัปยาว: หัวข้อค้างบน ปุ่มค้างล่าง เลื่อนเฉพาะเนื้อหาตรงกลาง */
+.modal{display:flex;flex-direction:column}.modal>.mh,.modal>.mf{flex:none}.modal>.mb{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain}
 .modal{max-width:min(calc(440px * var(--tz) * var(--mz)),96vw)!important}
 .modal.k-pick{max-width:min(calc(340px * var(--tz) * var(--mz)),96vw)!important}
 .cell .lbl{font-size:calc(1em * var(--tz))}
@@ -1693,7 +1695,7 @@ function ask({actor=null,kind='',title,body='',opts=[{v:'ok',l:'ตกลง',c:
     if(onShow)onShow(m);
     const done=(v)=>{MODAL_CANCEL=null;const form={};m.querySelectorAll('[data-f]').forEach(el=>form[el.dataset.f]=el.value);$('#ov').classList.remove('on');MODAL=false;res({v,form})};
     if(isBot){setTimeout(()=>{const b=opts.find(o=>o.v===bot&&!o.dis)||opts[opts.length-1];m.querySelector('.mf').innerHTML=`<span class="muted">${esc(actor.name)} เลือก: <b>${b.l}</b></span>`;setTimeout(()=>done(b.v),S.speed*.8)},S.speed)}
-    else{MODAL_CANCEL=()=>done(lastOk());m.querySelectorAll('.mf button').forEach(b=>b.onclick=()=>done(opts[+b.dataset.i].v));m.querySelectorAll('.mb [data-v]').forEach(b=>b.onclick=()=>done(b.dataset.v));const f=m.querySelector('.mf button.pri')||m.querySelector('.mf button');if(f)f.focus()}
+    else{MODAL_CANCEL=()=>done(lastOk());m.querySelectorAll('.mf button').forEach(b=>b.onclick=()=>done(opts[+b.dataset.i].v));m.querySelectorAll('.mb [data-v]').forEach(b=>b.onclick=()=>done(b.dataset.v));const f=m.querySelector('.mf button.pri')||m.querySelector('.mf button');if(f)f.focus({preventScroll:true});m.scrollTop=0;const mb=m.querySelector('.mb');if(mb)mb.scrollTop=0} /* โฟกัสปุ่มโดยไม่เลื่อนป๊อปอัปลงล่าง */
   });
 }
 async function choose(o){if(o.actor&&o.actor._afkb){const d=(o.opts||[]).find(x=>['no','n','skip','stay','x','cancel','pass'].includes(x.v));if(d)o={...o,bot:d.v}}
@@ -3231,7 +3233,7 @@ function onTag(){let t=$('#roomTag');if(!ON.code){if(t)t.remove();return}
   if(!t){t=document.createElement('span');t.id='roomTag';t.className='roomtag';t.setAttribute('role','button');t.title='ดูข้อมูลห้อง';t.onclick=onRoomInfo;const h=document.querySelector('header .logo')?.parentElement||document.querySelector('header');h.appendChild(t)}
   t.textContent='ห้อง '+ON.code+' ⓘ'}
 /* เวอร์ชันของไฟล์เกม (เปลี่ยนทุกครั้งที่แก้ระบบออนไลน์) · ส่งไปกับสถานะออนไลน์ เพื่อดูว่าใครยังเปิดเวอร์ชันเก่า */
-const BUILD='2026-11-16.19';
+const BUILD='2026-11-16.20';
 /* ป้ายเลขห้อง → ข้อมูลห้อง: เจ้าของห้อง · เครื่องที่คุมรอบ · สถานะผู้เล่นแต่ละคน */
 function onRoomInfo(){const r=ON.room;if(!r||!ON.code)return;
   const seatName=u=>{const q=S&&S.players&&S.players.find(x=>x.uid===u);if(q)return q.name;const s=Object.values(r.seats||{}).find(x=>x&&x.uid===u);return s?(s.name||'ผู้เล่น'):'—'};
