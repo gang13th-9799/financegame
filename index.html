@@ -1078,6 +1078,15 @@ body.fs #gameView:not(.mapmin){grid-template-columns:minmax(288px,1.2fr) minmax(
 @media (orientation:portrait) and (max-aspect-ratio:9/20){#setupView:has(.setup.onl)::before{background-image:url(img/online-hero-921.webp);background-position:center bottom}}
 .setup.onl{background:rgba(255,253,245,.9);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);margin-top:clamp(16px,6vh,64px)}
 .setup.onl .ol-card{background:rgba(255,255,255,.72)}
+/* หน้าแรกออนไลน์แบบ minimal */
+.olh .olmain{display:flex;flex-direction:column;gap:12px}
+.olh .hero{margin-bottom:4px}.olh .hero-t{font-size:24px}
+.linkbtn{background:none!important;border:none!important;box-shadow:none!important;padding:2px 0;min-height:0;color:var(--muted);font:500 13px var(--body);cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.olbig{width:100%;min-height:50px;font-size:17px}
+.olh .ol-row input{min-height:46px;font-size:16px;flex:1;min-width:0}.olh #olCode{max-width:none}.olh #olCode:not(:placeholder-shown){font-size:22px}.olh [hidden]{display:none!important}
+.olor{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:13px}.olor::before,.olor::after{content:"";flex:1;border-top:1px solid var(--line)}
+.oloff{background:#fff;border:2px solid var(--accent)!important;color:var(--accent);font-weight:700}
+.olfoot{text-align:center;color:var(--muted);font-size:13px;margin-top:2px}
 /* หน้าล็อกอิน/หน้าแรกออนไลน์ จอแนวนอน (มือถือแนวนอน/แท็บเล็ต): ตารางอันดับซ้าย · เมนูขวา */
 @media (orientation:landscape) and (min-width:700px){
  .setup.onl.two{max-width:min(1060px,96vw);display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:18px;align-items:start}
@@ -3055,10 +3064,10 @@ async function lbRender(){const el=$('#lbBox');if(!el)return;
   const meU=ON.user&&ON.user.uid,mi=rows.findIndex(r=>r.u===meU),medal=i=>['🥇','🥈','🥉'][i]||(i+1);
   const tr=(r,i)=>`<tr class="${r.u===meU?'lbme':''}"><td class="lbn">${medal(i)}</td><td>${esc(r.n)}${r.u===meU?' (คุณ)':''}</td><td class="r num"><b>${r.p.toLocaleString()}</b></td><td class="r muted">${r.g}</td><td class="r muted">${r.w}</td></tr>`;
   el.innerHTML=`<div class="subtabs" style="position:static">${[['m','📅 เดือนนี้'],['a','🏛 ตลอดกาล']].map(([k,l])=>`<button class="${LB_TAB===k?'on':''}" onclick="LB_TAB='${k}';lbRender()">${l}</button>`).join('')}</div>
-   ${rows.length?`<table class="ft lbt"><tr class="th"><td>#</td><td>ผู้เล่น</td><td class="r">คะแนน</td><td class="r">เกม</td><td class="r">ชนะ</td></tr>${rows.slice(0,20).map(tr).join('')}${mi>=20?`<tr><td colspan="5" class="muted" style="text-align:center">⋯</td></tr>${tr(rows[mi],mi)}`:''}</table>`:`<p class="muted">${m?'เดือนนี้':'ตอนนี้'}ยังไม่มีใครได้คะแนน · จบเกมออนไลน์เพื่อเริ่มสะสม</p>`}
-   ${ON.user&&ON.user.anon?'<p class="muted" style="font-size:12px">บัญชีแขกไม่ติดอันดับ · ผูกบัญชี Google เพื่อสะสมคะแนน</p>':ON.user&&mi<0?'<p class="muted" style="font-size:12px">คุณยังไม่มีคะแนน'+(m?'เดือนนี้':'')+'</p>':''}`}
+   ${rows.length?`<table class="ft lbt"><tr class="th"><td>#</td><td>ผู้เล่น</td><td class="r">คะแนน</td><td class="r">เกม</td><td class="r">ชนะ</td></tr>${rows.slice(0,20).map(tr).join('')}${mi>=20?`<tr><td colspan="5" class="muted" style="text-align:center">⋯</td></tr>${tr(rows[mi],mi)}`:''}</table>`:`<p class="muted">ยังไม่มีคะแนน${m?'เดือนนี้':''}</p>`}
+`}
 function lbCard(){setTimeout(lbRender,0);return `<div class="ol-card lbcard"><h3>🏅 อันดับคะแนนสะสม</h3><div id="lbBox"><p class="muted">กำลังโหลด…</p></div>
-  <details class="lbhow"><summary>วิธีคิดคะแนน</summary><p class="muted" style="font-size:12px">ทุกครั้งที่จบเกมออนไลน์: อันดับที่ 1–6 ได้ 10/6/4/2/1/1 · 🏆 ชนะ Lv.1 +10 · 💎 ไดมอนด์ +25 · ความใกล้ชนะ +1 ทุก 10% (สูงสุด +10) · ไม่ล้มละลาย +3 / ล้มละลาย −5 · เล่นจนจบ +2 · คูณตามจำนวนผู้เล่นที่เป็นคน: 1 คน (กับบอท) ×0.5 · 2 คน ×1 · 3–4 คน ×1.2 · 5–6 คน ×1.5 · เกมสั้นกว่า ${LB_MIN_ROUNDS} รอบได้แค่ +2 · บัญชีแขกไม่เก็บคะแนน</p></details></div>`}
+</div>`}
 
 /* ---------- หน้าล็อกอิน ---------- */
 function onLogin(mode){
@@ -3086,12 +3095,15 @@ async function onReset(){const e=$('#olE').value.trim();if(!e){toast('กรอ�
 /* ---------- หน้าหลักออนไลน์ ---------- */
 function onHome(){
   onStop();const v=$('#setupView');$('#gameView').hidden=true;v.hidden=false;const u=ON.user;
-  v.innerHTML=`<div class="setup onl two"><div class="olmain">
-   <div class="hero"><i class="logo hero-logo"></i><div><div class="hero-t">เล่นออนไลน์</div><div class="muted">สวัสดี <b>${esc(ON.name)}</b>${u.anon?' · บัญชีแขก':''}</div></div></div>
-   <div class="fld"><label for="olMe">ชื่อที่แสดงในเกม</label><div class="ol-row"><input id="olMe" maxlength="16" value="${esc(ON.name)}"><button class="sm" onclick="onRename()">บันทึก</button></div></div>
-   <div class="ol-card"><h3>สร้างห้องใหม่</h3><p class="muted">ได้เลขห้อง 5 หลักไว้ส่งให้เพื่อน แล้วเลือกได้ว่าที่นั่งไหนเป็นคนหรือบอท (2–6 ที่)</p><button class="pri" onclick="onCreate()">＋ สร้างห้อง</button></div>
-   <div class="ol-card"><h3>เข้าห้องเพื่อน</h3><div class="ol-row"><input id="olCode" inputmode="numeric" maxlength="5" placeholder="เลขห้อง 5 หลัก" oninput="this.value=this.value.replace(/[^0-9]/g,'')"><button class="pri" onclick="onJoin($('#olCode').value)">เข้าห้อง</button></div></div>
-   <div class="btnrow" style="justify-content:flex-start">${u.anon?`<button class="sm" onclick="onLink()">🔗 ผูกบัญชี Google (กันข้อมูลหาย)</button>`:''}<button class="sm" onclick="ON.be.out()">ออกจากระบบ</button><button class="sm" onclick="onExit()">← เล่นบนเครื่องนี้ (ออฟไลน์)</button></div></div>${lbCard()}</div>`}
+  v.innerHTML=`<div class="setup onl two olh"><div class="olmain">
+   <div class="hero"><i class="logo hero-logo"></i><div><div class="hero-t">สวัสดี ${esc(ON.name)}</div><button class="linkbtn" onclick="$('#olName').hidden=!$('#olName').hidden">✏️ เปลี่ยนชื่อ</button>${u.anon?'<span class="muted"> · แขก</span>':''}</div></div>
+   <div class="ol-row" id="olName" hidden><input id="olMe" maxlength="16" value="${esc(ON.name)}" aria-label="ชื่อที่แสดงในเกม"><button class="sm" onclick="onRename()">บันทึก</button></div>
+   <button class="pri olbig" onclick="onCreate()">＋ สร้างห้อง</button>
+   <div class="ol-row"><input id="olCode" inputmode="numeric" maxlength="5" placeholder="เลขห้อง 5 หลัก" aria-label="เลขห้อง" oninput="this.value=this.value.replace(/[^0-9]/g,'')" onkeydown="if(event.key==='Enter')onJoin(this.value)"><button class="pri" onclick="onJoin($('#olCode').value)">เข้าห้อง</button></div>
+   <div class="olor"><span>หรือ</span></div>
+   <button class="olbig oloff" onclick="onExit()">🎲 เล่นออฟไลน์บนเครื่องนี้</button>
+   <div class="olfoot">${u.anon?`<button class="linkbtn" onclick="onLink()">🔗 ผูกบัญชี Google</button> · `:''}<button class="linkbtn" onclick="ON.be.out()">ออกจากระบบ</button></div>
+  </div>${lbCard()}</div>`}
 async function onRename(){const n=$('#olMe').value.trim().slice(0,16);if(!n)return;ON.name=n;await ON.be.update('users/'+ON.user.uid,{name:n});onHome();toast('บันทึกชื่อแล้ว')}
 async function onLink(){try{await ON.be.link();ON.user.anon=false;toast('ผูกบัญชี Google แล้ว');if(!ON.code)onHome()}catch(e){onErr(e)}}
 
@@ -3124,7 +3136,7 @@ function onTag(){let t=$('#roomTag');if(!ON.code){if(t)t.remove();return}
   if(!t){t=document.createElement('span');t.id='roomTag';t.className='roomtag';t.setAttribute('role','button');t.title='ดูข้อมูลห้อง';t.onclick=onRoomInfo;const h=document.querySelector('header .logo')?.parentElement||document.querySelector('header');h.appendChild(t)}
   t.textContent='ห้อง '+ON.code+' ⓘ'}
 /* เวอร์ชันของไฟล์เกม (เปลี่ยนทุกครั้งที่แก้ระบบออนไลน์) · ส่งไปกับสถานะออนไลน์ เพื่อดูว่าใครยังเปิดเวอร์ชันเก่า */
-const BUILD='2026-11-16.8';
+const BUILD='2026-11-16.9';
 /* ป้ายเลขห้อง → ข้อมูลห้อง: เจ้าของห้อง · เครื่องที่คุมรอบ · สถานะผู้เล่นแต่ละคน */
 function onRoomInfo(){const r=ON.room;if(!r||!ON.code)return;
   const seatName=u=>{const q=S&&S.players&&S.players.find(x=>x.uid===u);if(q)return q.name;const s=Object.values(r.seats||{}).find(x=>x&&x.uid===u);return s?(s.name||'ผู้เล่น'):'—'};
