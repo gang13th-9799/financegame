@@ -1089,6 +1089,11 @@ body.fs #gameView:not(.mapmin){grid-template-columns:minmax(288px,1.2fr) minmax(
 .afkov[hidden]{display:none}
 .subtabs{overflow-x:auto;scrollbar-width:none;display:flex;gap:4px;padding:3px;margin:0 0 10px;background:#f1ead6;border-radius:999px;position:sticky;top:0;z-index:3}
 .subtabs button{flex:1;min-height:34px;padding:4px 8px;border:none!important;border-radius:999px;background:transparent!important;box-shadow:none!important;transform:none!important;color:var(--muted);font-size:13px;white-space:nowrap;font-family:var(--display)}
+.mktabs{display:flex;gap:6px;margin:0 0 8px}
+.mktabs button{flex:1;display:flex;align-items:center;justify-content:center;gap:5px;min-height:38px;padding:4px 6px;border:1.5px solid #e2d6b5!important;border-radius:12px;background:#fffaf0!important;box-shadow:none!important;transform:none!important;color:var(--muted);font-size:13px;white-space:nowrap;font-family:var(--display)}
+.mktabs button img{width:22px;height:22px;object-fit:contain}
+.mktabs button.on{border-color:var(--accent)!important;background:#eef6e8!important;color:var(--ink);font-weight:700}
+.mktabs button i{font-style:normal;font-size:11px;background:var(--accent);color:#fff;border-radius:999px;padding:0 6px;line-height:17px}
 .subtabs button.on{background:#fff!important;color:var(--ink);font-weight:700;box-shadow:0 1px 3px rgba(0,0,0,.12)!important}
 .lbt td{padding:6px 4px}.lbt .lbn{width:30px;text-align:center}.lbt tr.lbme td{background:#fff6d8}.lbhow summary{cursor:pointer;font-size:13px;color:var(--muted);margin-top:6px}
 #wikiov{position:fixed;inset:0;z-index:9000;background:var(--bg);display:flex;flex-direction:column}#wikiov[hidden]{display:none}
@@ -2743,13 +2748,16 @@ function mrow(a,p,dis,acc){
   return `<div class="mi"><div class="mi1 tap" role="button" tabindex="0" aria-label="ซื้อขาย ${a.n}" onclick="tradeDlg('${a.s}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tradeDlg('${a.s}')}">${MICO(a)}<div class="mname">${a.k==='stock'?`<b>${esc(a.n)}</b>`:`<b>${a.s}</b><span class="muted">${a.n}</span>`}</div>${spark(hs)}<div class="mprice"><b class="num">${fmtP(a,pr)}</b><span class="num ${ch>=0?'pos':'neg'}">${ch>=0?'+':''}${ch.toFixed(1)}%</span></div><span class="mgo" aria-hidden="true">›</span></div>
     <div class="mi2"><div class="mtags">${a.risk?`<span class="mk">เสี่ยง${RISK[a.risk]}</span>`:''}${a.k==='cry'?cryTag(a):''}${a.div?`<span class="mk">ปันผล ฿${a.k==='fund'?a.div.toFixed(2):a.div.toFixed(1)}/${UNIT(a)}</span>`:''}<span class="mk">ถือ ${h&&h.q?h.q.toLocaleString():0}</span>${pl}</div></div></div>`;
 }
+/* แท็บย่อยในเทรด: หุ้น / คริปโต / สินค้าโภคภัณฑ์ (จำแท็บล่าสุดไว้) · ตัวเลขบนแท็บ = จำนวนตัวที่ถือ */
+const MKT_KS=[['stock','หุ้น','as-stock'],['cry','คริปโต','as-crypto'],['com','สินค้าโภคภัณฑ์','as-commod']];let MKT_K='stock';
 function renderMkt(){
   const act=canAct(),p=act?cp():P(S.view),dis=act?'':'disabled';
   const acc={tc:0,tv:0};
-  return `<p class="trhint">👆 แตะชื่อหุ้นหรือสินค้า เพื่อเลือก <b>ซื้อ / ขาย</b> แล้วกดปุ่มจำนวน · ค่าธรรมเนียม 1%<br>📅 ราคาทุกตัวเดินตาม<b>ราคาจริง</b>ช่วงที่สุ่มจาก 10 ปีที่ผ่านมา (เดือนที่ ${(S.cmo??0)+1}) · หุ้นเป็นบริษัทจริง · เฉลยช่วงเวลาตอนจบเกม${S.freeComm?' <b class="pos">(เทิร์นนี้ฟรี)</b>':''}${act?'':' · <span class="neg">ซื้อขายได้เฉพาะในเทิร์นของคุณ</span>'}</p>
+  const nh=k=>ASSETS.filter(a=>a.k===k&&p.stocks[a.s]&&p.stocks[a.s].q).length;
+  return `<div class="mktabs" role="tablist">${MKT_KS.map(([k,t,im])=>`<button class="${k===MKT_K?'on':''}" role="tab" aria-selected="${k===MKT_K}" onclick="MKT_K='${k}';render()"><img src="img/${im}.webp" alt="">${t}${nh(k)?`<i>${nh(k)}</i>`:''}</button>`).join('')}</div><p class="trhint">👆 แตะชื่อหุ้นหรือสินค้า เพื่อเลือก <b>ซื้อ / ขาย</b> แล้วกดปุ่มจำนวน · ค่าธรรมเนียม 1%<br>📅 ราคาทุกตัวเดินตาม<b>ราคาจริง</b>ช่วงที่สุ่มจาก 10 ปีที่ผ่านมา (เดือนที่ ${(S.cmo??0)+1}) · หุ้นเป็นบริษัทจริง · เฉลยช่วงเวลาตอนจบเกม${S.freeComm?' <b class="pos">(เทิร์นนี้ฟรี)</b>':''}${act?'':' · <span class="neg">ซื้อขายได้เฉพาะในเทิร์นของคุณ</span>'}</p>
   <div class="mlist">
-  ${[['stock','หุ้น','as-stock'],['com','สินค้าโภคภัณฑ์','as-commod'],['cry','คริปโต','as-crypto']].map(([k,t,im])=>`<h4 class="mgh"><img class="mghi" src="img/${im}.webp" alt="">${t}${k==='cry'?` <span class="crydate">ราคาจริง (บาท) · 1 รอบ = 1 เดือน</span>`:''}</h4>`+ASSETS.filter(a=>a.k===k).map(a=>mrow(a,p,dis,acc)).join('')).join('')}</div>
-  ${acc.tc?`<div class="ln" style="margin-top:6px"><span><b>รวมพอร์ต ${esc(p.name)}</b><br><span class="muted" style="font-size:12px">ทุน ${B(acc.tc)} · มูลค่าตอนนี้ ${B(acc.tv)}</span></span><b class="num ${acc.tv>=acc.tc?'pos':'neg'}">${acc.tv>=acc.tc?'+':'−'}${B(Math.abs(acc.tv-acc.tc)).replace('−','')} (${acc.tv>=acc.tc?'+':''}${((acc.tv-acc.tc)/acc.tc*100).toFixed(1)}%)</b></div>`:''}
+  ${MKT_KS.filter(([k])=>k===MKT_K).map(([k,t,im])=>`<h4 class="mgh"><img class="mghi" src="img/${im}.webp" alt="">${t}${k==='cry'?` <span class="crydate">ราคาจริง (บาท) · 1 รอบ = 1 เดือน</span>`:''}</h4>`+ASSETS.filter(a=>a.k===k).map(a=>mrow(a,p,dis,acc)).join('')).join('')}</div>
+  ${acc.tc?`<div class="ln" style="margin-top:6px"><span><b>รวมพอร์ต${MKT_KS.find(x=>x[0]===MKT_K)[1]} ${esc(p.name)}</b><br><span class="muted" style="font-size:12px">ทุน ${B(acc.tc)} · มูลค่าตอนนี้ ${B(acc.tv)}</span></span><b class="num ${acc.tv>=acc.tc?'pos':'neg'}">${acc.tv>=acc.tc?'+':'−'}${B(Math.abs(acc.tv-acc.tc)).replace('−','')} (${acc.tv>=acc.tc?'+':''}${((acc.tv-acc.tc)/acc.tc*100).toFixed(1)}%)</b></div>`:''}
   <p class="muted" style="font-size:12px;margin:4px 0 0">ทุนเฉลี่ยรวมค่าคอมมิชชันแล้ว</p>
   <p class="muted" style="font-size:12px">ราคาขยับทุกครั้งที่จบรอบ และเมื่อมีข่าวตลาด หุ้นที่มีปันผลนับเป็นรายได้จากทรัพย์สินทุกเดือน · ป้ายประกาศขายทรัพย์สินอยู่ในแท็บตลาด ${act?'':'· ซื้อขายได้เฉพาะในเทิร์นของคุณ'}</p>`;
 }
@@ -3261,7 +3269,7 @@ function onTag(){let t=$('#roomTag');if(!ON.code){if(t)t.remove();return}
   if(!t){t=document.createElement('span');t.id='roomTag';t.className='roomtag';t.setAttribute('role','button');t.title='ดูข้อมูลห้อง';t.onclick=onRoomInfo;const h=document.querySelector('header .logo')?.parentElement||document.querySelector('header');h.appendChild(t)}
   t.textContent='ห้อง '+ON.code+' ⓘ'}
 /* เวอร์ชันของไฟล์เกม (เปลี่ยนทุกครั้งที่แก้ระบบออนไลน์) · ส่งไปกับสถานะออนไลน์ เพื่อดูว่าใครยังเปิดเวอร์ชันเก่า */
-const BUILD='2026-11-16.23';
+const BUILD='2026-11-16.24';
 /* ป้ายเลขห้อง → ข้อมูลห้อง: เจ้าของห้อง · เครื่องที่คุมรอบ · สถานะผู้เล่นแต่ละคน */
 function onRoomInfo(){const r=ON.room;if(!r||!ON.code)return;
   const seatName=u=>{const q=S&&S.players&&S.players.find(x=>x.uid===u);if(q)return q.name;const s=Object.values(r.seats||{}).find(x=>x&&x.uid===u);return s?(s.name||'ผู้เล่น'):'—'};
