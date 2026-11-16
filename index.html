@@ -1179,6 +1179,9 @@ body:has(#setupView .setup.onl) header{position:relative;z-index:5}
  transform-origin:50% 100%!important;transform:translate(-50%,-100%) rotateZ(calc(-1 * var(--ang,45deg))) rotateX(calc(-1 * var(--tilt)))!important;z-index:2}
 .board.v3d.iso .cell .zimg:not(.pimgc){border-radius:10px;box-shadow:0 3px 8px rgba(0,0,0,.25);height:48cqmin!important}
 .board.v3d.iso .cell .toks{left:64%!important;top:auto!important;bottom:36%!important;right:auto!important;transform:translateX(-50%)!important}
+/* กระดาน 48 ช่อง: วงนอกใช้ขอบ 13×13 เต็ม ทุกแถว/คอลัมน์กว้างเท่ากัน (แถว 2,12 = แถบกลาง) */
+#board.board:not(.iso){grid-template-columns:repeat(13,minmax(0,1fr))!important;grid-template-rows:repeat(13,minmax(0,1fr))!important}
+.minib{grid-template-columns:repeat(13,1fr)!important;grid-template-rows:repeat(13,1fr)!important}
 </style>
 </head>
 <body>
@@ -1229,23 +1232,24 @@ function jobIdx(p){const n=S&&S.jobs&&S.jobs[p.job]?S.jobs[p.job].n:'';return JO
 function tokStyle(p){const i=jobIdx(p);return `--pc:${p.color};background-color:${p.color};${i>=0?`--img:url(img/head-${i}.webp);--pawn:url(img/pawn-${i}.webp)`:''}`}
 function pawnImg(p,cls='pawn'){const i=jobIdx(p);return i>=0?`<img class="${cls}" src="img/pawn-${i}.webp" alt="">`:''}
 const COLORS=['#e5664f','#4f93d0','#f0b13a','#5cb46a','#9f78d4','#ee86b8'];
-/* Two-ring board: outer = provinces (40 squares, 11x11 perimeter), inner = capital (32 squares, 9x9 perimeter) */
+/* Two-ring board: outer = provinces (48 squares, 13x13 perimeter), inner = capital (32 squares, 9x9 perimeter) */
 const ZONES={
  o0:{n:'เขตเกษตรกรรม',c:'#8cc263'}, o1:{n:'เขตอุตสาหกรรม',c:'#9aa0b5'}, o2:{n:'เขตท่องเที่ยว',c:'#5ec0cf'}, o3:{n:'เขตชุมชน',c:'#f0ad5e'},
  i0:{n:'ย่านที่พักหรู',c:'#b993de'}, i1:{n:'ย่านช้อปปิ้ง',c:'#ef8db2'}, i2:{n:'ย่านธุรกิจ',c:'#e8866a'}, i3:{n:'ย่านการเงิน',c:'#6f9ad9'},
 };
 const ZPROPS={
- o0:[['นาข้าว',20000,2200,1500],['สวนยางพารา',25000,2700,2000],['ไร่มันสำปะหลัง',25000,2700,2000],['ฟาร์มไก่',35000,3900,2500],['สวนทุเรียน',50000,5600,3500]],
- o1:[['ลานจอดรถบรรทุก',30000,3300,2500],['ห้องเช่าคนงาน',35000,4000,3000],['โกดังสินค้า',50000,5600,4000],['โรงงานแปรรูปอาหาร',70000,8000,5000],['นิคมอุตสาหกรรม',90000,10000,6500]],
- o2:[['ร้านของฝาก',30000,3400,2500],['โฮมสเตย์',40000,4500,3500],['ร้านอาหารซีฟู้ด',55000,6200,4500],['เรือนำเที่ยว',65000,7300,5000],['รีสอร์ตริมทะเล',95000,10800,7000]],
- o3:[['ร้านขายของชำ',20000,2200,1500],['ตลาดนัดชุมชน',30000,3300,2500],['ทาวน์โฮม',40000,4400,3000],['หอพัก',50000,5600,4000],['ปั๊มน้ำมัน',70000,7800,5000]],
+ o0:[['นาข้าว',20000,2200,1500],['สวนยางพารา',25000,2700,2000],['ไร่มันสำปะหลัง',25000,2700,2000],['ฟาร์มไก่',35000,3900,2500],['สวนทุเรียน',50000,5600,3500],['โรงสีข้าว',60000,6700,4000]],
+ o1:[['ลานจอดรถบรรทุก',30000,3300,2500],['ห้องเช่าคนงาน',35000,4000,3000],['โกดังสินค้า',50000,5600,4000],['โรงงานแปรรูปอาหาร',70000,8000,5000],['นิคมอุตสาหกรรม',90000,10000,6500],['ท่าเรือขนส่งสินค้า',110000,12000,7500]],
+ o2:[['ร้านของฝาก',30000,3400,2500],['โฮมสเตย์',40000,4500,3500],['ร้านอาหารซีฟู้ด',55000,6200,4500],['เรือนำเที่ยว',65000,7300,5000],['รีสอร์ตริมทะเล',95000,10800,7000],['สวนน้ำ',110000,12500,8000]],
+ o3:[['ร้านขายของชำ',20000,2200,1500],['ตลาดนัดชุมชน',30000,3300,2500],['ทาวน์โฮม',40000,4400,3000],['หอพัก',50000,5600,4000],['ปั๊มน้ำมัน',70000,7800,5000],['คลินิกเอกชน',85000,9400,6000]],
  i0:[['คอนโดติดรถไฟฟ้า',120000,14000,9000],['เซอร์วิสอพาร์ตเมนต์',150000,17500,11000],['ทาวน์โฮมกลางเมือง',160000,18500,12000],['บ้านหรูริมแม่น้ำ',200000,23500,15000]],
  i1:[['ร้านอาหารในห้าง',140000,16500,11000],['คอมมูนิตี้มอลล์',180000,21000,14000],['ห้างสรรพสินค้า',240000,28000,19000],['ศูนย์การค้าใหญ่',280000,33000,22000]],
  i2:[['โคเวิร์กกิ้งสเปซ',150000,17500,12000],['อาคารสำนักงาน',200000,23500,16000],['โรงแรมธุรกิจ',260000,30500,21000],['ศูนย์ประชุม',300000,35000,24000]],
  i3:[['อาคารธนาคาร',220000,26000,18000],['ตึกตลาดหลักทรัพย์',280000,33000,23000],['ตึกระฟ้า',350000,41000,28000],['ทาวเวอร์ใจกลางเมือง',400000,47000,32000]],
 };
-const SQN={study:'ศูนย์เรียนรู้',mkt:'ตลาดกลาง',rest:'พักผ่อน',charity:'บริจาคการกุศล',jobless:'ตกงาน',pay:'เงินเดือน',news:'ข่าวตลาด',net:'เครือข่าย',exch:'ตลาดหลักทรัพย์',splurge:'ฟุ่มเฟือย',crisis:'วิกฤตชีวิต',road:'ถนน',bizc:'ศูนย์ธุรกิจ'};
-const SQ_SUB={study:'📚+2–4 · สกิลการ์ดฟรี 1',mkt:'ป้ายขาย · ธนาคารรับซื้อ',rest:'❤+1 ⏳+1–2',charity:'10% ได้ทอย 2 ลูก',jobless:'❤−2 · 2 เดือนได้แค่ Passive (รอบ 1–5: ใบเตือน 🟨)',pay:'รับกระแสเงินสด',news:'ราคาตลาดขยับ',net:'ธุรกิจเครือข่าย',exch:'เทรดฟรี',splurge:'จั่วรายจ่าย',crisis:'ทอยเสี่ยง',road:'เข้า/ออกเมือง',bizc:'ดีลธุรกิจ −20%'};
+const SQN={study:'ศูนย์เรียนรู้',mkt:'ตลาดกลาง',rest:'พักผ่อน',charity:'บริจาคการกุศล',jobless:'ตกงาน',pay:'เงินเดือน',news:'ข่าวตลาด',net:'เครือข่าย',exch:'ตลาดหลักทรัพย์',splurge:'ฟุ่มเฟือย',crisis:'วิกฤตชีวิต',road:'ถนน',bizc:'ศูนย์ธุรกิจ',ent:'สถานบันเทิง'};
+const ENTN={o0:'ร้านคาราโอเกะ',o1:'สนามไดรฟ์กอล์ฟ',o2:'บีชคลับ',o3:'โรงภาพยนตร์'};/* ช่องสถานบันเทิงประจำเขต (พักผ่อนแบบเสียเงิน) */
+const SQ_SUB={study:'📚+2–4 · สกิลการ์ดฟรี 1',mkt:'ป้ายขาย · ธนาคารรับซื้อ',rest:'❤+1 ⏳+1–2',charity:'10% ได้ทอย 2 ลูก',jobless:'❤−2 · 2 เดือนได้แค่ Passive (รอบ 1–5: ใบเตือน 🟨)',pay:'รับกระแสเงินสด',news:'ราคาตลาดขยับ',net:'ธุรกิจเครือข่าย',exch:'เทรดฟรี',splurge:'จั่วรายจ่าย',crisis:'ทอยเสี่ยง',road:'เข้า/ออกเมือง',bizc:'ดีลธุรกิจ −20%',ent:'จ่าย ฿1k–20k · ❤⏳📚 +1–5'};
 const LIVING={o:.85,i:1.3};
 const ZLIVE={o0:.7,o1:.8,o2:1,o3:.85,i0:1.7,i1:1.5,i2:1.4,i3:1.3};
 function lifeMul(p){return ZLIVE[zoneOfCell(p.ring+p.pos)]||1}
@@ -1261,19 +1265,22 @@ function mkProp(z,k){const [n,down,cf0,fee]=ZPROPS[z][k],roi=ZROI[z],up=Math.rou
 const SQ_MAP={};
 (function build(){
   const oc=['pay','pay','pay','pay'];
-  for(let s=0;s<4;s++){const z='o'+s,b=s*10;
-    const side=[mkProp(z,0),{t:'rest'},mkProp(z,1),mkProp(z,2),{t:'road',z},mkProp(z,3),{t:'study'},mkProp(z,4),{t:'splurge'}];
+  for(let s=0;s<4;s++){const z='o'+s,b=s*12;/* 12 ช่องต่อด้าน: มุมเงินเดือน + 11 */
+    const side=[mkProp(z,0),{t:'rest'},mkProp(z,1),mkProp(z,2),{t:'ent',z},{t:'road',z},mkProp(z,3),{t:'study'},mkProp(z,4),mkProp(z,5),{t:'splurge'}];
     SQ_MAP['o'+b]={t:oc[s]};side.forEach((q,k)=>SQ_MAP['o'+(b+1+k)]=q);}
-  SQ_MAP.o9={t:'jobless'};SQ_MAP.o29={t:'charity'};
+  SQ_MAP.o11={t:'jobless'};SQ_MAP.o35={t:'charity'};
   const ic=['pay','exch','pay','jobless'],is2=['study','news','study','charity'];
   for(let s=0;s<4;s++){const z='i'+s,b=s*8;
     const side=[mkProp(z,0),{t:s%2?'rest':'bizc'},mkProp(z,1),{t:'road',z},mkProp(z,2),{t:is2[s]},mkProp(z,3)];
     SQ_MAP['i'+b]={t:ic[s]};side.forEach((q,k)=>SQ_MAP['i'+(b+1+k)]=q);}
-  for(const k in SQ_MAP){const q=SQ_MAP[k];if(!q.n)q.n=q.t==='road'?'ถนน · '+ZONES[q.z].n:SQN[q.t];if(k==='o0')q.n='เริ่ม / เงินเดือน'}
+  for(const k in SQ_MAP){const q=SQ_MAP[k];if(!q.n)q.n=q.t==='road'?'ถนน · '+ZONES[q.z].n:q.t==='ent'?ENTN[q.z]:SQN[q.t];if(k==='o0')q.n='เริ่ม / เงินเดือน'}
 })();
-const RING_LEN={o:40,i:32};
+const RING_LEN={o:48,i:32};
+/* แปลงเลขช่องวงนอกจากกระดาน 40 ช่องเดิม → 48 ช่อง (เซฟเก่า/ห้องออนไลน์เก่า) */
+const O40TO48=i=>Math.floor(i/10)*12+[0,1,2,3,4,6,7,8,9,11][i%10];
+function migrateBoard(o){if(!o||o.ob===48)return o;const pr={};for(const k in o.props||{})pr[k[0]==='o'?'o'+O40TO48(+k.slice(1)):k]=o.props[k];o.props=pr;for(const q of o.players||[])if(q&&q.ring==='o'&&q.pos!=null)q.pos=O40TO48(q.pos);o.ob=48;return o}
 const SQ=k=>SQ_MAP[k];
-const roadPair=(ring,i)=>ring==='o'?['i',(i-5)/10*8+4]:['o',(i-4)/8*10+5];
+const roadPair=(ring,i)=>ring==='o'?['i',(i-6)/12*8+4]:['o',(i-4)/8*12+6];
 const ASSETS=[
  {s:'TTEC',n:'ไทยเทค',k:'stock',p:20,v:.12,div:0},
  {s:'PWR',n:'พลังงานไทย',k:'stock',p:15,v:.06,div:1},
@@ -1688,7 +1695,7 @@ function fxFloat(t,cls='up',delay=0){if(RM)return;setTimeout(()=>{const e=docume
 function fxBanner(p){if(RM)return;const e=document.createElement('div');e.className='fxb';e.innerHTML=`<div>${jobIdx(p)>=0?`<img src="img/c${jobIdx(p)}-wave.webp" style="height:64px;margin:-18px 0 -8px" alt="">`:''}<i class="logo" style="font-size:22px"></i>ตาของ ${esc(p.name)}</div>`;$('#fx').appendChild(e);setTimeout(()=>e.remove(),1800)}
 function fxCoins(n=10){if(RM)return;for(let i=0;i<n;i++){const e=document.createElement('div');e.className='coin';e.textContent=i%3?'🪙':'💵';e.style.left=(innerWidth/2-11)+'px';e.style.top=(innerHeight*.45)+'px';const a=Math.random()*Math.PI*2,r=80+Math.random()*120;e.style.setProperty('--dx',Math.cos(a)*r+'px');e.style.setProperty('--dy',(Math.sin(a)*r-60)+'px');e.style.setProperty('--r',(Math.random()*360-180)+'deg');e.style.animationDelay=(i*40)+'ms';$('#fx').appendChild(e);setTimeout(()=>e.remove(),1500+i*40)}}
 const FXT={trail:{},hop:null};
-const SQICO={study:'IMG:back-learn',pay:'IMG:sq-pay',rest:'IMG:sq-rest',charity:'IMG:sq-charity',jobless:'IMG:sq-jobless',mkt:'IMG:sq-market',news:'IMG:sq-news',exch:'IMG:as-stock',bizc:'IMG:as-biz',splurge:'IMG:sq-luxury',crisis:'IMG:sq-crisis',net:'IMG:sq-net'};
+const SQICO={study:'IMG:back-learn',pay:'IMG:sq-pay',rest:'IMG:sq-rest',charity:'IMG:sq-charity',jobless:'IMG:sq-jobless',mkt:'IMG:sq-market',news:'IMG:sq-news',exch:'IMG:as-stock',bizc:'IMG:as-biz',splurge:'IMG:sq-luxury',ent:'🎉',crisis:'IMG:sq-crisis',net:'IMG:sq-net'};
 const ZICO={o0:'🌾',o1:'🏭',o2:'🏖️',o3:'🏘️',i0:'🏙️',i1:'🛍️',i2:'🏢',i3:'🏦'};
 
 /* ===================== SETUP ===================== */
@@ -1712,7 +1719,7 @@ function showSetup(){
     <h3 style="margin-top:18px;font-size:15px">กติกาย่อ <button class="sm" onclick="openWiki()">📖 เปิด Wiki ฉบับเต็ม</button></h3>${RULES}</div>`;
   v.querySelectorAll('.seg button').forEach(b=>b.onclick=()=>{const i=+b.dataset.s;seats.forEach((s,j)=>s.n=$('#seat'+j).value);seats[i].bot=b.dataset.b==='1';showSetup()});
   $('#go').onclick=()=>{seats.forEach((s,j)=>s.n=$('#seat'+j).value.trim()||('ผู้เล่น '+(j+1)));newGame(+$('#speed').value)};
-  if($('#resume'))$('#resume').onclick=()=>{S=saved;startView();resume()};
+  if($('#resume'))$('#resume').onclick=()=>{S=migrateBoard(saved);startView();resume()};
 }
 const RULES=`<ol class="rules">
 <li><b>ลูก</b> (สูงสุด 4 คน): คนที่ 1–2 บังคับรับ คนที่ 3–4 เลือกได้ · ค่าเลี้ยงดูรายเดือนตามอาชีพ · ⏳ −1 ทุกวันเงินเดือนต่อลูก 1 คน · แรงบันดาลใจ: การ์ดธุรกิจ/งานที่ใช้ ❤ ลดลง 1 ต่อลูก และรายได้ธุรกิจ (ธุรกิจในกองโอกาส + ธุรกิจ A) +5% ต่อลูก · การ์ดค่าเทอม ทัศนศึกษา อุปกรณ์การเรียน ฯลฯ ไม่บังคับ คิดตามจำนวนลูก</li>
@@ -1735,7 +1742,7 @@ const RULES=`<ol class="rules">
 
 function newGame(speed){
   const S0jobs=JSON.parse(JSON.stringify(JOBS));const jobs=shuffle(JOBS.map((_,i)=>i));
-  S={jobs:S0jobs,listings:[],round:1,cur:0,phase:'roll',speed,props:{},prices:{},hist:{},decks:{},log:[],dice:[1],winner:null,freeComm:false,view:Math.max(0,seats.findIndex(x=>!x.bot)),
+  S={ob:48,jobs:S0jobs,listings:[],round:1,cur:0,phase:'roll',speed,props:{},prices:{},hist:{},decks:{},log:[],dice:[1],winner:null,freeComm:false,view:Math.max(0,seats.findIndex(x=>!x.bot)),
     players:seats.map((s,i)=>{const j=S0jobs[jobs[i]];return {id:i,uid:s.uid||null,name:s.n,bot:s.bot,color:COLORS[i],job:jobs[i],salary:j.sal,cash:j.cash,
       exp:{...j.e,extra:0},active:0,debt:{home:j.e.home*100,car:j.e.car*25,card:j.e.card*20},kids:0,kidCost:j.kc||rnd100(j.sal*.06),loan:0,dep:0,warn:0,deals:[],stocks:{},skills:[],
       net:netNew(),ring:'o',pos:0,jobless:0,charity:0,st:{h:j.h,t:j.t,k:j.k}}})};
@@ -2022,6 +2029,10 @@ async function resolveSquare(p){
   else if(sq.t==='exch'){S.freeComm=true;toast('ตลาดหลักทรัพย์: เทิร์นนี้เทรดไม่เสียค่าคอม');await newsCard(p)}
   else if(sq.t==='splurge'){const neg=LIFE.filter(c=>c.neg&&!+c.acc&&!c.sp);if(!neg.length)return;await lifeCard(p,neg[Math.floor(Math.random()*neg.length)],'ช่องฟุ่มเฟือย')}
   else if(sq.t==='study'){await studySquare(p)}else if(sq.t==='mkt'){await marketSquare(p)}
+  else if(sq.t==='ent'){/* สถานบันเทิง: บังคับจ่ายสุ่ม ฿1,000–20,000 (ขั้นละ 500) ได้ ❤⏳📚 ตามช่วงเงิน */
+    const cost=1000+Math.floor(Math.random()*39)*500,tier=1+Math.min(4,Math.floor((cost-1000)/3800)),g=()=>Math.max(1,tier-Math.floor(Math.random()*2));
+    pay(p,cost);const sx=adj(p,{h:g(),t:g(),k:g()});log(`🎉 ${esc(p.name)} เที่ยว${esc(sq.n)} จ่าย ${B(cost)}${sx}`);toast(`🎉 ${p.name} เที่ยว${sq.n} จ่าย ${B(cost)}${sx}`);
+    ruleNote(p,`สถานบันเทิง · ${sq.n}`,`หยุดช่องนี้ต้องจ่ายค่าเที่ยวแบบสุ่ม ฿1,000–20,000 (ครั้งนี้ ${B(cost)}) แล้วได้ ❤ ⏳ 📚 อย่างละ +1 ถึง +5 ยิ่งจ่ายมากยิ่งได้มาก${sx}`)}
   else if(sq.t==='rest'){const sx=adj(p,{h:1,t:1+Math.floor(Math.random()*2)});log(`🌿 ${esc(p.name)} พักผ่อน${sx}`);toast(`🌿 ${p.name} พักผ่อน${sx}`)}
   else if(sq.t==='bizc'){const biz=OPP.filter(c=>c.ty==='biz');if(biz.length)await oppCard(p,biz[Math.floor(Math.random()*biz.length)],'ศูนย์ธุรกิจเมืองหลวง')}
   else if(sq.t==='charity'){
@@ -2445,12 +2456,12 @@ function setBoard(bd,html){_tpl.innerHTML=html;const nw=_tpl.content.children,wk
   const reps=[];for(let i=0;i<nw.length;i++){if(old[i].outerHTML!==nw[i].outerHTML)reps.push([old[i],nw[i]])}
   for(const [o,n] of reps)o.replaceWith(n.cloneNode(true))}
 function cellPos0(k){const ring=k[0],i=+k.slice(1);
-  if(ring==='o'){if(i<=10)return[1,i+1];if(i<=20)return[i-9,11];if(i<=30)return[11,31-i];return[41-i,1]}
-  if(i<=8)return[2,i+2];if(i<=16)return[i-6,10];if(i<=24)return[10,26-i];return[34-i,2]}
-const GX=x=>x===1?1:x===11?13:x+1;
+  if(ring==='o'){if(i<=12)return[1,i+1];if(i<=24)return[i-11,13];if(i<=36)return[13,37-i];return[49-i,1]}
+  if(i<=8)return[3,i+3];if(i<=16)return[i-5,11];if(i<=24)return[11,27-i];return[35-i,3]}
+const GX=x=>x;/* ตาราง 13×13: วงนอก 48 ช่องเต็มขอบ · แถว/คอลัมน์ 2,12 = แถบกลาง · วงใน 3–11 */
 function cellPos(k){const [r,c]=cellPos0(k);return [GX(r),GX(c)]}
 function roadDir(k){const [r]=cellPos0(k),i=+k.slice(1),L=RING_LEN[k[0]];const side=Math.floor(i/(L/4));return side%2===0?'v':'h'}
-const CITY_PLATE='<div class="landring" aria-hidden="true"><i class="lr-road"></i><i class="lr-line"></i><i class="lr-river"></i><i class="lr-rail"></i></div>'+[[1,2,0],[1,12,0],[13,2,0],[13,12,0],[2,1,1],[12,1,1],[2,13,1],[12,13,1]].map(([r,c,m])=>`<div class="gapt" style="grid-row:${r};grid-column:${c};z-index:${10+r+c}" aria-hidden="true"><img class="zimg pimgc" style="--b:44%;--s:1.658;--m:${m?-1:1};--d:${r+c}" src="img/tile-grass.webp" alt=""></div>`).join('')+'<div class="cityplate" aria-hidden="true"><span>เมืองหลวง</span></div>'+[[2,7],[7,12],[12,7],[7,2]].map(([r,c],i)=>`<div class="bridge ${i%2?'h':'v'}" style="grid-row:${r};grid-column:${c}" aria-hidden="true"></div>`).join('');
+const CITY_PLATE='<div class="landring" aria-hidden="true"><i class="lr-road"></i><i class="lr-line"></i><i class="lr-river"></i><i class="lr-rail"></i></div>'+'<div class="cityplate" aria-hidden="true"><span>เมืองหลวง</span></div>'+[[2,7],[7,12],[12,7],[7,2]].map(([r,c],i)=>`<div class="bridge ${i%2?'h':'v'}" style="grid-row:${r};grid-column:${c}" aria-hidden="true"></div>`).join('');
 function zoneOfCell(k){const ring=k[0],i=+k.slice(1),L=RING_LEN[ring];return ring+Math.min(3,Math.floor(i/(L/4)))}
 const SQ_DESC={
  pay:k=>{const p=cp(),f=fin(p);return `<p><b>เดินผ่านหรือหยุด</b>ที่ช่องนี้ ได้รับเงินคงเหลือต่อเดือนทันที</p>
@@ -2467,6 +2478,7 @@ const SQ_DESC={
  exch:()=>`<p>จั่วข่าวตลาด 1 ใบ และ<b>ซื้อขายหุ้นไม่เสียค่าคอม</b>ตลอดเทิร์นนี้</p>`,
  splurge:()=>`<p>จั่วการ์ดดำเนินชีวิตแบบ<b>ใช้จ่าย/เสียหาย</b> 1 ใบ เช่น ซื้อมือถือ เที่ยว รถเสีย</p>`,
  bizc:()=>`<p><b>ศูนย์ธุรกิจเมืองหลวง</b>: ได้ข้อเสนอดีลธุรกิจ 1 ดีล ลดเงินลงทุน 20%</p>`,
+ ent:()=>`<p><b>สถานบันเทิงประจำเขต</b>: บังคับจ่ายค่าเที่ยวแบบสุ่ม <b>฿1,000–20,000</b> แล้วได้ ❤ ⏳ 📚 อย่างละ <b>+1 ถึง +5</b> ยิ่งจ่ายมากยิ่งได้มาก</p><p class="muted">฿1,000–4,500 ≈ +1 · … · ฿16,500–20,000 ≈ +4–5 · วงนอก 4 ช่อง (เขตละ 1)</p>`,
  rest:()=>`<p>พักผ่อนเติมพลัง ❤ หัวใจ +1 · ⏳ เวลา +1 ถึง +2 (สุ่ม)</p><p class="muted">วงนอก 4 ช่อง · วงใน 2 ช่อง</p>`,
 };
 function cellBody(k){const q=SQ(k),pr=S.props[k];
@@ -2479,11 +2491,11 @@ function cellBody(k){const q=SQ(k),pr=S.props[k];
 function cellInfo(k){if(MODAL)return;ask({title:esc(SQ(k).n),body:cellBody(k)})}
 let MAPMIN=false;try{MAPMIN=localStorage.getItem('ff-mapmin')==='1'}catch(e){}
 /* ภาพประจำช่องที่ดิน (img/prop-<รหัสช่อง>.webp) — ใส่รหัสช่องที่มีภาพแล้ว */
-const PROPIMG={o1:46.6,o3:50.3,o4:45.8,o6:39.7,o8:46.6,o11:44.4,o13:47.4,o14:47.2,o16:47.2,o18:64.5,o21:49.2,o23:50.6,o24:45.8,o26:46.5,o28:48.6,o31:48.2,o33:47.0,o34:49.4,o36:53.6,o38:47.4};/* ค่า = จุดกึ่งกลางพื้นข้าวหลามตัดของภาพ (% จากบน) ใช้วางภาพ isometric ให้ตรงกลางช่อง */
-const PROPR={o11:.603,o13:.603,o14:.603,o16:.603,o18:.603,o21:.603,o23:.603,o24:.603,o26:.603,o28:.603,o31:.603,o33:.603,o34:.603,o36:.603,o38:.603},TILE_ROAD={c:44,r:.603};/* r = สัดส่วนสูง/กว้างของพื้นข้าวหลามตัดในภาพ (ภาพเกษตรชุดแรก .766) — ภาพทุกภาพถูกยืดให้ตรงกับมุมกล้องเดียวกัน */
+const PROPIMG={o1:46.6,o3:50.3,o4:45.8,o7:39.7,o9:46.6,o13:44.4,o15:47.4,o16:47.2,o19:47.2,o21:64.5,o25:49.2,o27:50.6,o28:45.8,o31:46.5,o33:48.6,o37:48.2,o39:47.0,o40:49.4,o43:53.6,o45:47.4};/* ค่า = จุดกึ่งกลางพื้นข้าวหลามตัดของภาพ (% จากบน) ใช้วางภาพ isometric ให้ตรงกลางช่อง */
+const PROPR={o13:.603,o15:.603,o16:.603,o19:.603,o21:.603,o25:.603,o27:.603,o28:.603,o31:.603,o33:.603,o37:.603,o39:.603,o40:.603,o43:.603,o45:.603},TILE_ROAD={c:44,r:.603};/* r = สัดส่วนสูง/กว้างของพื้นข้าวหลามตัดในภาพ (ภาพเกษตรชุดแรก .766) — ภาพทุกภาพถูกยืดให้ตรงกับมุมกล้องเดียวกัน */
 function tileSty(k,c,r){let d=0;try{const q=cellPos(k);d=q[0]+q[1]}catch(e){}const sd=Math.floor(+k.slice(1)/(RING_LEN[k[0]]/4))%4;return `--b:${c}%;--s:${(1/r).toFixed(4)};--m:${sd%2?-1:1};--d:${d}`}
 const TILE_BASE_ON=true;/* พื้นหญ้าเปล่า (P001) ใต้ช่องวงนอกที่ยังไม่มีภาพของตัวเอง */
-const SQIMG={o0:['sq-start',70.2],o10:['sq-pay-o10',62.0],o20:['sq-pay-o20',67.2],o30:['sq-pay-o30',65.7],o2:['sq-rest-o2',48.1],o12:['sq-rest-o12',52.2],o22:['sq-rest-o22',52.5],o32:['sq-rest-o32',51.1]};/* ภาพเฉพาะช่องพิเศษวงนอก [ไฟล์, c%] (P022–P029) — ช่องที่ไม่มีใช้หญ้า P001 */
+const SQIMG={o0:['sq-start',70.2],o12:['sq-pay-o12',62.0],o24:['sq-pay-o24',67.2],o36:['sq-pay-o36',65.7],o2:['sq-rest-o2',48.1],o14:['sq-rest-o14',52.2],o26:['sq-rest-o26',52.5],o38:['sq-rest-o38',51.1]};/* ภาพเฉพาะช่องพิเศษวงนอก [ไฟล์, c%] (P022–P029) — ช่องที่ไม่มีใช้หญ้า P001 */
 function tileBase(k){if(!TILE_BASE_ON||k[0]!=='o'||k in PROPIMG)return '';const q=SQIMG[k];return `<img class="zimg pimgc tbase${q?' sqimg':''}" style="${tileSty(k,q?q[1]:TILE_ROAD.c,TILE_ROAD.r)}" src="img/${q?q[0]:'tile-grass'}.webp" alt="">`}
 function toggleMap(){MAPMIN=!MAPMIN;try{localStorage.setItem('ff-mapmin',MAPMIN?'1':'0')}catch(e){}render()}
 function render(){
@@ -3306,7 +3318,7 @@ async function onState(st,force){
   const first=!S||$('#gameView').hidden,prevCur=S&&S.cur,view=S&&!first?S.view:null,pick=S&&S.viewPick;
   const lg=o.log||[];o.log=first?lg:lg.concat((S.log||[]).filter(x=>!lg.includes(x))).slice(0,200);
   const oldRound=S&&S.round;if(parNew&&MODAL&&typeof MODAL_CANCEL==='function')try{MODAL_CANCEL()}catch(x){}
-  S=o;ON.ver=Math.max(ON.ver,st.v||0);ON.lastDrv=iDrive();
+  S=migrateBoard(o);ON.ver=Math.max(ON.ver,st.v||0);ON.lastDrv=iDrive();
   if(S.par&&S.rp==='h'){ON.ownRound=null;ON.pz={};parLocalTurn();if(fresh||oldRound!==S.round)setTimeout(parBanner,300);
     const c=ON.code;ON.be.get(`rooms/${c}/p`).then(m=>{ON.pQ=(ON.pQ||Promise.resolve()).then(()=>parOnP(m))});ON.be.get(`rooms/${c}/pr`).then(parOnPr);ON.be.get(`rooms/${c}/afk`).then(parOnAfk)}
   const mi=S.players.findIndex(q=>q.uid===ON.user.uid);
