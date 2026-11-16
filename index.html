@@ -1900,6 +1900,7 @@ function timeUp(){
   if(['roll','card','free'].includes(S.phase))endTurn();
 }
 setInterval(()=>{
+  afkAutoClose();
   if(S&&S.ann&&S.ann.length&&!MODAL&&S.winner==null)flushAnn();
   if(ON.lbAnn&&!MODAL){const a=ON.lbAnn;ON.lbAnn=null;ask({npc:'happy',title:a.t,body:a.b})} /* คะแนนสะสมหลังจบเกม */
   if(!S||S.winner!=null||$('#gameView').hidden)return;const el=$('#timer');const p=cp();
@@ -3233,7 +3234,7 @@ function onTag(){let t=$('#roomTag');if(!ON.code){if(t)t.remove();return}
   if(!t){t=document.createElement('span');t.id='roomTag';t.className='roomtag';t.setAttribute('role','button');t.title='ดูข้อมูลห้อง';t.onclick=onRoomInfo;const h=document.querySelector('header .logo')?.parentElement||document.querySelector('header');h.appendChild(t)}
   t.textContent='ห้อง '+ON.code+' ⓘ'}
 /* เวอร์ชันของไฟล์เกม (เปลี่ยนทุกครั้งที่แก้ระบบออนไลน์) · ส่งไปกับสถานะออนไลน์ เพื่อดูว่าใครยังเปิดเวอร์ชันเก่า */
-const BUILD='2026-11-16.20';
+const BUILD='2026-11-16.21';
 /* ป้ายเลขห้อง → ข้อมูลห้อง: เจ้าของห้อง · เครื่องที่คุมรอบ · สถานะผู้เล่นแต่ละคน */
 function onRoomInfo(){const r=ON.room;if(!r||!ON.code)return;
   const seatName=u=>{const q=S&&S.players&&S.players.find(x=>x.uid===u);if(q)return q.name;const s=Object.values(r.seats||{}).find(x=>x&&x.uid===u);return s?(s.name||'ผู้เล่น'):'—'};
@@ -3541,7 +3542,13 @@ function parOnAfk(map){if(!ON.play||!S||!S.players)return;map=map||{};ON.afkMap=
   for(const q of S.players){if(q.uid&&map[q.uid]===false&&q.afk){q.afk=false;ch=true}
     else if(q.uid&&map[q.uid]===true&&!q.afk&&!q.bot){q.afk=true;if(PARH()&&q.uid!==ON.user.uid)q.done=true;ch=true}}
   if(ch){render();if(PAR()?parMaster()&&S.rp==='b':iDrive())save()}parOverlay()}
-async function parUnafk(){const me=parMe();if(!me)return;me.afk=false;await ON.be.set(`rooms/${ON.code}/afk/${ON.user.uid}`,false);
+/* ติดสถานะ Bot: ไม่เก็บป๊อปอัปไว้ให้ไล่ปิด — ปิดป๊อปอัป/ข่าว/ป้ายแจ้งเตือนให้อัตโนมัติ (ดูย้อนหลังได้ที่บันทึกเกม) */
+function afkAutoClose(){if(!ON.play||ON.spec||!S||!S.players||S.winner!=null)return;const me=S.players.find(q=>q.uid===ON.user.uid);if(!me||!me.afk)return;
+  let n=0;if(S.ann&&S.ann.length){n+=S.ann.length;S.ann.length=0}
+  document.querySelectorAll('.rnote').forEach(e=>{e.remove();n++});
+  if(MODAL&&typeof MODAL_CANCEL==='function'){try{MODAL_CANCEL();n++}catch(e){}}
+  if(n)ON.afkSkip=(ON.afkSkip||0)+n}
+async function parUnafk(){const me=parMe();if(!me)return;me.afk=false;if(ON.afkSkip){toast(`ระหว่างติดสถานะ Bot ระบบปิดป๊อปอัปให้ ${ON.afkSkip} อัน · ดูย้อนหลังได้ที่แท็บบันทึกเกม`);ON.afkSkip=0}await ON.be.set(`rooms/${ON.code}/afk/${ON.user.uid}`,false);
   if(PARH()&&me.done&&NOW()<S.rt0+TURN_MS-15000){me.done=false;me.acted=false;me.tEnd=S.rt0+TURN_MS;parLocalTurn();toast('กลับมาเล่นแล้ว · ทันรอบนี้')}
   else toast('ปลดสถานะ Bot แล้ว · กลับมาเล่นได้ตั้งแต่รอบถัดไป');
   render();if(PARH())parPushMe(true);parOverlay()}
