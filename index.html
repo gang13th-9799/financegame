@@ -1249,7 +1249,7 @@ const ZPROPS={
 };
 const SQN={study:'ศูนย์เรียนรู้',mkt:'ตลาดกลาง',rest:'พักผ่อน',charity:'บริจาคการกุศล',jobless:'ตกงาน',pay:'เงินเดือน',news:'ข่าวตลาด',net:'เครือข่าย',exch:'ตลาดหลักทรัพย์',splurge:'ฟุ่มเฟือย',crisis:'วิกฤตชีวิต',road:'ถนน',bizc:'ศูนย์ธุรกิจ',ent:'สถานบันเทิง'};
 const ENTN={o0:'ร้านคาราโอเกะ',o1:'สนามไดรฟ์กอล์ฟ',o2:'บีชคลับ',o3:'โรงภาพยนตร์'};/* ช่องสถานบันเทิงประจำเขต (พักผ่อนแบบเสียเงิน) */
-const SQ_SUB={study:'📚+2–4 · สกิลการ์ดฟรี 1',mkt:'ป้ายขาย · ธนาคารรับซื้อ',rest:'❤+1 ⏳+1–2',charity:'10% ได้ทอย 2 ลูก',jobless:'❤−2 · 2 เดือนได้แค่ Passive (รอบ 1–5: ใบเตือน 🟨)',pay:'รับกระแสเงินสด',news:'ราคาตลาดขยับ',net:'ธุรกิจเครือข่าย',exch:'เทรดฟรี',splurge:'จั่วรายจ่าย',crisis:'ทอยเสี่ยง',road:'เข้า/ออกเมือง',bizc:'ดีลธุรกิจ −20%',ent:'จ่าย ฿1k–20k · ❤⏳📚 +1–5'};
+const SQ_SUB={study:'📚+2–4 · สกิลการ์ดฟรี 1',mkt:'ป้ายขาย · ธนาคารรับซื้อ',rest:'❤+1 ⏳+1–2',charity:'10% ได้ทอย 2 ลูก',jobless:'❤−2 · 2 เดือนได้แค่ Passive (รอบ 1–5: ใบเตือน 🟨)',pay:'รับกระแสเงินสด',news:'ราคาตลาดขยับ',net:'ธุรกิจเครือข่าย',exch:'เทรดฟรี',splurge:'จั่วรายจ่าย',crisis:'ทอยเสี่ยง',road:'เข้า/ออกเมือง · ค่าผ่าน ฿200–1k',bizc:'ดีลธุรกิจ −20%',ent:'จ่าย ฿1k–20k · ❤⏳📚 +1–5'};
 const LIVING={o:.85,i:1.3};
 const ZLIVE={o0:.7,o1:.8,o2:1,o3:.85,i0:1.7,i1:1.5,i2:1.4,i3:1.3};
 function lifeMul(p){return ZLIVE[zoneOfCell(p.ring+p.pos)]||1}
@@ -1790,10 +1790,10 @@ async function rollTurn(n){
     render();camFollow(p);walkTo(p);await sleep(p.bot?(V3.on&&!MAPMIN?240:130):(V3.on&&!MAPMIN&&!RM?STEP_MS:260));if(q.t==='pay')await payday(p);
     if(q.t==='road'&&left>0){
       const [nr,ni]=roadPair(p.ring,p.pos);
-      const into=nr==='i';
-      const v=await choose({actor:p,title:`ถนน ${ZONES[q.z].n}`,body:`<p>${into?'เลี้ยวเข้า<b>เมืองหลวง</b>: สร้างธุรกิจง่าย แต่ค่าครองชีพ ×1.3 ที่ดินและอสังหาฯ แพง':'ออกไป<b>ต่างจังหวัด</b>: ค่าครองชีพ ×0.85 ที่ดินและอสังหาฯ ราคาถูก'}</p><p class="muted">เดินข้ามถนนไปอีกชั้นนับเป็น 1 ก้าว · เหลืออีก ${left} ก้าว</p>`,
+      const into=nr==='i',toll=(2+Math.floor(Math.random()*9))*100;/* ค่าผ่านทางข้ามวง สุ่ม ฿200–1,000 (กันทริกลัดวงเก็บเงินเดือน) */
+      const v=await choose({actor:p,title:`ถนน ${ZONES[q.z].n}`,body:`<p>${into?'เลี้ยวเข้า<b>เมืองหลวง</b>: สร้างธุรกิจง่าย แต่ค่าครองชีพ ×1.3 ที่ดินและอสังหาฯ แพง':'ออกไป<b>ต่างจังหวัด</b>: ค่าครองชีพ ×0.85 ที่ดินและอสังหาฯ ราคาถูก'}</p><p>ค่าผ่านทางข้ามชั้น <b>${B(toll)}</b> (สุ่ม ฿200–1,000)</p><p class="muted">เดินข้ามถนนไปอีกชั้นนับเป็น 1 ก้าว · เหลืออีก ${left} ก้าว</p>`,
         opts:[{v:'go',l:into?'เข้าเมืองหลวง':'ออกต่างจังหวัด',c:'pri'},{v:'stay',l:'เดินต่อชั้นเดิม'}],bot:botRoad(p,into)});
-      if(v==='go'){p.ring=nr;p.pos=ni;left--;FXT.trail[p.ring+p.pos]=NOW();FXT.hop={id:p.id,t:NOW()};log(`🛣 ${esc(p.name)} ${into?'เข้าเมืองหลวง':'ออกต่างจังหวัด'}`);render();camFollow(p);await sleep(150)}
+      if(v==='go'){pay(p,toll);ruleNote(p,'ค่าผ่านทางข้ามชั้น',`ข้ามถนนไป${into?'เมืองหลวง':'ต่างจังหวัด'}ต้องจ่ายค่าผ่านทาง ${B(toll)} (สุ่ม ฿200–1,000 ทุกครั้งที่ข้าม)`);p.ring=nr;p.pos=ni;left--;FXT.trail[p.ring+p.pos]=NOW();FXT.hop={id:p.id,t:NOW()};log(`🛣 ${esc(p.name)} ${into?'เข้าเมืองหลวง':'ออกต่างจังหวัด'} จ่ายค่าผ่านทาง ${B(toll)}`);render();camFollow(p);await sleep(150)}
     }
   }
   if(CAM.active){await sleep(p.bot?250:550);camOff()}
