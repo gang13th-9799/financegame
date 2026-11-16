@@ -325,7 +325,7 @@ div.chip{display:flex;flex-direction:column;align-items:center;justify-content:c
 .modal.k-news{border-top:6px solid #5d6b76;--cbc:#5d6b76;--cbimg:url(img/back-news.webp)}
 /* ข่าว 2 ช่วง: เปิดข่าวระหว่างรอบ (เหลือง · ยังไม่มีผล) / จบรอบข่าวมีผล (เขียว · ราคาเปลี่ยนแล้ว) */
 .modal.k-newsin{border-top:6px solid #e0a42e;--cbc:#e8b13a;--cbimg:url(img/back-news.webp)}.modal.k-newsin .mh .kind{color:#a8700f;font-weight:700}
-.modal.k-newsfx{border-top:6px solid #3f9a55;--cbc:#4fae66}.modal.k-newsfx .mh .kind{color:#2f7a42;font-weight:700}.modal.k-win{border-top:6px solid var(--gold)}
+.modal.k-newsfx{border-top:6px solid #3f9a55;--cbc:#4fae66}.modal.k-newsnpc{border-top:6px solid #4a78c2;--cbc:#5b86c5}.modal.k-newsnpc .mh .kind{color:#2f5a9e;font-weight:700}.modal.k-newsfx .mh .kind{color:#2f7a42;font-weight:700}.modal.k-win{border-top:6px solid var(--gold)}
 .kv{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:13px}
 .kv b{font-weight:600}
 .fld{display:flex;flex-direction:column;gap:4px;margin:8px 0}
@@ -1671,7 +1671,7 @@ function ask({actor=null,kind='',title,body='',opts=[{v:'ok',l:'ตกลง',c:
     if(S&&S.autoPilot&&!(actor&&actor.bot)){res({v:lastOk(),form:{}});return}
     if(actor&&actor.bot){const b=opts.find(o=>o.v===bot&&!o.dis)||opts[opts.length-1];setTimeout(()=>{if(opts.length>1){const st=x=>String(x).replace(/<[^>]*>/g,'');log(`🤖 ${esc(actor.name)}: ${esc(st(title))} → ${esc(st(b.l))}`)}render();res({v:b.v,form:{}})},S.speed*.35);return}
     MODAL=true;const m=$('#modal');m.className='modal'+(kind?' k-'+kind:'')+(['life','learn','opp','netc','news','newsin'].includes(kind)&&!RM&&!noflip?' cardflip':'');
-    const kindName={mkt:'ตลาดกลาง',netc:'การ์ดธุรกิจเครือข่าย',life:'การ์ดดำเนินชีวิต',learn:'การ์ดเรียนรู้',opp:'การ์ดโอกาสชีวิต',news:'ข่าวตลาด',newsin:'📢 ข่าวเข้า · ยังไม่มีผล รอจบรอบ',newsfx:'✅ ข่าวมีผลแล้ว · ราคาเปลี่ยนแล้ว',win:'จบเกม'}[kind]||'';
+    const kindName={mkt:'ตลาดกลาง',netc:'การ์ดธุรกิจเครือข่าย',life:'การ์ดดำเนินชีวิต',learn:'การ์ดเรียนรู้',opp:'การ์ดโอกาสชีวิต',news:'ข่าวตลาด',newsin:'📢 ข่าวเข้า · ยังไม่มีผล รอจบรอบ',newsfx:'✅ ข่าวที่เปิดรอบที่แล้ว · มีผลตอนจบรอบ ราคาเปลี่ยนแล้ว',newsnpc:'⚡ NPC เปิดข่าวต้นรอบ · มีผลทันที',win:'จบเกม'}[kind]||'';
     const isBot=actor&&actor.bot;
     const plr=(actor&&!actor.bot&&jobIdx(actor)>=0)?actor:(!actor&&S&&S.players&&S.winner==null&&!$('#gameView').hidden&&!cp().bot&&jobIdx(cp())>=0&&kind!=='win'?cp():null);
     const nk=npc===false||(actor&&actor.bot)?null:(npc||(kind==='mkt'?'thumb':/^news/.test(kind||'')?'shock':'work'));
@@ -2280,7 +2280,7 @@ function npcDraw(){if(!S)return;
   for(let i=0;i<2;i++){const d=parDeck('opp'),c0=OPP[d.pop()];if(!c0)continue;let c={...c0};const id='n'+S.round+'_'+i+'_'+Math.random().toString(36).slice(2,6);
     if(NPC_MK.includes(c.ty)){if(['re','biz'].includes(c.ty)){const zs=Object.keys(ZROI);c=oppPrep(c,zs[Math.floor(Math.random()*zs.length)])}S.mk.push({id,c,r0:S.round,exp:S.round+1});out.push('🏪 '+esc(c.t))}
     else{S.nw.push({id,c,r0:S.round,exp:S.round+1});if(c.ty==='mnews'||c.e)news.push({c,by:'NPC'});out.push('📰 '+esc(c.t))}}
-  if(news.length)parApplyNews(news);
+  if(news.length)parApplyNews(news,true);
   log(`🧑‍💼 NPC เปิดการ์ดโอกาส 2 ใบ: ${out.join(' · ')}`);
   const cur=S.players&&S.players.find(q=>!q.bot);if(cur)ruleNote(cur,'NPC เปิดการ์ดโอกาสต้นรอบ',`${out.join(' · ')} — ดูได้ที่แท็บตลาด / ข่าวสาร (อยู่ 2 รอบ)`)}
 function npcLeft(x){return x.exp-S.round+1}
@@ -3224,7 +3224,7 @@ function onTag(){let t=$('#roomTag');if(!ON.code){if(t)t.remove();return}
   if(!t){t=document.createElement('span');t.id='roomTag';t.className='roomtag';t.setAttribute('role','button');t.title='ดูข้อมูลห้อง';t.onclick=onRoomInfo;const h=document.querySelector('header .logo')?.parentElement||document.querySelector('header');h.appendChild(t)}
   t.textContent='ห้อง '+ON.code+' ⓘ'}
 /* เวอร์ชันของไฟล์เกม (เปลี่ยนทุกครั้งที่แก้ระบบออนไลน์) · ส่งไปกับสถานะออนไลน์ เพื่อดูว่าใครยังเปิดเวอร์ชันเก่า */
-const BUILD='2026-11-16.15';
+const BUILD='2026-11-16.16';
 /* ป้ายเลขห้อง → ข้อมูลห้อง: เจ้าของห้อง · เครื่องที่คุมรอบ · สถานะผู้เล่นแต่ละคน */
 function onRoomInfo(){const r=ON.room;if(!r||!ON.code)return;
   const seatName=u=>{const q=S&&S.players&&S.players.find(x=>x.uid===u);if(q)return q.name;const s=Object.values(r.seats||{}).find(x=>x&&x.uid===u);return s?(s.name||'ผู้เล่น'):'—'};
@@ -3480,7 +3480,7 @@ async function parQueueNews(p,kind,c){
   if(PARH()){const id=NOW().toString(36)+Math.random().toString(36).slice(2,5);ON.be.set(`rooms/${ON.code}/nq/${id}`,e)}else{S.nq=S.nq||[];S.nq.push(e)}
   log(`📰 ${esc(p.name)} เปิดข่าว: ${esc(c.t)} · มีผลตอนจบรอบ`);render();
   await choose({actor:p,kind:'newsin',title:c.t,body:`${newsImg(c.tone?c.tone!=='g':Object.values(c.e||{}).reduce((a,b)=>a+b,0)<0,c.cat)}<p>ข่าวนี้จะมีผลกับราคาตลาด${c.cash?' และเงินของผู้เล่นทุกคน':''} <b>ตอนจบรอบ</b> (ระหว่างรอบราคาคงที่ ทุกคนซื้อขายราคาเดียวกัน)</p>`,opts:[{v:'ok',l:'รับทราบ',c:'pri'}],bot:'ok'})}
-function parApplyNews(list){const blocks=[],me=ON.play?S.players.find(q=>q.uid===ON.user.uid):null;let myDv=0,myCash=0;
+function parApplyNews(list,npc){ /* npc=true: ข่าวที่ NPC เปิดต้นรอบ (มีผลทันที) · ไม่ใส่: ข่าวที่ผู้เล่น/บอทเปิดระหว่างรอบ มีผลตอนจบรอบ */const blocks=[],me=ON.play?S.players.find(q=>q.uid===ON.user.uid):null;let myDv=0,myCash=0;
   for(const e of list){const c=e.c;if(!c||!c.e)continue;const ch=shockPrices(c.e);
     if(c.cash)for(const q of S.players){if(c.cash>0)q.cash+=c.cash;else pay(q,-c.cash)}
     const t=`${esc(c.t)} · ${ch.map(x=>`${x.a.s} ${x.pct>0?'+':''}${x.pct}%`).join(' ')}${c.cash?` · ทุกคน${c.cash>0?'ได้':'จ่าย'} ${B(Math.abs(c.cash))}`:''}`;log(`📰 ข่าวมีผลแล้ว (${esc(e.by)}): ${t}`);
@@ -3491,7 +3491,7 @@ function parApplyNews(list){const blocks=[],me=ON.play?S.players.find(q=>q.uid==
       ${c.cash?`<div class="ln"><span>เงินสดทุกคน</span><span class="num ${c.cash>0?'pos':'neg'}">${c.cash>0?'+':'−'}${B(Math.abs(c.cash))}</span></div>`:''}</div>
       <div class="muted nwby">เปิดโดย ${esc(e.by)}</div></div>`)}
   if(blocks.length){myDv=Math.round(myDv);const my=me?`<div class="nwme"><span>ผลต่อคุณ</span><span class="num ${myDv+myCash>0?'pos':myDv+myCash<0?'neg':'muted'}">${myDv?`พอร์ต ${myDv>0?'+':'−'}${B(Math.abs(myDv)).replace('−','')}`:'ไม่ได้ถือสินทรัพย์ในข่าว'}${myCash?` · เงินสด ${myCash>0?'+':'−'}${B(Math.abs(myCash))}`:''}</span></div>`:'';
-    S.ann=S.ann||[];S.ann.push({k:'newsfx',t:'📊 สรุปข่าวที่มีผลตอนจบรอบ',b:blocks.join('')+my})}}
+    S.ann=S.ann||[];S.ann.push({k:npc?'newsnpc':'newsfx',t:npc?'🧑‍💼 ข่าวต้นรอบจาก NPC':'📊 สรุปข่าวจากรอบที่แล้ว',b:blocks.join('')+my})}}
 /* ---------- หัวห้อง: ทุกคนจบแล้ว → บอท ---------- */
 function parCheck(){if(!PARH()||!parMaster()||ON.parBusy)return;const now=NOW();
   const hum=S.players.filter(q=>!q.bot);
