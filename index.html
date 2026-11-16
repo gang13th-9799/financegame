@@ -1055,6 +1055,7 @@ body.fs #gameView:not(.mapmin){grid-template-columns:minmax(288px,1.2fr) minmax(
 .subtabs{overflow-x:auto;scrollbar-width:none;display:flex;gap:4px;padding:3px;margin:0 0 10px;background:#f1ead6;border-radius:999px;position:sticky;top:0;z-index:3}
 .subtabs button{flex:1;min-height:34px;padding:4px 8px;border:none!important;border-radius:999px;background:transparent!important;box-shadow:none!important;transform:none!important;color:var(--muted);font-size:13px;white-space:nowrap;font-family:var(--display)}
 .subtabs button.on{background:#fff!important;color:var(--ink);font-weight:700;box-shadow:0 1px 3px rgba(0,0,0,.12)!important}
+.lbt td{padding:6px 4px}.lbt .lbn{width:30px;text-align:center}.lbt tr.lbme td{background:#fff6d8}.lbhow summary{cursor:pointer;font-size:13px;color:var(--muted);margin-top:6px}
 .jl.afkc{background:#eef0f4;color:#3f4652;border:1px solid #c5cad3}
 .afk-box{background:#fffdf3;border-radius:22px;padding:22px 20px;max-width:420px;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,.3)}
 .afk-box .afk-ic{font-size:48px}.afk-box h2{margin:6px 0}.afk-box button{margin-top:12px;font-size:18px;min-height:48px;padding:0 28px}
@@ -1600,7 +1601,7 @@ function titleAmt(t,a){const n=Math.round(a);return new RegExp('(^|[^\\d,])('+n.
 function payS(p,a){const x=rnd100(a*Math.max(1,p.salary/40000));pay(p,x);return `จ่าย ${B(x)}`}
 function bankrupt(p){
   for(const k in S.props)if(S.props[k].o===p.id)delete S.props[k];
-  p.deals=[];p.stocks={};p.loan=0;p.dep=0;p.warn=0;p.net=netNew();p.active=0;p.cash=S.jobs[p.job].cash;
+  p.bk=(p.bk||0)+1;p.deals=[];p.stocks={};p.loan=0;p.dep=0;p.warn=0;p.net=netNew();p.active=0;p.cash=S.jobs[p.job].cash;
   log(`💀 <b>${esc(p.name)} ล้มละลาย</b> ทรัพย์สินถูกยึดทั้งหมด เริ่มใหม่จากอาชีพเดิม`);ruleNote(p,'ล้มละลาย','หนี้ธนาคารเกิน 12 เท่าของเงินเดือน (หรือ ฿400,000) ทรัพย์สินทั้งหมดถูกยึด และเริ่มใหม่ด้วยเงินสดตั้งต้นของอาชีพ');
 }
 
@@ -1831,6 +1832,7 @@ function timeUp(){
 }
 setInterval(()=>{
   if(S&&S.ann&&S.ann.length&&!MODAL&&S.winner==null)flushAnn();
+  if(ON.lbAnn&&!MODAL){const a=ON.lbAnn;ON.lbAnn=null;ask({npc:'happy',title:a.t,body:a.b})} /* คะแนนสะสมหลังจบเกม */
   if(!S||S.winner!=null||$('#gameView').hidden)return;const el=$('#timer');const p=cp();
   if(p.bot){if(el)el.textContent='';return}
   if(ON.play&&S.par&&(p.done||S.phase==='wait')){if(el)el.textContent='';return}
@@ -1897,7 +1899,7 @@ function rankPin(p,c='rpin'){return p&&p.net&&p.net.on?`<img class="${c}" src="i
 function badges(p){return rankPin(p)+(p.warn>0?`<span class="bdg" title="โดนใบเตือน: เงินเดือนลด 50% อีก ${p.warn} เดือน"><img class="icw" src="img/ic-warn.webp" alt=""></span>`:'')+(p.badge1?'<span class="bdg" title="ชนะ Lv.1: รายได้จากทรัพย์สินมากกว่ารายจ่ายรวม">🏆</span>':'')+(p.badge2?'<span class="bdg" title="ชนะ Lv.2: ธุรกิจ A ระดับไดมอนด์">💎</span>':'')}
 function standings(){return [...S.players].map(q=>[q,fin(q)]).sort((a,b)=>((b[0].badge2?2:0)+(b[0].badge1?1:0))-((a[0].badge2?2:0)+(a[0].badge1?1:0))||b[1].passive/Math.max(1,b[1].expenses)-a[1].passive/Math.max(1,a[1].expenses))}
 function standingsHtml(){return `<table class="ft"><tr class="th"><td>#</td><td>ผู้เล่น</td><td class="r">ทรัพย์สิน / รายจ่าย</td></tr>${standings().map(([q,f],i)=>`<tr><td>${i+1}</td><td><span class="tok pic" style="display:inline-block;${tokStyle(q)}"></span> ${esc(q.name)} ${badges(q)}<div class="fsub">${esc(S.jobs[q.job].n)}${q.badge1?` · Lv.1 รอบ ${q.badge1}`:''}${q.badge2?` · Lv.2 รอบ ${q.badge2}`:''}</div></td><td class="r num"><span class="pos">${B(f.passive)}</span> / <span class="neg">${B(f.expenses)}</span></td></tr>`).join('')}</table>`}
-function endGame(why){if(PAR()&&!parMaster()&&S.winner==null)return;if(S.phase!=='done')log(cryReveal());S.winner=S.winner??(standings()[0][0].id);S.phase='done';save();render();
+function endGame(why){if(PAR()&&!parMaster()&&S.winner==null)return;if(S.phase!=='done')log(cryReveal());S.winner=S.winner??(standings()[0][0].id);S.phase='done';if(ON.play&&PAR())onPush();else save();render();lbAward(); /* โหมดพร้อมกัน: save() ช่วงผู้เล่นเล่นส่งแค่ข้อมูลตัวเอง จึงส่งสถานะทั้งเกมตรงๆ */
   ask({kind:'win',npc:'happy',title:'🏁 จบเกม · สรุปผล',body:`${why?`<p>${why}</p>`:''}${standingsHtml()}<p class="muted" style="font-size:12px">🏆 Lv.1 = รายได้จากทรัพย์สินมากกว่ารายจ่ายรวม · 💎 Lv.2 = ธุรกิจ A ระดับไดมอนด์</p>`,opts:[{v:'see',l:'ดูกระดาน'},{v:'new',l:'เกมใหม่',c:'pri'}]}).then(r=>{if(r.v==='new')showSetup()})}
 function confirmEnd(){if(MODAL||!S||S.winner!=null)return;choose({title:'จบเกมและสรุปผล?',body:standingsHtml(),opts:[{v:'y',l:'จบเกม',c:'pri'},{v:'n',l:'เล่นต่อ'}]}).then(v=>{if(v==='y')endGame('จบเกมโดยผู้เล่น')})}
 function flushAnn(){if(!S||!S.ann||!S.ann.length||MODAL)return;const a=S.ann.shift();ask({kind:a.k||'win',npc:'happy',title:a.t,body:a.b,opts:[{v:'ok',l:'เล่นต่อ',c:'pri'}]})}
@@ -2995,6 +2997,47 @@ async function onAuthed(u){
 function onSeatOf(r,uid){const s=r&&r.seats;if(!s)return -1;for(let i=0;i<(r.n||6);i++)if(s[i]&&s[i].uid===uid)return i;return -1}
 const onErr=e=>{const m=String(e&&(e.code||e.message)||e);toast('⚠ '+({'auth/popup-closed-by-user':'ปิดหน้าต่างล็อกอินก่อนเสร็จ','auth/invalid-credential':'อีเมลหรือรหัสผ่านไม่ถูกต้อง','auth/email-already-in-use':'อีเมลนี้สมัครไว้แล้ว ลองเข้าสู่ระบบ','auth/weak-password':'รหัสผ่านต้องยาวอย่างน้อย 6 ตัว','auth/invalid-email':'รูปแบบอีเมลไม่ถูกต้อง','auth/popup-blocked':'เบราว์เซอร์บล็อกหน้าต่างล็อกอิน','auth/account-exists-with-different-credential':'อีเมลนี้เคยล็อกอินด้วยวิธีอื่น ลองใช้วิธีเดิม'}[m]||m))};
 
+/* ===================== คะแนนสะสม + Leader board =====================
+   คะแนนต่อเกม = (อันดับ + โบนัส) × ตัวคูณจำนวนผู้เล่นที่เป็นคน · บันทึกที่ lb/{uid} (บัญชีแขกไม่เก็บ) · กันซ้ำด้วยรหัสเกม (g) */
+const LB_PLACE=[10,6,4,2,1,1],LB_MIN_ROUNDS=10;
+const lbMult=h=>h<=1?.5:h===2?1:h<=4?1.2:1.5;
+const lbMonth=(d=new Date())=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+function lbCalc(p){const st=standings(),rank=st.findIndex(x=>x[0]===p),f=fin(p),hum=S.players.filter(q=>q.uid).length,rows=[];
+  if(S.round<LB_MIN_ROUNDS){rows.push([`เล่นจนจบเกม (เกมสั้นกว่า ${LB_MIN_ROUNDS} รอบ นับแค่ค่าเล่นจบ)`,2]);return {pts:2,rows,mult:1,hum,rank,win:false}}
+  rows.push([`อันดับที่ ${rank+1}`,LB_PLACE[rank]||1]);
+  if(p.badge1)rows.push(['🏆 ชนะ Lv.1',10]);if(p.badge2)rows.push(['💎 ธุรกิจ A ไดมอนด์',25]);
+  const pct=Math.min(100,f.passive/Math.max(1,f.expenses)*100),c=Math.min(10,Math.floor(pct/10));if(c)rows.push([`ความใกล้ชนะ ${Math.round(pct)}%`,c]);
+  rows.push(p.bk?[`ล้มละลาย ${p.bk} ครั้ง`,-5]:['ไม่เคยล้มละลาย',3]);rows.push(['เล่นจนจบเกม',2]);
+  const raw=rows.reduce((a,r)=>a+r[1],0);return {pts:Math.max(0,Math.round(raw*lbMult(hum))),rows,mult:lbMult(hum),hum,rank,win:rank===0}}
+async function lbAward(){
+  if(!ON.play||!ON.code||!ON.user||!S||S.winner==null)return;const me=S.players.find(q=>q.uid===ON.user.uid);if(!me)return;
+  const gk=(ON.code+'_'+(S.gid||'old')).replace(/[.#$\[\]\/]/g,'');if(ON.lbDone===gk)return;ON.lbDone=gk;
+  const c=lbCalc(me);
+  const tbl=`<table class="ft">${c.rows.map(([l,v])=>`<tr><td>${l}</td><td class="r num ${v<0?'neg':'pos'}">${v>0?'+':''}${v}</td></tr>`).join('')}${c.mult!==1?`<tr><td>ตัวคูณผู้เล่นที่เป็นคน ${c.hum} คน</td><td class="r num">×${c.mult}</td></tr>`:''}<tr class="th"><td><b>รวม</b></td><td class="r num pos"><b>+${c.pts}</b></td></tr></table>`;
+  if(ON.user.anon){ON.lbAnn=({t:`⭐ เกมนี้ได้ ${c.pts} คะแนน`,b:tbl+'<p class="neg">บัญชีแขกไม่เก็บคะแนนสะสมและไม่ติดอันดับ · ผูกบัญชี Google ที่หน้าแรกเพื่อเริ่มสะสมคะแนน</p>'});return}
+  const mk=lbMonth();let dup=false,after=null;
+  try{const x=await ON.be.tx(`lb/${ON.user.uid}`,cur=>{cur=cur||{};const g=cur.g||{};if(g[gk]){dup=true;return undefined}dup=false;
+      const o={...cur,n:ON.name,pts:(cur.pts||0)+c.pts,games:(cur.games||0)+1,wins:(cur.wins||0)+(c.win?1:0),best:Math.max(cur.best||0,c.pts),t:Date.now()};
+      if(cur.mk!==mk){o.mk=mk;o.mp=0;o.mg=0;o.mw=0}o.mp+=c.pts;o.mg+=1;o.mw+=c.win?1:0;
+      const keys=Object.keys(g).slice(-29);o.g=Object.fromEntries(keys.map(k=>[k,g[k]]));o.g[gk]=c.pts;after=o;return o});
+    if(dup)return;if(x&&x.err)throw x.err;if(x&&!x.ok)throw new Error('ไม่ได้บันทึก');LB_CACHE=null;
+    ON.lbAnn=({t:`⭐ คะแนนสะสม +${c.pts}`,b:tbl+(after?`<p>คะแนนเดือนนี้ <b class="num">${after.mp}</b> · สะสมทั้งหมด <b class="num">${after.pts}</b> คะแนน (${after.games} เกม)</p>`:'')});
+    log(`⭐ ${esc(me.name)} ได้คะแนนสะสม +${c.pts}`);render()}
+  catch(e){ON.lbDone=null;toast('⚠ บันทึกคะแนนสะสมไม่สำเร็จ: '+(e.code||e.message||e))}}
+let LB_CACHE=null,LB_TAB='m';
+async function lbLoad(){if(LB_CACHE&&Date.now()-LB_CACHE.t<60000)return LB_CACHE.d;const d=await ON.be.get('lb')||{};LB_CACHE={t:Date.now(),d};return d}
+async function lbRender(){const el=$('#lbBox');if(!el)return;
+  let d;try{d=await lbLoad()}catch(e){el.innerHTML=`<p class="muted">โหลดอันดับไม่ได้ (${esc(e.code||e.message||String(e))})</p>`;return}
+  const mk=lbMonth(),m=LB_TAB==='m';
+  const rows=Object.entries(d).map(([u,x])=>({u,n:x.n||'ผู้เล่น',p:m?(x.mk===mk?x.mp||0:0):x.pts||0,g:m?(x.mk===mk?x.mg||0:0):x.games||0,w:m?(x.mk===mk?x.mw||0:0):x.wins||0})).filter(r=>r.g>0).sort((a,b)=>b.p-a.p||b.w-a.w||a.g-b.g);
+  const meU=ON.user&&ON.user.uid,mi=rows.findIndex(r=>r.u===meU),medal=i=>['🥇','🥈','🥉'][i]||(i+1);
+  const tr=(r,i)=>`<tr class="${r.u===meU?'lbme':''}"><td class="lbn">${medal(i)}</td><td>${esc(r.n)}${r.u===meU?' (คุณ)':''}</td><td class="r num"><b>${r.p.toLocaleString()}</b></td><td class="r muted">${r.g}</td><td class="r muted">${r.w}</td></tr>`;
+  el.innerHTML=`<div class="subtabs" style="position:static">${[['m','📅 เดือนนี้'],['a','🏛 ตลอดกาล']].map(([k,l])=>`<button class="${LB_TAB===k?'on':''}" onclick="LB_TAB='${k}';lbRender()">${l}</button>`).join('')}</div>
+   ${rows.length?`<table class="ft lbt"><tr class="th"><td>#</td><td>ผู้เล่น</td><td class="r">คะแนน</td><td class="r">เกม</td><td class="r">ชนะ</td></tr>${rows.slice(0,20).map(tr).join('')}${mi>=20?`<tr><td colspan="5" class="muted" style="text-align:center">⋯</td></tr>${tr(rows[mi],mi)}`:''}</table>`:`<p class="muted">${m?'เดือนนี้':'ตอนนี้'}ยังไม่มีใครได้คะแนน · จบเกมออนไลน์เพื่อเริ่มสะสม</p>`}
+   ${ON.user&&ON.user.anon?'<p class="muted" style="font-size:12px">บัญชีแขกไม่ติดอันดับ · ผูกบัญชี Google เพื่อสะสมคะแนน</p>':ON.user&&mi<0?'<p class="muted" style="font-size:12px">คุณยังไม่มีคะแนน'+(m?'เดือนนี้':'')+'</p>':''}`}
+function lbCard(){setTimeout(lbRender,0);return `<div class="ol-card lbcard"><h3>🏅 อันดับคะแนนสะสม</h3><div id="lbBox"><p class="muted">กำลังโหลด…</p></div>
+  <details class="lbhow"><summary>วิธีคิดคะแนน</summary><p class="muted" style="font-size:12px">ทุกครั้งที่จบเกมออนไลน์: อันดับที่ 1–6 ได้ 10/6/4/2/1/1 · 🏆 ชนะ Lv.1 +10 · 💎 ไดมอนด์ +25 · ความใกล้ชนะ +1 ทุก 10% (สูงสุด +10) · ไม่ล้มละลาย +3 / ล้มละลาย −5 · เล่นจนจบ +2 · คูณตามจำนวนผู้เล่นที่เป็นคน: 1 คน (กับบอท) ×0.5 · 2 คน ×1 · 3–4 คน ×1.2 · 5–6 คน ×1.5 · เกมสั้นกว่า ${LB_MIN_ROUNDS} รอบได้แค่ +2 · บัญชีแขกไม่เก็บคะแนน</p></details></div>`}
+
 /* ---------- หน้าล็อกอิน ---------- */
 function onLogin(mode){
   const v=$('#setupView');$('#gameView').hidden=true;v.hidden=false;
@@ -3012,7 +3055,7 @@ function onLogin(mode){
     <button class="ol-guest" onclick="onSign('guest')">👤 เล่นแบบแขก (ไม่ต้องสมัคร)</button>
    </div>
    <p class="muted" style="font-size:12px">แขก: ถ้าล้างข้อมูลเบราว์เซอร์หรือเปลี่ยนเครื่อง จะกลับเข้าห้องเดิมไม่ได้ ผูกบัญชี Google ทีหลังได้ในหน้าถัดไป</p>
-   <div class="btnrow" style="justify-content:flex-start"><button class="sm" onclick="onExit()">← เล่นบนเครื่องนี้ (ออฟไลน์)</button></div></div>`}
+   <div class="btnrow" style="justify-content:flex-start"><button class="sm" onclick="onExit()">← เล่นบนเครื่องนี้ (ออฟไลน์)</button></div>${lbCard()}</div>`}
 async function onSign(k){try{await ON.be[k]()}catch(e){onErr(e)}}
 async function onMail(reg){const e=$('#olE').value.trim(),p=$('#olP').value,n=reg?$('#olN').value.trim():'';if(!e||!p){toast('กรอกอีเมลและรหัสผ่าน');return}
   try{await ON.be.email(e,p,!!reg,n);if(reg&&n&&ON.user)await ON.be.update('users/'+ON.user.uid,{name:n})}catch(x){onErr(x)}}
@@ -3026,7 +3069,7 @@ function onHome(){
    <div class="fld"><label for="olMe">ชื่อที่แสดงในเกม</label><div class="ol-row"><input id="olMe" maxlength="16" value="${esc(ON.name)}"><button class="sm" onclick="onRename()">บันทึก</button></div></div>
    <div class="ol-card"><h3>สร้างห้องใหม่</h3><p class="muted">ได้เลขห้อง 5 หลักไว้ส่งให้เพื่อน แล้วเลือกได้ว่าที่นั่งไหนเป็นคนหรือบอท (2–6 ที่)</p><button class="pri" onclick="onCreate()">＋ สร้างห้อง</button></div>
    <div class="ol-card"><h3>เข้าห้องเพื่อน</h3><div class="ol-row"><input id="olCode" inputmode="numeric" maxlength="5" placeholder="เลขห้อง 5 หลัก" oninput="this.value=this.value.replace(/[^0-9]/g,'')"><button class="pri" onclick="onJoin($('#olCode').value)">เข้าห้อง</button></div></div>
-   <div class="btnrow" style="justify-content:flex-start">${u.anon?`<button class="sm" onclick="onLink()">🔗 ผูกบัญชี Google (กันข้อมูลหาย)</button>`:''}<button class="sm" onclick="ON.be.out()">ออกจากระบบ</button><button class="sm" onclick="onExit()">← เล่นบนเครื่องนี้ (ออฟไลน์)</button></div></div>`}
+   <div class="btnrow" style="justify-content:flex-start">${u.anon?`<button class="sm" onclick="onLink()">🔗 ผูกบัญชี Google (กันข้อมูลหาย)</button>`:''}<button class="sm" onclick="ON.be.out()">ออกจากระบบ</button><button class="sm" onclick="onExit()">← เล่นบนเครื่องนี้ (ออฟไลน์)</button></div>${lbCard()}</div>`}
 async function onRename(){const n=$('#olMe').value.trim().slice(0,16);if(!n)return;ON.name=n;await ON.be.update('users/'+ON.user.uid,{name:n});onHome();toast('บันทึกชื่อแล้ว')}
 async function onLink(){try{await ON.be.link();ON.user.anon=false;toast('ผูกบัญชี Google แล้ว');if(!ON.code)onHome()}catch(e){onErr(e)}}
 
@@ -3059,7 +3102,7 @@ function onTag(){let t=$('#roomTag');if(!ON.code){if(t)t.remove();return}
   if(!t){t=document.createElement('span');t.id='roomTag';t.className='roomtag';t.setAttribute('role','button');t.title='ดูข้อมูลห้อง';t.onclick=onRoomInfo;const h=document.querySelector('header .logo')?.parentElement||document.querySelector('header');h.appendChild(t)}
   t.textContent='ห้อง '+ON.code+' ⓘ'}
 /* เวอร์ชันของไฟล์เกม (เปลี่ยนทุกครั้งที่แก้ระบบออนไลน์) · ส่งไปกับสถานะออนไลน์ เพื่อดูว่าใครยังเปิดเวอร์ชันเก่า */
-const BUILD='2026-11-16.2';
+const BUILD='2026-11-16.3';
 /* ป้ายเลขห้อง → ข้อมูลห้อง: เจ้าของห้อง · เครื่องที่คุมรอบ · สถานะผู้เล่นแต่ละคน */
 function onRoomInfo(){const r=ON.room;if(!r||!ON.code)return;
   const seatName=u=>{const q=S&&S.players&&S.players.find(x=>x.uid===u);if(q)return q.name;const s=Object.values(r.seats||{}).find(x=>x&&x.uid===u);return s?(s.name||'ผู้เล่น'):'—'};
@@ -3130,7 +3173,7 @@ async function onLeave(){const r=ON.room,uid=ON.user.uid,code=ON.code;if(!r)retu
   await ON.be.remove('users/'+uid+'/room');onHome()}
 async function onStart(){const r=ON.room;if(!r||r.host!==ON.user.uid)return;const n=r.n||4;
   seats=[...Array(n).keys()].map(i=>{const s=(r.seats||{})[i]||{t:'h'};return s.uid?{n:s.name||('ผู้เล่น '+(i+1)),bot:false,uid:s.uid}:{n:'บอท '+(i+1),bot:true}});
-  ON.play=true;ON.ver=0;newGame(900);S.par=1;await onPush(true);
+  ON.play=true;ON.ver=0;newGame(900);S.par=1;S.gid=Date.now().toString(36);await onPush(true);
   await ON.be.update('rooms/'+ON.code,{status:'play',started:ON.be.now()})}
 
 /* ---------- ซิงก์เกม ---------- */
@@ -3175,6 +3218,7 @@ async function onState(st,force){
   if(first&&S.phase==='busy'&&onMine())S.phase='card';
   if(first){startView();$('#setupView').hidden=true}else render();
   if(!S.par&&prevCur!==S.cur&&onMine()&&S.winner==null)fxBanner(cp());
+  if(S.winner!=null)lbAward();
   onDrive();parOverlay()}
 function o0par(st){return !!(st&&st.h&&S&&S.par&&st.h.r!==S.round)}
 function viewFollowOnline(){if(PAR())return;const c=cp();if(c&&c.uid===ON.user.uid){S.view=S.cur;S.viewPick=0}}

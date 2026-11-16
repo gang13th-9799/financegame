@@ -73,6 +73,13 @@
           ".write": "auth != null && data.parent().child('mem').child(auth.uid).exists()"
         }
       }
+    },
+    "lb": {
+      ".read": true,
+      "$uid": {
+        ".write": "auth != null && auth.uid === $uid && auth.provider !== 'anonymous'",
+        ".validate": "newData.hasChildren(['pts','games'])"
+      }
     }
   }
 }
