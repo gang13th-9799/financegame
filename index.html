@@ -214,6 +214,8 @@ div.chip{display:flex;flex-direction:column;align-items:center;justify-content:c
 .layout.mapmin .mloc2 .mloc{flex:1;min-width:0}
 .layout.mapmin .mbar .mi{padding:0 8px;min-height:26px;font-size:14px;line-height:1}
 .layout.mapmin .bwrap{display:none!important}
+.nwb .mnl{border:none;padding:0}.nwb{background:#fff;border:1px solid var(--line);border-radius:12px;padding:8px 10px;margin:0 0 8px}.nwt{font-size:14.5px;margin:0 0 4px}.nwby{font-size:11.5px;text-align:right;margin-top:2px}
+.nwme{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;padding:8px 10px;border-radius:12px;background:var(--surface2,#f4ecd8);font-weight:600}
 .mbars{display:flex;flex-direction:column;gap:3px}
 .mbr{display:grid;grid-template-columns:18px minmax(0,1fr) 20px;align-items:center;gap:6px}
 .mbr img{width:18px;height:18px;object-fit:contain}
@@ -3219,7 +3221,7 @@ function onTag(){let t=$('#roomTag');if(!ON.code){if(t)t.remove();return}
   if(!t){t=document.createElement('span');t.id='roomTag';t.className='roomtag';t.setAttribute('role','button');t.title='ดูข้อมูลห้อง';t.onclick=onRoomInfo;const h=document.querySelector('header .logo')?.parentElement||document.querySelector('header');h.appendChild(t)}
   t.textContent='ห้อง '+ON.code+' ⓘ'}
 /* เวอร์ชันของไฟล์เกม (เปลี่ยนทุกครั้งที่แก้ระบบออนไลน์) · ส่งไปกับสถานะออนไลน์ เพื่อดูว่าใครยังเปิดเวอร์ชันเก่า */
-const BUILD='2026-11-16.13';
+const BUILD='2026-11-16.14';
 /* ป้ายเลขห้อง → ข้อมูลห้อง: เจ้าของห้อง · เครื่องที่คุมรอบ · สถานะผู้เล่นแต่ละคน */
 function onRoomInfo(){const r=ON.room;if(!r||!ON.code)return;
   const seatName=u=>{const q=S&&S.players&&S.players.find(x=>x.uid===u);if(q)return q.name;const s=Object.values(r.seats||{}).find(x=>x&&x.uid===u);return s?(s.name||'ผู้เล่น'):'—'};
@@ -3475,11 +3477,18 @@ async function parQueueNews(p,kind,c){
   if(PARH()){const id=NOW().toString(36)+Math.random().toString(36).slice(2,5);ON.be.set(`rooms/${ON.code}/nq/${id}`,e)}else{S.nq=S.nq||[];S.nq.push(e)}
   log(`📰 ${esc(p.name)} เปิดข่าว: ${esc(c.t)} · มีผลตอนจบรอบ`);render();
   await choose({actor:p,kind:'news',title:c.t,body:`${newsImg(c.tone?c.tone!=='g':Object.values(c.e||{}).reduce((a,b)=>a+b,0)<0,c.cat)}<p>ข่าวนี้จะมีผลกับราคาตลาด${c.cash?' และเงินของผู้เล่นทุกคน':''} <b>ตอนจบรอบ</b> (ระหว่างรอบราคาคงที่ ทุกคนซื้อขายราคาเดียวกัน)</p>`,opts:[{v:'ok',l:'รับทราบ',c:'pri'}],bot:'ok'})}
-function parApplyNews(list){const lines=[];
+function parApplyNews(list){const blocks=[],me=ON.play?S.players.find(q=>q.uid===ON.user.uid):null;let myDv=0,myCash=0;
   for(const e of list){const c=e.c;if(!c||!c.e)continue;const ch=shockPrices(c.e);
     if(c.cash)for(const q of S.players){if(c.cash>0)q.cash+=c.cash;else pay(q,-c.cash)}
-    const t=`${esc(c.t)} · ${ch.map(x=>`${x.a.s} ${x.pct>0?'+':''}${x.pct}%`).join(' ')}${c.cash?` · ทุกคน${c.cash>0?'ได้':'จ่าย'} ${B(Math.abs(c.cash))}`:''}`;log(`📰 ข่าวมีผลแล้ว (${esc(e.by)}): ${t}`);lines.push(`<li>${t}</li>`)}
-  if(lines.length){S.ann=S.ann||[];S.ann.push({k:'news',t:'📰 ข่าวที่มีผลตอนจบรอบ',b:`<ul>${lines.join('')}</ul>`})}}
+    const t=`${esc(c.t)} · ${ch.map(x=>`${x.a.s} ${x.pct>0?'+':''}${x.pct}%`).join(' ')}${c.cash?` · ทุกคน${c.cash>0?'ได้':'จ่าย'} ${B(Math.abs(c.cash))}`:''}`;log(`📰 ข่าวมีผลแล้ว (${esc(e.by)}): ${t}`);
+    if(me){for(const x of ch){const h=me.stocks[x.s];if(h&&h.q)myDv+=h.q*(x.np-x.old)}myCash+=c.cash||0}
+    const ico=(MNCAT[c.cat]||['📰'])[0];
+    blocks.push(`<div class="nwb"><div class="nwt">${ico} <b>${esc(c.t)}</b></div>
+      <div class="mnl">${ch.map(x=>`<div class="ln"><span>${esc(x.a.n)} <span class="muted">${x.a.s}</span></span><span class="num ${x.pct>0?'pos':'neg'}">${x.pct>0?'▲ +':'▼ '}${x.pct}% → ${fmtP(x.a,x.np)}</span></div>`).join('')||'<div class="ln muted">สินทรัพย์ในข่าวยังไม่เข้าตลาด</div>'}
+      ${c.cash?`<div class="ln"><span>เงินสดทุกคน</span><span class="num ${c.cash>0?'pos':'neg'}">${c.cash>0?'+':'−'}${B(Math.abs(c.cash))}</span></div>`:''}</div>
+      <div class="muted nwby">เปิดโดย ${esc(e.by)}</div></div>`)}
+  if(blocks.length){myDv=Math.round(myDv);const my=me?`<div class="nwme"><span>ผลต่อคุณ</span><span class="num ${myDv+myCash>0?'pos':myDv+myCash<0?'neg':'muted'}">${myDv?`พอร์ต ${myDv>0?'+':'−'}${B(Math.abs(myDv)).replace('−','')}`:'ไม่ได้ถือสินทรัพย์ในข่าว'}${myCash?` · เงินสด ${myCash>0?'+':'−'}${B(Math.abs(myCash))}`:''}</span></div>`:'';
+    S.ann=S.ann||[];S.ann.push({k:'news',t:'📰 ข่าวที่มีผลตอนจบรอบ',b:blocks.join('')+my})}}
 /* ---------- หัวห้อง: ทุกคนจบแล้ว → บอท ---------- */
 function parCheck(){if(!PARH()||!parMaster()||ON.parBusy)return;const now=NOW();
   const hum=S.players.filter(q=>!q.bot);
