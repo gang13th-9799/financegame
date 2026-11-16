@@ -208,7 +208,21 @@ div.chip{display:flex;flex-direction:column;align-items:center;justify-content:c
 .mc .mo{position:absolute;left:0;right:0;bottom:0;height:2px}
 .mc .md{width:5px;height:5px;border-radius:50%;border:1px solid #fff;display:block}
 .mc .md.cur{width:8px;height:8px;box-shadow:0 0 0 1.5px #e3a63a}
-.layout.mapmin .mrow{flex-direction:column;align-items:stretch;gap:4px}
+.layout.mapmin .mrow.mact{flex-direction:column;align-items:stretch;gap:4px}
+.layout.mapmin .mrow:not(.mact){flex-direction:row;flex-wrap:wrap;align-items:center;gap:2px 8px}
+.layout.mapmin .mrow .mdice{margin-left:auto}
+.layout.mapmin .mloc2 .mloc{flex:1;min-width:0}
+.layout.mapmin .mbar .mi{padding:0 8px;min-height:26px;font-size:14px;line-height:1}
+.layout.mapmin .bwrap{display:none!important}
+.mpiles{margin:0 0 8px}
+.mpl{font:700 12.5px var(--display);color:var(--muted);margin:0 0 4px}
+.mpg{display:grid;grid-template-columns:repeat(4,1fr);gap:5px}
+.mcard{position:relative;padding:0!important;aspect-ratio:3/4;min-height:0;border-radius:9px;overflow:hidden;border:2px solid var(--line);background:#fff;box-shadow:0 2px 0 rgba(0,0,0,.12)}
+.mcard img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.mcard span{position:absolute;left:0;right:0;bottom:0;padding:2px 1px;background:rgba(255,253,246,.92);font:700 11px var(--display);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mcard.life{border-color:#c96a2b}.mcard.learn{border-color:#2f7fb5}.mcard.opp{border-color:var(--gold)}.mcard.netp{border-color:#2a9d8f}
+.mcard:not(:disabled):active{transform:translateY(2px)}
+@media (max-width:560px){.mpg{grid-template-columns:repeat(2,1fr)}}
 .layout.mapmin .mrow>*{margin:0!important}
 .layout.mapmin .mrow .mdice{text-align:left}
 .layout.mapmin .mact button{width:100%}
@@ -2517,7 +2531,7 @@ function render(){
     else if(p.bot)act2=`<span class="muted">บอทกำลังเล่น…</span>`;
     else if(!onMine())act2=`<span class="muted">⏳ ตาของ ${esc(p.name)}</span>`;
     else if(S.phase==='roll')act2=p.charity>0?`<button class="sm" ${act?'':'disabled'} onclick="canAct()&&rollTurn(1)">ทอย 1 ลูก</button><button class="sm pri" ${act?'':'disabled'} onclick="canAct()&&rollTurn(2)">ทอย 2 ลูก</button>`:`<button class="sm pri" ${act?'':'disabled'} onclick="canAct()&&rollTurn(1)">ทอยลูกเต๋า</button>`;
-    else if(S.phase==='card')act2=`<span class="muted">จั่ว ${(S.picks||0)+1}/${picksMax()}</span>${[['life','ชีวิต'],['learn','เรียนรู้'],['opp','โอกาส'],['net','ธุรกิจ A']].map(([kk,l])=>`<button class="sm mpile ${kk==='net'?'netp':kk}" ${act?'':'disabled'} onclick="canAct()&&previewPile('${kk}')">${l}</button>`).join('')}<button class="sm endbtn mini" ${act?'':'disabled'} onclick="canAct()&&confirmEndTurn()">✅ จบเทิร์น</button>`;
+    else if(S.phase==='card')act2=`<button class="sm endbtn mini" ${act?'':'disabled'} onclick="canAct()&&confirmEndTurn()">✅ จบเทิร์น</button>`;
     else if(S.phase==='free')act2=`<button class="sm" ${act?'':'disabled'} onclick="tradeUI()">ซื้อขายกับผู้เล่น</button><button class="sm endbtn mini" ${act?'':'disabled'} onclick="canAct()&&confirmEndTurn()">✅ จบเทิร์น</button>`;
     else act2=`<span class="muted">…</span>`;
     let mini='';for(const kk in SQ_MAP){const b=SQ(kk),[r,c]=cellPos(kk),fc={pay:'#ffd338',jobless:'#46206a',charity:'#f5862a',road:'#9da3a8'}[b.t],z=ZONES[b.z||zoneOfCell(kk)].c;
@@ -2525,10 +2539,13 @@ function render(){
       const here=S.players.filter(x=>x.ring+x.pos===kk);
       mini+=`<div class="mc ${kk===k?'me':''}" style="grid-row:${r};grid-column:${c};background:${bg}" onclick="cellInfo('${kk}')" title="${esc(b.n)}">${pr?`<i class="mo" style="background:${P(pr.o).color}"></i>`:''}${here.map(x=>`<b class="md ${x.id===p.id?'cur':''}" style="background:${x.color}"></b>`).join('')}</div>`}
     act2+=skillPanelBtn(p,act);
-    $('#minimap').innerHTML=`<div class="minib" aria-label="แผนที่ย่อ">${mini}<div class="mcity"></div></div><div class="mbar" style="--zc:${full||zc}">
-      <div class="mrow"><span class="tok pic" style="${tokStyle(p)}"></span><b>${esc(p.name)}${badges(p)}</b><span class="muted">${esc(S.jobs[p.job].n)}</span><span class="mst">❤${p.st.h} ⏳${p.st.t} 📚${p.st.k}</span>${!p.bot&&S.winner==null?'<span class="timer num" id="timer"></span>':''}<span class="mdice num">🎲 ${S.dice.join('+')}</span></div>
-      <div class="mrow"><span class="mloc">📍 <b>${esc(q.n)}</b></span><span class="muted msum">${sum}</span><button class="sm" onclick="cellInfo('${k}')">รายละเอียด</button></div>
-      <div class="mrow mact">${act2}</div></div>`;bd.innerHTML='';}
+    /* แผนที่ย่อ: กองการ์ด (ภาพหลังการ์ด) ติดใต้แผนที่ → ปุ่มทำตา → ข้อมูลผู้เล่นแบบย่อ (ใช้บรรทัดร่วมกัน) */
+    const piles=S.phase==='card'&&!p.bot&&onMine()&&S.winner==null?`<div class="mpiles"><div class="mpl">🃏 จั่วการ์ด ${(S.picks||0)+1}/${picksMax()}</div><div class="mpg">${[['life','ชีวิต'],['learn','เรียนรู้'],['opp','โอกาส'],['net','ธุรกิจ A']].map(([kk,l])=>`<button class="mcard ${kk==='net'?'netp':kk}" ${act?'':'disabled'} onclick="canAct()&&previewPile('${kk}')" aria-label="จั่วกอง${l}"><img src="img/back-${kk}.webp" alt=""><span>${l}</span></button>`).join('')}</div></div>`:'';
+    $('#minimap').innerHTML=`<div class="minib" aria-label="แผนที่ย่อ">${mini}<div class="mcity"></div></div>${piles}<div class="mbar" style="--zc:${full||zc}">
+      <div class="mrow mact">${act2}</div>
+      <div class="mrow mwho"><span class="tok pic" style="${tokStyle(p)}"></span><b>${esc(p.name)}${badges(p)}</b><span class="muted">${esc(S.jobs[p.job].n)}</span></div>
+      <div class="mrow mstat"><span class="mst">❤${p.st.h} ⏳${p.st.t} 📚${p.st.k}</span>${!p.bot&&S.winner==null?'<span class="timer num" id="timer"></span>':''}<span class="mdice num">🎲 ${S.dice.join('+')}</span></div>
+      <div class="mrow mloc2"><span class="mloc">📍 <b>${esc(q.n)}</b></span><button class="sm mi" onclick="cellInfo('${k}')" aria-label="รายละเอียดช่อง" title="รายละเอียด">ⓘ</button><span class="muted msum">${sum}</span></div></div>`;bd.innerHTML='';}
   else if(V3.on){setBoard(bd,CITY_PLATE+h+`<div class="center plaza"></div>`);const hd=$('#hud');hd.hidden=false;hd.className=`hud center ph-${p.bot?'bot':S.phase}`;hd.innerHTML=ctr;v3Update(p)}
   else setBoard(bd,CITY_PLATE+h+`<div class="center ph-${p.bot?'bot':S.phase}">${ctr}</div>`);
   if(!V3.on||MAPMIN){$('#hud').hidden=true}
@@ -3182,7 +3199,7 @@ function onTag(){let t=$('#roomTag');if(!ON.code){if(t)t.remove();return}
   if(!t){t=document.createElement('span');t.id='roomTag';t.className='roomtag';t.setAttribute('role','button');t.title='ดูข้อมูลห้อง';t.onclick=onRoomInfo;const h=document.querySelector('header .logo')?.parentElement||document.querySelector('header');h.appendChild(t)}
   t.textContent='ห้อง '+ON.code+' ⓘ'}
 /* เวอร์ชันของไฟล์เกม (เปลี่ยนทุกครั้งที่แก้ระบบออนไลน์) · ส่งไปกับสถานะออนไลน์ เพื่อดูว่าใครยังเปิดเวอร์ชันเก่า */
-const BUILD='2026-11-16.11';
+const BUILD='2026-11-16.12';
 /* ป้ายเลขห้อง → ข้อมูลห้อง: เจ้าของห้อง · เครื่องที่คุมรอบ · สถานะผู้เล่นแต่ละคน */
 function onRoomInfo(){const r=ON.room;if(!r||!ON.code)return;
   const seatName=u=>{const q=S&&S.players&&S.players.find(x=>x.uid===u);if(q)return q.name;const s=Object.values(r.seats||{}).find(x=>x&&x.uid===u);return s?(s.name||'ผู้เล่น'):'—'};
