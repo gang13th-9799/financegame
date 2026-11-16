@@ -1087,6 +1087,10 @@ body.fs #gameView:not(.mapmin){grid-template-columns:minmax(288px,1.2fr) minmax(
 .rbanner b{display:block;font-size:clamp(24px,6vw,40px);color:#b8202f}.rbanner span{display:block;margin-top:4px;font-size:clamp(14px,3.6vw,18px)}
 .afkov{position:fixed;inset:0;z-index:9990;background:rgba(90,92,96,.72);backdrop-filter:grayscale(1);-webkit-backdrop-filter:grayscale(1);display:grid;place-items:center;padding:16px}
 .afkov[hidden]{display:none}
+.tsl{display:flex;flex-direction:column;gap:6px}
+.tsr{display:grid;grid-template-columns:28px 1fr auto;gap:8px;align-items:center;padding:8px 10px;border:1px solid #eadfc4;border-radius:12px;background:#fffdf6}
+.tsi{font-size:20px;text-align:center}.tsw{font-size:14px;line-height:1.35}.tsw small{display:block;color:var(--muted);font-size:12px}
+.tsd{text-align:right;white-space:nowrap;font-size:14px}.tsd b{margin-left:6px}
 .subtabs{overflow-x:auto;scrollbar-width:none;display:flex;gap:4px;padding:3px;margin:0 0 10px;background:#f1ead6;border-radius:999px;position:sticky;top:0;z-index:3}
 .subtabs button{flex:1;min-height:34px;padding:4px 8px;border:none!important;border-radius:999px;background:transparent!important;box-shadow:none!important;transform:none!important;color:var(--muted);font-size:13px;white-space:nowrap;font-family:var(--display)}
 .mktabs{display:flex;gap:6px;margin:0 0 8px}
@@ -1715,9 +1719,32 @@ function pay(p,a){p.cash-=a;settle(p)}
 const STN={h:'หัวใจ',t:'เวลา',k:'ความรู้'},STI={h:'❤',t:'⏳',k:'📚'};
 const IMGICO={'🟨':'ic-warn','❤':'ic-h','❤️':'ic-h','⏳':'ic-t','📚':'ic-k','💰':'ic-cash','🏦':'sq-bank','🏠':'as-estate','🏪':'as-biz','📊':'as-stock','🛍️':'sq-luxury','💝':'sq-charity','📉':'sq-jobless','🚀':'as-ipo','🐷':'as-saving'};
 function ii(e,c='ii'){const f=IMGICO[e];return f?`<img class="${c}" src="img/${f}.webp" alt="${e}">`:e}
+/* ===== สรุปก่อนเริ่มเทิร์น: จดทุกอย่างที่เพิ่ม/ลดเงินสดและค่าพลังของผู้เล่น ตั้งแต่จบเทิร์นของตัวเองจนถึงเริ่มเทิร์นถัดไป =====
+   p._ts0 = ค่าตอนจบเทิร์น · p._led = รายการ {i ไอคอน, w ที่มา, c เงิน, h/t/k ค่าพลังที่เปลี่ยนจริง, x หมายเหตุ}
+   ตอนเริ่มเทิร์น tsShow() เทียบยอดจริงกับผลรวมรายการ ส่วนต่างขึ้นเป็น "ไม่ระบุที่มา" (ช่วยเช็กบัก) */
+let TSQ=[],NOFX=0,TS_OPEN=0;
+function tsBegin(p){if(!p||p.bot)return;p._ts0={c:Math.round(p.cash),h:p.st.h,t:p.st.t,k:p.st.k,r:S.round};p._led=[]}
+function ledg(p,i,w,d){if(!p||!p._ts0)return;(p._led=p._led||[]).push({i,w,c:Math.round(d.c||0),h:d.h||0,t:d.t||0,k:d.k||0,x:d.x||''})}
+function ledAdj(p,d,i,w){const s0={...p.st};let sx;NOFX++;try{sx=adj(p,d,true)}finally{NOFX--}
+  const a={h:p.st.h-s0.h,t:p.st.t-s0.t,k:p.st.k-s0.k},cap=['h','t','k'].some(s=>(d[s]||0)>0&&a[s]<d[s]);
+  ledg(p,i,w,{...a,x:cap?(sx?'บางค่าเต็ม 10 แล้ว':'ค่าพลังเต็ม 10 แล้ว ได้ไม่เพิ่ม'):''});return sx}
+function tsChips(e){const o=[];if(e.c)o.push(`<b class="num ${e.c>0?'pos':'neg'}">${e.c>0?'+':'−'}${B(Math.abs(e.c)).replace('−','')}</b>`);
+  for(const [s,ic] of [['h','❤'],['t','⏳'],['k','📚']])if(e[s])o.push(`<b class="${e[s]>0?'pos':'neg'}">${ic} ${e[s]>0?'+':''}${e[s]}</b>`);return o.join(' ')||'<span class="muted">—</span>'}
+function tsShow(p){if(!p||p.bot||!p._ts0||S.winner!=null)return;const a=p._ts0,L=p._led||[];delete p._ts0;delete p._led;
+  const now={c:Math.round(p.cash),h:p.st.h,t:p.st.t,k:p.st.k},sum={c:0,h:0,t:0,k:0};for(const e of L)for(const s in sum)sum[s]+=e[s];
+  const rem={};for(const s in sum)rem[s]=now[s]-a[s]-sum[s];const hasRem=Object.values(rem).some(v=>v);
+  if(!L.length&&!hasRem)return;
+  const row=e=>`<div class="tsr"><span class="tsi">${e.i}</span><span class="tsw">${esc(e.w)}${e.x?`<small>${esc(e.x)}</small>`:''}</span><span class="tsd">${tsChips(e)}</span></div>`;
+  const tot=(lbl,s,f)=>`<div class="ln"><span>${lbl}</span><span class="num ${now[s]>a[s]?'pos':now[s]<a[s]?'neg':'muted'}">${f(a[s])} → ${f(now[s])}${now[s]!==a[s]?` (${now[s]>a[s]?'+':'−'}${s==='c'?B(Math.abs(now[s]-a[s])).replace('−',''):Math.abs(now[s]-a[s])})`:''}</span></div>`;
+  const body=`<p class="muted" style="margin:0 0 6px">ตั้งแต่จบเทิร์นที่แล้ว (รอบ ${a.r}) จนถึงตอนนี้ มีการเปลี่ยนแปลงดังนี้</p>
+    <div class="tsl">${L.map(row).join('')}${hasRem?row({i:'❓',w:'ไม่ระบุที่มา',x:'ถ้าเห็นบรรทัดนี้ ช่วยแจ้งผู้พัฒนาเพื่อเช็กบัก',...rem}):''}</div>
+    <h4 style="margin:10px 0 4px">ยอดรวม</h4>${tot('💵 เงินสด','c',v=>B(v))}${tot('❤ หัวใจ','h',v=>v)}${tot('⏳ เวลา','t',v=>v)}${tot('📚 ความรู้','k',v=>v)}`;
+  TSQ.push({pid:p.id,t:`📋 สรุปก่อนเริ่มเทิร์น · ${esc(p.name)}`,b:body})}
+function tsFlush(){if(!TSQ.length||MODAL||(S&&S.ann&&S.ann.length))return;const q=TSQ.shift();TS_OPEN=1;
+  ask({npc:'think',title:q.t,body:q.b,opts:[{v:'ok',l:'เริ่มเทิร์น',c:'pri'}]}).then(()=>{TS_OPEN=0})}
 function adj(p,d,quiet){
   const parts=[];
-  let fdl=0;for(const s of ['h','t','k'])if(d[s]){const o=p.st[s];p.st[s]=Math.max(0,Math.min(10,o+d[s]));if(p.st[s]!==o){const df=p.st[s]-o;parts.push(`${STN[s]} ${d[s]>0?'+':''}${df}`);if(!p.bot&&S&&!S.autoPilot&&typeof fxFloat==='function'){fxFloat(`${STI[s]} ${df>0?'+':''}${df}`,df>0?'up':'down',fdl);fdl+=280}}}
+  let fdl=0;for(const s of ['h','t','k'])if(d[s]){const o=p.st[s];p.st[s]=Math.max(0,Math.min(10,o+d[s]));if(p.st[s]!==o){const df=p.st[s]-o;parts.push(`${STN[s]} ${d[s]>0?'+':''}${df}`);if(!p.bot&&S&&!S.autoPilot&&!NOFX&&typeof fxFloat==='function'){fxFloat(`${STI[s]} ${df>0?'+':''}${df}`,df>0?'up':'down',fdl);fdl+=280}}}
   let txt=parts.length?` · ${parts.join(' · ')}`:'';
   if(p.st.h===0&&GRULE.sickAtZeroHeart){const bill=rnd100(p.salary*.3);pay(p,bill);const tl=Math.min(2,p.st.t);p.st.t-=tl;p.st.h=3;p._sick={bill,tl};
     const m=`หัวใจหมด! ป่วยหนัก ค่ารักษา ${B(bill)} · พักฟื้น ⏳−${tl} · ❤ ฟื้นกลับเป็น 3 (ไม่ตกงาน)`;ruleNote(p,'หัวใจหมด → ป่วยหนัก',`❤ ของคุณลดเหลือ 0 จึงต้องจ่ายค่ารักษา ${B(bill)} และพักฟื้น ⏳−${tl} (หัวใจฟื้นกลับเป็น 3)`);log(`🚑 ${esc(p.name)} ${m}`);if(!quiet)toast(`🚑 ${p.name} ${m}`);txt+=` · ${m}`}
@@ -1945,14 +1972,14 @@ function stopPicking(){if(!canAct()||S.phase!=='card')return;log(`${esc(cp().nam
 function endTurn(early){
   if(S.winner!=null)return;if(PAR()){parEndTurn(early);return}S.bonusPicks=0;const tn=S.autoPilot&&S.timeoutNote;S.timeoutNote=null;S.freeComm=false;S.picks=0;
   if(tn)setTimeout(()=>{if(!MODAL)ask({npc:'think',title:'⏰ หมดเวลา 3 นาที',body:`<p><b>${esc(tn.name)}</b> ใช้เวลาครบ 3 นาที ระบบจึงจบเทิร์นให้อัตโนมัติ${tn.phase==='roll'?' (ยังไม่ได้ทอยลูกเต๋า)':` · จั่วการ์ดไป ${tn.picks}/${PICKS} ใบ`}</p><p class="muted">นาฬิกานับถอยหลังอยู่กลางกระดาน ใต้ค่าพลัง · ระหว่างเปิดหน้าตั้งค่านาฬิกาจะหยุดเดิน</p>`})},50);
-  const p=cp();p.hired=false;
-  if(early&&!S.autoPilot&&NOW()<S.turnEnd){const sx=adj(p,{t:1},true);if(sx){log(`⏱ ${esc(p.name)} จบเทิร์นก่อนเวลา${sx}`);if(!p.bot)toast(`⏱ จบไว ได้เวลา +1`)}}
+  const p=cp();p.hired=false;tsBegin(p);
+  if(early&&!S.autoPilot&&NOW()<S.turnEnd){const sx=ledAdj(p,{t:1},'⏱','จบเทิร์นก่อนหมดเวลา');if(sx)log(`⏱ ${esc(p.name)} จบเทิร์นก่อนเวลา${sx}`)}
   turnPassiveTime(p);
   if(p._afkb){p.bot=false;delete p._afkb}
   S.autoPilot=false;
   S.cur=(S.cur+1)%S.players.length;if(S.cur===0)endRound();
   S.phase='roll';viewFollow();S.turnEnd=NOW()+TURN_MS;render();save();
-  if(!cp().bot)fxBanner(cp());
+  if(!cp().bot){fxBanner(cp());if(!ON.play||onMine())tsShow(cp())}
   if(cp().bot&&iDrive()){ON.turnKey=S.round+':'+S.cur;botTurn()}
 }
 function timeUp(){
@@ -1964,11 +1991,12 @@ function timeUp(){
 setInterval(()=>{
   afkAutoClose();
   if(S&&S.ann&&S.ann.length&&!MODAL&&S.winner==null)flushAnn();
+  if(S&&TSQ.length&&!MODAL&&S.winner==null)tsFlush();
   if(ON.lbAnn&&!MODAL){const a=ON.lbAnn;ON.lbAnn=null;ask({npc:'happy',title:a.t,body:a.b})} /* คะแนนสะสมหลังจบเกม */
   if(!S||S.winner!=null||$('#gameView').hidden)return;const el=$('#timer');const p=cp();
   if(p.bot){if(el)el.textContent='';return}
   if(ON.play&&S.par&&(p.done||S.phase==='wait')){if(el)el.textContent='';return}
-  if(!$('#setov').hidden){S.turnEnd+=500;return}
+  if(!$('#setov').hidden||TS_OPEN){S.turnEnd+=500;return}
   const ms=S.turnEnd-NOW(),s=Math.max(0,Math.ceil(ms/1000));
   if(el){el.textContent=`⏱ ${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`;el.classList.toggle('low',s<=30)}
   if(ms<=0&&!S.autoPilot&&iDrive())timeUp();
@@ -2106,7 +2134,7 @@ async function resolveSquare(p){
         const ok=await buyFlow(p,c,{cf:d.upcf,needT:1,verb:'อัปเกรด',no:'ไม่อัปเกรด',title:`อัปเกรด ${esc(sq.n)}`,body:`<p>อัปเกรดเป็นขั้น ${pr.l+1} ค่าเช่าเพิ่ม <b class="pos">+${B(d.upcf)}</b> ต่อเดือน ค่าผ่านทางเพิ่มขึ้นด้วย</p>`});
         if(ok){pr.l++;pr.inv+=c;log(`🔨 ${esc(p.name)} อัปเกรด ${esc(sq.n)} เป็นขั้น ${pr.l}`)}}
     }else{
-      const o=P(pr.o),fee=propFee(key);pay(p,fee);if(PARH()&&o.uid!==ON.user.uid)parLed(o.id,{cash:fee,note:`💰 ${p.name} จ่ายค่าผ่านทาง ${B(fee)} ให้คุณ`});else o.cash+=fee;
+      const o=P(pr.o),fee=propFee(key);pay(p,fee);if(PARH()&&o.uid!==ON.user.uid)parLed(o.id,{cash:fee,note:`💰 ${p.name} จ่ายค่าผ่านทาง ${B(fee)} ให้คุณ`,lw:`🏠 ${p.name} จ่ายค่าผ่านทาง ${sq.n}`});else{o.cash+=fee;ledg(o,'🏠',`${p.name} จ่ายค่าผ่านทาง ${sq.n}`,{c:fee})}
       log(`${esc(p.name)} จ่ายค่าผ่านทาง ${B(fee)} ให้ ${esc(o.name)}`);toast(`${p.name} จ่ายค่าผ่านทาง ${B(fee)} ให้ ${o.name}`);
     }
   }else if(sq.t==='news'){await newsCard(p)}
@@ -2176,7 +2204,7 @@ async function marketSquare(p){
     const v=r.v,form=p.bot?bot.form:r.form;
     if(v==='done'||!v)break;
     if(v.startsWith('bank')){const i=+v.slice(4),o=offers[i],a=findAsset(p,form['bo'+i]);if(!a)continue;const amt=Math.round(a.fair*o.m);moveAsset(p,null,a.key);p.cash+=amt;soldBank.add(i);log(`🏦 ${esc(p.name)} ขาย ${esc(a.n)} ให้ธนาคาร ${B(amt)} (${Math.round(o.m*100)}%)`)}
-    else if(v.startsWith('buy')){const l=others[+v.slice(3)],s=P(l.seller),a=findAsset(s,l.key);if(!a||p.cash<l.price)continue;p.cash-=l.price;s.cash+=l.price;moveAsset(s,p,l.key,l.price);S.listings=S.listings.filter(x=>x!==l);log(`🪧 ${esc(p.name)} ซื้อ ${esc(a.n)} จากป้ายของ ${esc(s.name)} ${B(l.price)}`);toast(`${p.name} ซื้อ ${a.n} จาก ${s.name}`)}
+    else if(v.startsWith('buy')){const l=others[+v.slice(3)],s=P(l.seller),a=findAsset(s,l.key);if(!a||p.cash<l.price)continue;p.cash-=l.price;s.cash+=l.price;ledg(s,'🪧',`${p.name} ซื้อ ${a.n} จากป้ายประกาศขายของคุณ`,{c:l.price});moveAsset(s,p,l.key,l.price);S.listings=S.listings.filter(x=>x!==l);log(`🪧 ${esc(p.name)} ซื้อ ${esc(a.n)} จากป้ายของ ${esc(s.name)} ${B(l.price)}`);toast(`${p.name} ซื้อ ${a.n} จาก ${s.name}`)}
     else if(v.startsWith('cancel')){const l=myL[+v.slice(6)];S.listings=S.listings.filter(x=>x!==l);log(`${esc(p.name)} ปลดป้ายขาย`)}
     else if(v==='post'){const a=findAsset(p,form.pk),price=Math.max(0,Math.round(+form.pp||0));if(a&&price>0){S.listings.push({seller:p.id,key:a.key,price});log(`🪧 ${esc(p.name)} ติดป้ายขาย ${esc(a.n)} ราคา ${B(price)}`)}}
     render();save();if(checkWin())return;
@@ -2277,7 +2305,7 @@ async function mnewsCard(p,c){
   if(PAR()){await parQueueNews(p,'m',c);return}
   const ch=shockPrices(c.e),[ico,cn]=MNCAT[c.cat];
   const rows=S.players.map(q=>{let dv=0;for(const x of ch){const h=q.stocks[x.s];if(h&&h.q)dv+=h.q*(x.np-x.old)}return {q,dv:Math.round(dv)}});
-  if(c.cash)for(const q of S.players){if(c.cash>0)q.cash+=c.cash;else pay(q,-c.cash)}
+  if(c.cash)for(const q of S.players){if(c.cash>0)q.cash+=c.cash;else pay(q,-c.cash);ledg(q,'📰',`ข่าว: ${c.t}`,{c:c.cash})}
   log(`${ico} ${esc(p.name)} เปิดข่าว: ${esc(c.t)} · ${ch.map(x=>`${SN(x.a)} ${x.pct>0?'+':''}${x.pct}%`).join(' ')}${c.cash?` · ทุกคน${c.cash>0?'ได้':'จ่าย'} ${B(Math.abs(c.cash))}`:''}`);
   if(c.cash)ruleNote(p,c.cash>0?'ข่าวดี: ทุกคนได้เงิน':'ข่าวร้าย: ทุกคนจ่ายเงิน',`${c.cnote} ${B(Math.abs(c.cash))} (${esc(c.t)})`);
   render();
@@ -3299,7 +3327,7 @@ function onTag(){let t=$('#roomTag');if(!ON.code){if(t)t.remove();return}
   if(!t){t=document.createElement('span');t.id='roomTag';t.className='roomtag';t.setAttribute('role','button');t.title='ดูข้อมูลห้อง';t.onclick=onRoomInfo;const h=document.querySelector('header .logo')?.parentElement||document.querySelector('header');h.appendChild(t)}
   t.textContent='ห้อง '+ON.code+' ⓘ'}
 /* เวอร์ชันของไฟล์เกม (เปลี่ยนทุกครั้งที่แก้ระบบออนไลน์) · ส่งไปกับสถานะออนไลน์ เพื่อดูว่าใครยังเปิดเวอร์ชันเก่า */
-const BUILD='2026-11-16.29';
+const BUILD='2026-11-16.30';
 /* ป้ายเลขห้อง → ข้อมูลห้อง: เจ้าของห้อง · เครื่องที่คุมรอบ · สถานะผู้เล่นแต่ละคน */
 function onRoomInfo(){const r=ON.room;if(!r||!ON.code)return;
   const seatName=u=>{const q=S&&S.players&&S.players.find(x=>x.uid===u);if(q)return q.name;const s=Object.values(r.seats||{}).find(x=>x&&x.uid===u);return s?(s.name||'ผู้เล่น'):'—'};
@@ -3407,7 +3435,7 @@ async function onState(st,force){
   const lg=o.log||[];o.log=first?lg:lg.concat((S.log||[]).filter(x=>!lg.includes(x))).slice(0,200);
   const oldRound=S&&S.round;if(parNew&&MODAL&&typeof MODAL_CANCEL==='function')try{MODAL_CANCEL()}catch(x){}
   S=migrateStocks(migrateBoard(o));ON.ver=Math.max(ON.ver,st.v||0);ON.lastDrv=iDrive();
-  if(S.par&&S.rp==='h'){ON.ownRound=null;ON.pz={};parLocalTurn();if(fresh||oldRound!==S.round)setTimeout(parBanner,300);
+  if(S.par&&S.rp==='h'){ON.ownRound=null;ON.pz={};parLocalTurn();if(fresh||oldRound!==S.round){setTimeout(parBanner,300);if(!fresh)tsShow(parMe())}
     const c=ON.code;ON.be.get(`rooms/${c}/p`).then(m=>{ON.pQ=(ON.pQ||Promise.resolve()).then(()=>parOnP(m))});ON.be.get(`rooms/${c}/pr`).then(parOnPr);ON.be.get(`rooms/${c}/afk`).then(parOnAfk)}
   const mi=S.players.findIndex(q=>q.uid===ON.user.uid);
   if(S._stkNote){delete S._stkNote;if(mi>=0)setTimeout(()=>ruleNote(S.players[mi],'ตลาดเปลี่ยนรายชื่อสินทรัพย์','หุ้น/เหรียญ/สินค้าที่ถูกถอดออกจากตลาดขายคืนให้อัตโนมัติที่ราคาตลาดล่าสุด ดูยอดเงินในบันทึกเกม'),800)}
@@ -3415,7 +3443,7 @@ async function onState(st,force){
   viewFollowOnline();
   if(first&&S.phase==='busy'&&onMine())S.phase='card';
   if(first){startView();$('#setupView').hidden=true}else render();
-  if(!S.par&&prevCur!==S.cur&&onMine()&&S.winner==null)fxBanner(cp());
+  if(!S.par&&prevCur!==S.cur&&onMine()&&S.winner==null){fxBanner(cp());tsShow(cp())}
   if(S.winner!=null)lbAward();
   onDrive();parOverlay()}
 function o0par(st){return !!(st&&st.h&&S&&S.par&&st.h.r!==S.round)}
@@ -3496,7 +3524,7 @@ function parStartRound(){
   log(`🔔 <b>เริ่มรอบที่ ${S.round}</b> · ผู้เล่นทุกคนเล่นพร้อมกัน คนละ 3 นาที`);
   const c=ON.code;['p','pr','lg','led','nq','mk'].forEach(k=>ON.be.remove(`rooms/${c}/${k}`));
   ON.lgSeen={};ON.pz={};ON.prSent={};ON.ownRound=S.round;
-  parLocalTurn();render();onPush();parBanner();
+  parLocalTurn();tsShow(parMe());render();onPush();parBanner();
 }
 function parBanner(){let el=$('#rbanner');if(!el){el=document.createElement('div');el.id='rbanner';el.className='rbanner';el.onclick=()=>el.classList.remove('on');document.body.appendChild(el)}
   const me=parMe();el.innerHTML=`<b>🔔 เริ่มรอบที่ ${S.round}</b><span>${me&&me.afk?'คุณติดสถานะ Bot · กดปลดเพื่อกลับมาเล่น':'ทุกคนเล่นพร้อมกัน · คนละ 3 นาที'}</span>`;el.classList.add('on');clearTimeout(parBanner.t);parBanner.t=setTimeout(()=>el.classList.remove('on'),2800)}
@@ -3506,20 +3534,20 @@ function parBanner(){let el=$('#rbanner');if(!el){el=document.createElement('div
 const PT_TIERS=[[.75,{h:1,t:1,k:1}],[.5,{t:1,k:1}],[.25,{t:1}]];
 const stTxt=b=>[b.h?'❤ +'+b.h:'',b.t?'⏳ +'+b.t:'',b.k?'📚 +'+b.k:''].filter(Boolean).join(' ');
 function turnPassiveTime(p){if(!p||S.winner!=null)return;turnLv1Bonus(p);turnNetBonus(p);if(p.badge1)return;const f=fin(p),pr=f.expenses>0?f.passive/f.expenses:0,tr=PT_TIERS.find(([x])=>pr>=x);if(!tr)return;
-  const b=tr[1],sx=adj(p,{...b},true);if(!sx)return;log(`💰 ${esc(p.name)} รายได้จากทรัพย์สิน ${Math.floor(pr*100)}% ของรายจ่าย ได้โบนัสทุกเทิร์น${sx}`);
-  if(!p.bot){toast(`💰 Passive ${Math.floor(pr*100)}% ของรายจ่าย: ${stTxt(b)}`);if(p._rnPT!==tr[0]){p._rnPT=tr[0];ruleNote(p,'โบนัส Passive ทุกเทิร์น',`รายได้จากทรัพย์สินเทียบรายจ่าย ได้ทุกครั้งที่จบเทิร์น (ขั้นสูงสุดขั้นเดียว): 25% ⏳ +1 · 50% ⏳ +1 📚 +1 · 75% ❤ +1 ⏳ +1 📚 +1 (ตอนนี้ ${Math.floor(pr*100)}%)`)}}}
+  const b=tr[1],sx=ledAdj(p,{...b},'💰',`รายได้จากทรัพย์สิน ${Math.floor(pr*100)}% ของรายจ่าย (ขั้น ${tr[0]*100}%)`);if(!sx)return;log(`💰 ${esc(p.name)} รายได้จากทรัพย์สิน ${Math.floor(pr*100)}% ของรายจ่าย ได้โบนัสทุกเทิร์น${sx}`);
+  if(!p.bot){if(p._rnPT!==tr[0]){p._rnPT=tr[0];ruleNote(p,'โบนัส Passive ทุกเทิร์น',`รายได้จากทรัพย์สินเทียบรายจ่าย ได้ทุกครั้งที่จบเทิร์น (ขั้นสูงสุดขั้นเดียว): 25% ⏳ +1 · 50% ⏳ +1 📚 +1 · 75% ❤ +1 ⏳ +1 📚 +1 (ตอนนี้ ${Math.floor(pr*100)}%)`)}}}
 /* ชนะ Lv.1 แล้ว: ทุกครั้งที่จบเทิร์น ❤ +1 ⏳ +2 📚 +1 (เพิ่มจากโบนัส Passive) */
-function turnLv1Bonus(p){if(!p.badge1)return;const sx=adj(p,{h:1,t:2,k:1},true);if(!sx)return;log(`🏆 ${esc(p.name)} ชนะ Lv.1 แล้ว ได้โบนัสทุกเทิร์น${sx}`);
-  if(!p.bot){toast('🏆 โบนัสชนะ Lv.1: ❤ +1 ⏳ +2 📚 +1');if(!p._rnL1){p._rnL1=1;ruleNote(p,'โบนัสชนะ Lv.1 ทุกเทิร์น','ชนะ Lv.1 แล้ว ทุกครั้งที่จบเทิร์นได้ ❤ +1 ⏳ +2 📚 +1 แทนโบนัสขั้น Passive (ไม่ซ้อนกัน · ค่าพลังเต็มที่ 10)')}}}
+function turnLv1Bonus(p){if(!p.badge1)return;const sx=ledAdj(p,{h:1,t:2,k:1},'🏆','ชนะ Lv.1 แล้ว (แทนโบนัสขั้น Passive)');if(!sx)return;log(`🏆 ${esc(p.name)} ชนะ Lv.1 แล้ว ได้โบนัสทุกเทิร์น${sx}`);
+  if(!p.bot){if(!p._rnL1){p._rnL1=1;ruleNote(p,'โบนัสชนะ Lv.1 ทุกเทิร์น','ชนะ Lv.1 แล้ว ทุกครั้งที่จบเทิร์นได้ ❤ +1 ⏳ +2 📚 +1 แทนโบนัสขั้น Passive (ไม่ซ้อนกัน · ค่าพลังเต็มที่ 10)')}}}
 /* ธุรกิจ A: ทุกครั้งที่จบเทิร์นได้ค่าพลังตามระดับสูงสุดที่ถึง (NET_TURN) */
-function turnNetBonus(p){const r=p.net&&p.net.on?p.net.rank||0:0,b=NET_TURN[r];if(!b)return;const sx=adj(p,{...b},true);if(!sx)return;
+function turnNetBonus(p){const r=p.net&&p.net.on?p.net.rank||0:0,b=NET_TURN[r];if(!b)return;const sx=ledAdj(p,{...b},'🏅',`ธุรกิจ A ระดับ${NET_RANKS[r].n}`);if(!sx)return;
   log(`🏅 ${esc(p.name)} ธุรกิจ A ระดับ${NET_RANKS[r].n} ได้โบนัสทุกเทิร์น${sx}`);
-  if(!p.bot){toast(`🏅 โบนัสระดับ${NET_RANKS[r].n}: ${netTurnTxt(r)}`);if(p._rnNT!==r){p._rnNT=r;ruleNote(p,`โบนัสทุกเทิร์น ระดับ${NET_RANKS[r].n}`,`ธุรกิจ A ระดับ${NET_RANKS[r].n} ทุกครั้งที่จบเทิร์นได้ ${netTurnTxt(r)} (นับเฉพาะระดับสูงสุด ค่าพลังเต็มที่ 10)`)}}}
+  if(!p.bot){if(p._rnNT!==r){p._rnNT=r;ruleNote(p,`โบนัสทุกเทิร์น ระดับ${NET_RANKS[r].n}`,`ธุรกิจ A ระดับ${NET_RANKS[r].n} ทุกครั้งที่จบเทิร์นได้ ${netTurnTxt(r)} (นับเฉพาะระดับสูงสุด ค่าพลังเต็มที่ 10)`)}}}
 function parEndTurn(early){
   const p=cp();S.bonusPicks=0;S.freeComm=false;S.picks=0;p.hired=false;S.timeoutNote=null;
   if(S.rp==='h'){
-    if(p.uid!==ON.user.uid||p.done)return;
-    if(early&&!S.autoPilot&&NOW()<S.turnEnd){const sx=adj(p,{t:1},true);if(sx){log(`⏱ ${esc(p.name)} จบเทิร์นก่อนเวลา${sx}`);toast('⏱ จบไว ได้เวลา +1')}}
+    if(p.uid!==ON.user.uid||p.done)return;tsBegin(p);
+    if(early&&!S.autoPilot&&NOW()<S.turnEnd){const sx=ledAdj(p,{t:1},'⏱','จบเทิร์นก่อนหมดเวลา');if(sx)log(`⏱ ${esc(p.name)} จบเทิร์นก่อนเวลา${sx}`)}
     turnPassiveTime(p);
     if(S.autoPilot&&!p.acted){p.afk=true;ON.be.set(`rooms/${ON.code}/afk/${ON.user.uid}`,true);log(`💤 ${esc(p.name)} ไม่ได้เล่นภายใน 3 นาที ติดสถานะ Bot`)}
     else if(S.autoPilot)log(`⏰ ${esc(p.name)} หมดเวลา ระบบจบเทิร์นให้`);
@@ -3557,7 +3585,7 @@ async function parOnLed(map){if(!map||!PAR())return;for(const id in map)await pa
 async function parApplyLed(id,e){if(!e||e.c||parOwner(e.to)!==ON.user.uid)return false;ON.ledBusy=ON.ledBusy||{};if(ON.ledBusy[id])return false;ON.ledBusy[id]=1;
   const x=await ON.be.tx(`rooms/${ON.code}/led/${id}`,cur=>cur==null?null:cur.c?undefined:{...cur,c:ON.user.uid});
   if(!(x.ok&&x.val&&x.val.c===ON.user.uid))return false;
-  const q=S.players[e.to];if(q){if(e.cash){if(e.cash>0)q.cash+=e.cash;else pay(q,-e.cash)}if(e.add)q.deals.push(e.add);if(e.rem)q.deals=q.deals.filter(d=>d.id!==e.rem);
+  const q=S.players[e.to];if(q){if(e.cash){if(e.cash>0)q.cash+=e.cash;else pay(q,-e.cash);ledg(q,'💰',e.lw||e.note||'รายการจากผู้เล่นอื่น',{c:e.cash})}if(e.add)q.deals.push(e.add);if(e.rem)q.deals=q.deals.filter(d=>d.id!==e.rem);
     if(e.note&&!q.bot&&q.uid===ON.user.uid)toast(e.note)}
   await ON.be.remove(`rooms/${ON.code}/led/${id}`);render();save();return true}
 /* ---------- การ์ดข่าว: เก็บไว้มีผลตอนจบรอบ ---------- */
@@ -3568,7 +3596,7 @@ async function parQueueNews(p,kind,c){
   await choose({actor:p,kind:'newsin',title:c.t,body:`${newsImg(c.tone?c.tone!=='g':Object.values(c.e||{}).reduce((a,b)=>a+b,0)<0,c.cat)}<p>ข่าวนี้จะมีผลกับราคาตลาด${c.cash?' และเงินของผู้เล่นทุกคน':''} <b>ตอนจบรอบ</b> (ระหว่างรอบราคาคงที่ ทุกคนซื้อขายราคาเดียวกัน)</p>`,opts:[{v:'ok',l:'รับทราบ',c:'pri'}],bot:'ok'})}
 function parApplyNews(list,npc){ /* npc=true: ข่าวที่ NPC เปิดต้นรอบ (มีผลทันที) · ไม่ใส่: ข่าวที่ผู้เล่น/บอทเปิดระหว่างรอบ มีผลตอนจบรอบ */const blocks=[],me=ON.play?S.players.find(q=>q.uid===ON.user.uid):null;let myDv=0,myCash=0;
   for(const e of list){const c=e.c;if(!c||!c.e)continue;const ch=shockPrices(c.e);
-    if(c.cash)for(const q of S.players){if(c.cash>0)q.cash+=c.cash;else pay(q,-c.cash)}
+    if(c.cash)for(const q of S.players){if(c.cash>0)q.cash+=c.cash;else pay(q,-c.cash);ledg(q,'📰',`ข่าว: ${c.t}`,{c:c.cash})}
     const t=`${esc(c.t)} · ${ch.map(x=>`${SN(x.a)} ${x.pct>0?'+':''}${x.pct}%`).join(' ')}${c.cash?` · ทุกคน${c.cash>0?'ได้':'จ่าย'} ${B(Math.abs(c.cash))}`:''}`;log(`📰 ข่าวมีผลแล้ว (${esc(e.by)}): ${t}`);
     if(me){for(const x of ch){const h=me.stocks[x.s];if(h&&h.q)myDv+=h.q*(x.np-x.old)}myCash+=c.cash||0}
     const ico=(MNCAT[c.cat]||['📰'])[0];
@@ -3585,7 +3613,7 @@ function parCheck(){if(!PARH()||!parMaster()||ON.parBusy)return;const now=NOW();
   if(ok)parBots()}
 async function parBots(){ON.parBusy=1;try{
   const c=ON.code;S.rp='b';
-  const led=await ON.be.get(`rooms/${c}/led`)||{};for(const id in led){const e=led[id];if(e&&!e.c){const q=S.players[e.to];if(q){if(e.cash){if(e.cash>0)q.cash+=e.cash;else pay(q,-e.cash)}if(e.add)q.deals.push(e.add);if(e.rem)q.deals=q.deals.filter(d=>d.id!==e.rem)}}}
+  const led=await ON.be.get(`rooms/${c}/led`)||{};for(const id in led){const e=led[id];if(e&&!e.c){const q=S.players[e.to];if(q){if(e.cash){if(e.cash>0)q.cash+=e.cash;else pay(q,-e.cash);ledg(q,'💰',e.lw||e.note||'รายการจากผู้เล่นอื่น',{c:e.cash})}if(e.add)q.deals.push(e.add);if(e.rem)q.deals=q.deals.filter(d=>d.id!==e.rem)}}}
   await ON.be.remove(`rooms/${c}/led`);
   const pr=await ON.be.get(`rooms/${c}/pr`)||{};for(const k in pr)if(pr[k])S.props[k]=pr[k];
   const nq=await ON.be.get(`rooms/${c}/nq`)||{};S.nq=(S.nq||[]).concat(Object.keys(nq).sort().map(k=>nq[k]));await ON.be.remove(`rooms/${c}/nq`);
