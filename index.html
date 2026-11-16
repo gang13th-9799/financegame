@@ -214,6 +214,13 @@ div.chip{display:flex;flex-direction:column;align-items:center;justify-content:c
 .layout.mapmin .mloc2 .mloc{flex:1;min-width:0}
 .layout.mapmin .mbar .mi{padding:0 8px;min-height:26px;font-size:14px;line-height:1}
 .layout.mapmin .bwrap{display:none!important}
+.mbars{display:flex;flex-direction:column;gap:3px}
+.mbr{display:grid;grid-template-columns:18px minmax(0,1fr) 20px;align-items:center;gap:6px}
+.mbr img{width:18px;height:18px;object-fit:contain}
+.mbr b{font-size:13px;text-align:right}
+.mbt{display:grid;grid-template-columns:repeat(10,1fr);gap:2px}
+.mbt i{height:8px;border-radius:2px;background:#e8e1cf}
+.mbt i.on{background:var(--c)}
 .mpiles{margin:0 0 8px}
 .mpl{font:700 12.5px var(--display);color:var(--muted);margin:0 0 4px}
 .mpg{display:grid;grid-template-columns:repeat(4,1fr);gap:5px}
@@ -2556,7 +2563,8 @@ function render(){
     $('#minimap').innerHTML=`<div class="minib" aria-label="แผนที่ย่อ">${mini}<div class="mcity"></div></div>${piles}<div class="mbar" style="--zc:${full||zc}">
       <div class="mrow mact">${act2}</div>
       <div class="mrow mwho"><span class="tok pic" style="${tokStyle(p)}"></span><b>${esc(p.name)}${badges(p)}</b><span class="muted">${esc(S.jobs[p.job].n)}</span></div>
-      <div class="mrow mstat"><span class="mst">❤${p.st.h} ⏳${p.st.t} 📚${p.st.k}</span>${!p.bot&&S.winner==null?'<span class="timer num" id="timer"></span>':''}<span class="mdice num">🎲 ${S.dice.join('+')}</span></div>
+      <div class="mbars">${[['h','ic-h','#e05a7a','หัวใจ'],['t','ic-t','#e3a63a','เวลา'],['k','ic-k','#4a8fd8','ความรู้']].map(([kk,ic,c,l])=>`<div class="mbr" title="${l} ${p.st[kk]}/10"><img src="img/${ic}.webp" alt="${l}"><span class="mbt" style="--c:${c}">${Array.from({length:10},(_,i)=>`<i class="${i<p.st[kk]?'on':''}"></i>`).join('')}</span><b class="num">${p.st[kk]}</b></div>`).join('')}</div>
+      <div class="mrow mstat">${!p.bot&&S.winner==null?'<span class="timer num" id="timer"></span>':''}<span class="mdice num">🎲 ${S.dice.join('+')}</span></div>
       <div class="mrow mloc2"><span class="mloc">📍 <b>${esc(q.n)}</b></span><button class="sm mi" onclick="cellInfo('${k}')" aria-label="รายละเอียดช่อง" title="รายละเอียด">ⓘ</button><span class="muted msum">${sum}</span></div></div>`;bd.innerHTML='';}
   else if(V3.on){setBoard(bd,CITY_PLATE+h+`<div class="center plaza"></div>`);const hd=$('#hud');hd.hidden=false;hd.className=`hud center ph-${p.bot?'bot':S.phase}`;hd.innerHTML=ctr;v3Update(p)}
   else setBoard(bd,CITY_PLATE+h+`<div class="center ph-${p.bot?'bot':S.phase}">${ctr}</div>`);
@@ -3211,7 +3219,7 @@ function onTag(){let t=$('#roomTag');if(!ON.code){if(t)t.remove();return}
   if(!t){t=document.createElement('span');t.id='roomTag';t.className='roomtag';t.setAttribute('role','button');t.title='ดูข้อมูลห้อง';t.onclick=onRoomInfo;const h=document.querySelector('header .logo')?.parentElement||document.querySelector('header');h.appendChild(t)}
   t.textContent='ห้อง '+ON.code+' ⓘ'}
 /* เวอร์ชันของไฟล์เกม (เปลี่ยนทุกครั้งที่แก้ระบบออนไลน์) · ส่งไปกับสถานะออนไลน์ เพื่อดูว่าใครยังเปิดเวอร์ชันเก่า */
-const BUILD='2026-11-16.12';
+const BUILD='2026-11-16.13';
 /* ป้ายเลขห้อง → ข้อมูลห้อง: เจ้าของห้อง · เครื่องที่คุมรอบ · สถานะผู้เล่นแต่ละคน */
 function onRoomInfo(){const r=ON.room;if(!r||!ON.code)return;
   const seatName=u=>{const q=S&&S.players&&S.players.find(x=>x.uid===u);if(q)return q.name;const s=Object.values(r.seats||{}).find(x=>x&&x.uid===u);return s?(s.name||'ผู้เล่น'):'—'};
