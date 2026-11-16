@@ -1303,12 +1303,12 @@ function migrateBoard(o){if(!o||o.ob===48)return o;const pr={};for(const k in o.
 const SQ=k=>SQ_MAP[k];
 const roadPair=(ring,i)=>ring==='o'?['i',(i-6)/12*8+4]:['o',(i-4)/8*12+6];
 const ASSETS=[
- {s:'TTEC',n:'ไทยเทค',k:'stock',p:20,v:.12,div:0},
- {s:'PWR',n:'พลังงานไทย',k:'stock',p:15,v:.06,div:1},
- {s:'BNK',n:'ธนาคารสยาม',k:'stock',p:25,v:.05,div:1.5},
- {s:'FOOD',n:'อาหารไทย',k:'stock',p:10,v:.05,div:.5},
- {s:'REIT',n:'กองทรัสต์อสังหาฯ',k:'stock',p:10,v:.03,div:.7},
- {s:'GROW',n:'สตาร์ทอัพโกรว์',k:'stock',p:5,v:.3,div:0},
+ {s:'TTEC',n:'Apple',k:'stock',p:20,v:.12,div:0},
+ {s:'PWR',n:'ExxonMobil',k:'stock',p:15,v:.06,div:1},
+ {s:'BNK',n:'JPMorgan',k:'stock',p:25,v:.05,div:1.5},
+ {s:'FOOD',n:'McDonald’s',k:'stock',p:10,v:.05,div:.5},
+ {s:'REIT',n:'Realty Income',k:'stock',p:10,v:.03,div:.7},
+ {s:'GROW',n:'Tesla',k:'stock',p:5,v:.3,div:0},
  {s:'GOLD',n:'ทองคำ (บาท)',k:'com',p:20000,v:.05,div:0},
  {s:'OIL',n:'น้ำมันดิบ (สัญญา)',k:'com',p:6000,v:.12,div:0},
  {s:'RICE',n:'ข้าวหอมมะลิ (ตัน)',k:'com',p:3000,v:.08,div:0},
@@ -1343,7 +1343,7 @@ const cryLbl=i=>{const t=CRY_M0[1]-1+i;return `${TH_MON[t%12]} ${CRY_M0[0]+Math.
 const cryIdx=()=>(S.cm0??0)+(S.cmo??0);
 const cryLive=(a,S0)=>a.k!=='cry'||((S0.cm0??0)+(S0.cmo??0))>=cryFrom(a.s);
 
-/* ===== หุ้น + สินค้าโภคภัณฑ์ อิงราคาจริงช่วงเดียวกับคริปโต (ชื่อในเกมเป็นชื่อสมมติ) =====
+/* ===== หุ้น + สินค้าโภคภัณฑ์ อิงราคาจริงช่วงเดียวกับคริปโต (หุ้นใช้ชื่อบริษัทจริง) =====
    ราคาในเกม = ราคาตั้งต้น a.p × (ราคาจริงเดือนนี้ ÷ ราคาจริงเดือนเริ่มเกม) × S.adj (ผลข่าวตลาดสะสม)
    แหล่ง: หุ้นสหรัฐ + กองทุน ETF adjusted close รายเดือน (digrin.com) · ทอง COMEX (officialdata.org) · น้ำมัน WTI, ข้าวไทย 5% (IMF), เหล็ก PPI Iron&Steel — FRED */
 const MKT={
@@ -1363,13 +1363,13 @@ const MKT={
  SET50:[54.28,54.15,54.92,57.65,57.14,59.41,59.05,59.56,60.42,61.31,64.11,67.0,68.64,69.47,72.19,77.77,78.46,77.81,76.07,73.41,65.33,70.81,71.71,74.88,68.85,68.47,66.24,72.71,71.67,70.65,72.46,71.65,77.68,74.76,73.13,72.08,71.5,71.05,71.74,64.63,57.58,47.07,53.11,57.59,58.92,57.27,56.93,52.33,50.88,62.74,64.65,64.54,65.33,68.97,67.74,68.08,66.42,62.29,67.75,63.56,65.28,62.08,65.86,66.24,69.15,67.46,64.41,65.61,60.6,60.33,61.43,57.16,58.48,64.68,66.66,70.6,63.03,65.03,62.82,60.61,59.36,63.84,62.3,56.39,53.99,55.01,58.24,54.22,53.85,53.27,52.42,52.49,50.51,53.15,57.3,64.49,61.62,59.03,56.96,54.25,50.08,48.96,51.66,50.31,48.65,54.39,55.19,56.77,58.52,56.92,58.3,61.71,73.32,67.78,69.08,71.77,72.31,73.04,72.37,70.51,68.46],
  GLOB:[48.17,48.67,49.62,51.06,52.35,53.05,53.91,55.1,55.53,57.05,57.28,58.36,59.61,60.82,61.7,65.21,62.3,61.36,61.61,61.9,61.54,63.43,63.87,64.26,59.48,60.42,56.07,60.58,62.07,63.05,65.21,61.25,65.22,65.27,63.83,65.26,67.05,68.61,70.98,69.95,64.72,56.04,61.54,64.68,66.58,70.15,74.38,72.18,70.57,78.87,82.57,82.32,84.2,86.6,90.28,91.61,92.76,93.61,95.64,91.6,96.54,94.31,97.98,93.52,90.66,92.42,84.96,85.34,78.43,83.97,80.3,72.76,77.38,83.83,79.96,85.97,83.11,85.88,87.23,86.31,91.31,94.59,91.84,87.91,85.67,93.29,97.78,98.05,102.5,105.8,102.1,106.7,108.9,110.6,113.3,115.8,113.4,118.0,114.8,118.4,118.1,113.8,114.3,120.9,126.7,128.0,131.4,136.2,139.3,139.3,140.6,144.6,146.4,137.5,150.6,157.5,157.0,156.4,160.7,158.8,156.0],
  GOLDF:[121.9,111.8,109.6,115.6,119.2,118.7,120.8,120.6,118.0,120.8,125.8,121.6,120.7,121.1,123.7,127.7,125.0,125.8,124.6,123.1,118.7,116.0,113.5,112.8,115.2,115.5,121.3,124.8,124.0,122.0,121.2,123.3,133.2,133.2,143.8,138.9,142.4,137.9,142.9,149.3,148.4,148.1,158.8,162.9,167.4,185.4,184.8,177.1,176.2,166.7,178.4,172.6,161.8,160.0,165.7,178.4,165.6,169.8,169.7,164.2,166.7,165.5,171.0,168.1,178.4,180.7,176.9,171.1,168.5,164.1,159.3,154.7,151.9,164.8,169.6,179.4,169.8,183.2,184.8,182.3,178.3,182.4,180.0,171.5,184.1,188.8,191.2,188.5,189.3,205.7,211.9,215.3,215.0,226.6,231.3,243.1,253.5,245.6,242.1,258.6,263.3,288.1,303.8,303.6,304.8,303.0,318.1,355.5,368.1,387.9,396.3,445.0,483.8,430.3,423.7,417.1,368.4,371.5,408.4,380.8,355.8]};
-const MKT_REAL={TTEC:'Apple (AAPL)',PWR:'ExxonMobil (XOM)',BNK:'JPMorgan (JPM)',FOOD:"McDonald's (MCD)",REIT:'Realty Income (O)',GROW:'Tesla (TSLA)',GOLD:'ทองคำ COMEX',OIL:'น้ำมันดิบ WTI',RICE:'ข้าวขาวไทย 5% (IMF)',STEEL:'ดัชนีราคาเหล็กสหรัฐ (PPI)',MMF:'กองทุนพันธบัตรระยะสั้น BIL',BOND:'กองทุนตราสารหนี้ AGG',DIVF:'กองทุนหุ้นปันผล VYM',SET50:'กองทุนหุ้นไทย THD',GLOB:'กองทุนหุ้นโลก ACWI',GOLDF:'กองทุนทองคำ GLD'};
+const MKT_REAL={TTEC:'Apple (AAPL)',PWR:'ExxonMobil (XOM)',BNK:'JPMorgan (JPM)',FOOD:"McDonald’s (MCD)",REIT:'Realty Income (O)',GROW:'Tesla (TSLA)',GOLD:'ทองคำ COMEX',OIL:'น้ำมันดิบ WTI',RICE:'ข้าวขาวไทย 5% (IMF)',STEEL:'ดัชนีราคาเหล็กสหรัฐ (PPI)',MMF:'กองทุนพันธบัตรระยะสั้น BIL',BOND:'กองทุนตราสารหนี้ AGG',DIVF:'กองทุนหุ้นปันผล VYM',SET50:'กองทุนหุ้นไทย THD',GLOB:'กองทุนหุ้นโลก ACWI',GOLDF:'กองทุนทองคำ GLD'};
 for(const a of ASSETS)a.d0=a.div;
 const mktP=(s,i)=>{const d=MKT[s],a=AS(s);return a.p*d[Math.min(i,d.length-1)]/d[S.cm0??0]*((S.adj||{})[s]||1)};
 function syncDiv(){if(!S||!S.prices)return;for(const a of ASSETS)if(a.d0&&S.prices[a.s])a.div=+(a.d0*S.prices[a.s]/a.p).toFixed(a.k==='fund'?3:2)}
 function cryInitMkt(){S.mkOn=1;for(const s in MKT){const a=AS(s),v=roundP(a,mktP(s,S.cm0));S.prices[s]=v;S.hist[s]=[v]}syncDiv()}
 function cryInit(){S.adj={};S.cm0=Math.floor(Math.random()*(CRY_N-CRY_RUN+1));S.cmo=0;S.cryBase={};for(const a of ASSETS)if(a.k==='cry'){const v=cryP(a.s,S.cm0);S.prices[a.s]=v;S.hist[a.s]=[v];if(S.cm0>=cryFrom(a.s))S.cryBase[a.s]=v}cryInitMkt()}
-function cryReveal(){const a=S.cm0??0,b=Math.min(cryIdx(),CRY_N-1);return `📅 เฉลย: ราคาตลาดเกมนี้ใช้ช่วงจริง ${cryLbl(a)} → ${cryLbl(b)}${cryIdx()>=CRY_N?' (หลังจากนั้นสุ่มต่อ)':''} · อิงราคาจริงของ ${Object.entries(MKT_REAL).map(([k,v])=>AS(k).n+' = '+v).join(' · ')}`}
+function cryReveal(){const a=S.cm0??0,b=Math.min(cryIdx(),CRY_N-1);return `📅 เฉลย: ราคาตลาดเกมนี้ใช้ช่วงจริง ${cryLbl(a)} → ${cryLbl(b)}${cryIdx()>=CRY_N?' (หลังจากนั้นสุ่มต่อ)':''} · อิงราคาจริงของ ${Object.entries(MKT_REAL).filter(([k])=>AS(k).k!=='stock').map(([k,v])=>AS(k).n+' = '+v).join(' · ')}`}
 /* ธนาคาร: ดอกเบี้ยต่อเดือน */
 const LOAN_R=.02,DEP_R=.0025,LOAN_TXT='2%',DEP_TXT='0.25%';
 const loanLim=p=>Math.max(400000,p.salary*12);
@@ -1424,20 +1424,20 @@ async function netCard(p){
   netRankCheck(p);
 }
 const NEWS=[
- {t:'ไทยเทคเปิดตัวชิป AI',e:{TTEC:25}},
- {t:'ไทยเทคถูกแฮ็กข้อมูลลูกค้า',e:{TTEC:-20}},
+ {t:'Apple เปิดตัวชิป AI',e:{TTEC:25}},
+ {t:'Apple ถูกแฮ็กข้อมูลลูกค้า',e:{TTEC:-20}},
  {t:'ราคาน้ำมันโลกพุ่ง',e:{OIL:25,PWR:10}},
  {t:'กลุ่มผู้ผลิตน้ำมันเพิ่มกำลังผลิต',e:{OIL:-20,PWR:-5}},
  {t:'แบงก์ชาติขึ้นดอกเบี้ย',e:{BNK:8,REIT:-10,GROW:-15}},
  {t:'แบงก์ชาติลดดอกเบี้ย',e:{BNK:-6,REIT:10,GROW:15}},
  {t:'ภัยแล้งรุนแรง',e:{RICE:30,FOOD:-8}},
  {t:'ข้าวล้นตลาด',e:{RICE:-20}},
- {t:'อาหารไทยขยายสาขาต่างประเทศ',e:{FOOD:15}},
+ {t:'McDonald’s ขยายสาขาต่างประเทศ',e:{FOOD:15}},
  {t:'สงครามการค้าโลก',e:{GOLD:12,TTEC:-10,FOOD:-5}},
  {t:'ตลาดหุ้นโลกร่วงหนัก',e:{TTEC:-12,PWR:-12,BNK:-12,FOOD:-12,REIT:-8,GROW:-20,GOLD:8}},
  {t:'ตลาดหุ้นกระทิงทั่วโลก',e:{TTEC:10,PWR:8,BNK:8,FOOD:8,REIT:5,GROW:20,GOLD:-5}},
- {t:'โกรว์ได้เงินทุนรอบใหม่',e:{GROW:60}},
- {t:'ผู้ก่อตั้งโกรว์ลาออก',e:{GROW:-45}},
+ {t:'Tesla ได้เงินทุนรอบใหม่',e:{GROW:60}},
+ {t:'ผู้ก่อตั้ง Tesla ลาออก',e:{GROW:-45}},
  {t:'นักท่องเที่ยวต่างชาติทะลัก',e:{REIT:8,FOOD:6}},
  {t:'เงินเฟ้อสูงเกินคาด',e:{GOLD:10,BNK:-5,REIT:-4}},
 ];
@@ -1505,7 +1505,7 @@ function balanceDB(D){
   for(const r of D.learn||[])if(r.nt===undefined||r.nt==='')Object.assign(r,learnNeedDef(r));
   return rep;
 }
-function loadDB(){for(const r of DEFAULT_DB.opp)if(r.ty==='biz'&&!(+r.nh>=1))r.nh=1;lifeNoDrain(DEFAULT_DB);balanceDB(DEFAULT_DB);DEFAULT_DB.ver=12;let d=null;try{d=JSON.parse(localStorage.getItem('ffdb-v1')||'null')}catch(e){}DB=d&&d.jobs?d:JSON.parse(JSON.stringify(DEFAULT_DB));if(!(DB.ver>=2)&&DB.skills){for(const r of DB.skills)if(!r.kind){r.kind='passive';r.uses=0}for(const r of DEFAULT_DB.skills)if(r.kind==='active'&&!DB.skills.some(x=>x.key===r.key))DB.skills.push({...r});if(DB.learn)for(const r of DEFAULT_DB.learn)if(DEFAULT_DB.skills.some(s=>s.key===r.ty&&s.kind==='active')&&!DB.learn.some(x=>x.t===r.t))DB.learn.push({...r});DB.ver=2;try{localStorage.setItem('ffdb-v1',JSON.stringify(DB))}catch(e){}}if(!(DB.ver>=3)&&DB.net){const H=[['ฟิตเนส',2],['ไอโฟน',1],['ซีรีส์',1],['เสื้อผ้าใหม่',1],['ของขวัญ',1],['น้ำท่วม',-1]];
+function loadDB(){for(const r of DEFAULT_DB.opp)if(r.ty==='biz'&&!(+r.nh>=1))r.nh=1;lifeNoDrain(DEFAULT_DB);balanceDB(DEFAULT_DB);DEFAULT_DB.ver=13;let d=null;try{d=JSON.parse(localStorage.getItem('ffdb-v1')||'null')}catch(e){}DB=d&&d.jobs?d:JSON.parse(JSON.stringify(DEFAULT_DB));if(!(DB.ver>=2)&&DB.skills){for(const r of DB.skills)if(!r.kind){r.kind='passive';r.uses=0}for(const r of DEFAULT_DB.skills)if(r.kind==='active'&&!DB.skills.some(x=>x.key===r.key))DB.skills.push({...r});if(DB.learn)for(const r of DEFAULT_DB.learn)if(DEFAULT_DB.skills.some(s=>s.key===r.ty&&s.kind==='active')&&!DB.learn.some(x=>x.t===r.t))DB.learn.push({...r});DB.ver=2;try{localStorage.setItem('ffdb-v1',JSON.stringify(DB))}catch(e){}}if(!(DB.ver>=3)&&DB.net){const H=[['ฟิตเนส',2],['ไอโฟน',1],['ซีรีส์',1],['เสื้อผ้าใหม่',1],['ของขวัญ',1],['น้ำท่วม',-1]];
   for(const r of DB.net.filter(r=>r.cat==='ชีวิต')){const o={t:r.t,cash:0,cpct:0,spct:0,mexp:0,kid:0,h:0,tt:0,k:0,act:0,pas:0,opt:0,nt:0,nh:0,nk:0,sp:''};
     if(String(r.t).startsWith('ตกงาน'))o.sp='jobless';else if(!+r.A&&!+r.P){if(/ต่อเดือน/.test(r.t))o.mexp=+r.cost;else o.cash=-(+r.cost);const hh=H.find(([w])=>r.t.includes(w));if(hh)o.h=hh[1]}
     else Object.assign(o,{opt:1,cash:-(+r.cost),act:+r.A,pas:+r.P,nt:+r.nt||1,nh:+r.nh||0,nk:+r.nk||0});(DB.life=DB.life||[]).push(o)}
@@ -1521,6 +1521,8 @@ for(const r of DB.jobs||[])if(r.kc===undefined||r.kc==='')r.kc=Math.max(2000,Mat
 if(!(DB.ver>=10)){for(const r of DB.life||[])r.acc=["รถเสียกลางทาง", "เข้าโรงพยาบาล", "น้ำท่วมบ้าน", "ถูกเรียกเก็บภาษีย้อนหลัง", "ทำงานหนักจนนอนไม่พอ"].some(a=>String(r.t).startsWith(a))?1:(+r.acc||0);DB.ver=10;try{localStorage.setItem('ffdb-v1',JSON.stringify(DB))}catch(e){}}
 if(!(DB.ver>=11)){for(const n of [{"cash": -8000, "cpct": 0, "spct": 0, "mexp": 0, "kid": 0, "h": 1, "tt": 0, "k": 0, "act": 0, "pas": 0, "opt": 0, "nt": 0, "nh": 0, "nk": 0, "sp": "", "acc": 0, "perkid": 1, "t": "ค่าเทอมลูก เปิดเทอมใหม่"}, {"cash": -2000, "cpct": 0, "spct": 0, "mexp": 0, "kid": 0, "h": 1, "tt": 0, "k": 0, "act": 0, "pas": 0, "opt": 0, "nt": 0, "nh": 0, "nk": 0, "sp": "", "acc": 0, "perkid": 1, "t": "ค่าทัศนศึกษาของลูก"}, {"cash": -1500, "cpct": 0, "spct": 0, "mexp": 0, "kid": 0, "h": 1, "tt": 0, "k": 0, "act": 0, "pas": 0, "opt": 0, "nt": 0, "nh": 0, "nk": 0, "sp": "", "acc": 0, "perkid": 1, "t": "ซื้ออุปกรณ์การเรียนให้ลูก"}, {"cash": -5000, "cpct": 0, "spct": 0, "mexp": 0, "kid": 0, "h": 1, "tt": 0, "k": 1, "act": 0, "pas": 0, "opt": 0, "nt": 0, "nh": 0, "nk": 0, "sp": "", "acc": 0, "perkid": 1, "t": "ส่งลูกเรียนพิเศษ"}, {"cash": -3000, "cpct": 0, "spct": 0, "mexp": 0, "kid": 0, "h": 2, "tt": 0, "k": 0, "act": 0, "pas": 0, "opt": 0, "nt": 0, "nh": 0, "nk": 0, "sp": "", "acc": 0, "perkid": 1, "t": "พาลูกเที่ยวสวนสนุก"}])if(!DB.life.some(r=>r.t===n.t))DB.life.push(n);DB.ver=11;try{localStorage.setItem('ffdb-v1',JSON.stringify(DB))}catch(e){}}
 if(!(DB.ver>=12)){try{const j=JSON.stringify(DB).replace(/บริษัทแอมเวย์/g,'บริษัท A').replace(/นักธุรกิจแอมเวย์/g,'นักธุรกิจ A ').replace(/แอมเวย์/g,'A').replace(/amway/gi,'A').replace(/A  /g,'A ');DB=JSON.parse(j)}catch(e){}DB.ver=12;try{localStorage.setItem('ffdb-v1',JSON.stringify(DB))}catch(e){}}
+  /* v13: หุ้นใช้ชื่อบริษัทจริง (ไทยเทค→Apple ฯลฯ) ในการ์ดที่ผู้เล่นเก็บไว้ในเครื่อง */
+  if(!(DB.ver>=13)){try{let j=JSON.stringify(DB);for(const [a,b] of [['ไทยเทค','Apple '],['พลังงานไทย','ExxonMobil '],['ธนาคารสยาม','JPMorgan '],['อาหารไทยได้สัญญาส่งออกล็อตใหญ่','McDonald’s ยอดขายทั่วโลกโตเกินคาด'],['อาหารไทย','McDonald’s '],['สตาร์ทอัพโกรว์','Tesla '],['โกรว์','Tesla '],['ผู้ก่อตั้งTesla','ผู้ก่อตั้ง Tesla'],['ของExxonMobil','ของ ExxonMobil']])j=j.split(a).join(b);DB=JSON.parse(j)}catch(e){}DB.ver=13;try{localStorage.setItem('ffdb-v1',JSON.stringify(DB))}catch(e){}}
 for(const r of DB.net||[])if(/คอนโดราคา 2\.5M/.test(r.t))r.t='ลงทุนดาวน์คอนโดเพื่อปล่อยเช่า';
 for(const r of DB.life||[])if(r.sp==='jobless'&&/จ่ายเงินเท่ากับ/.test(r.t))r.t='ตกงาน (หัวใจ −2 · 2 เดือนได้แค่ Passive)';
 for(const k in DEFAULT_DB)if(!DB[k])DB[k]=JSON.parse(JSON.stringify(DEFAULT_DB[k]));applyDB()}
@@ -1561,6 +1563,8 @@ const rnd100=n=>Math.max(100,Math.round(n/100)*100);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
 const AS=s=>ASSETS.find(a=>a.s===s);
+/* หุ้นใช้ชื่อบริษัทจริงอย่างเดียว (ไม่โชว์ตัวย่อในตลาด) · สินทรัพย์อื่นยังโชว์ตัวย่อ */
+const SN=a=>a.k==='stock'?a.n:a.s,AN=a=>a.k==='stock'?a.n:`${a.n} (${a.s})`,SYMH=a=>a.k==='stock'?'':` <span class="muted">${a.s}</span>`;
 const EXP=new Set();
 /* แท็บข้อมูล: ตาคน → ดูคนนั้น · ตาบอท → คงที่เดิม (ถ้ากำลังดูบอทที่ไม่ได้เลือกเอง ให้กลับไปที่ผู้เล่นคน) */
 function viewFollow(){if(ON.play){viewFollowOnline();return}const c=S.players[S.cur];if(c&&!c.bot){S.view=S.cur;S.viewPick=0;return}const v=S.players.find(q=>q.id===S.view);if(!v||(v.bot&&!S.viewPick)){const h=S.players.find(q=>!q.bot);if(h)S.view=h.id}}
@@ -2168,16 +2172,16 @@ async function newsCard(p){
 /* ===== ข่าวตลาดในกองการ์ดโอกาส (40 ใบ: หุ้น/กองทุน/คริปโต/สินค้า อย่างละ 10 ดี 5 ร้าย 5) — เปิดแล้วมีผลกับผู้เล่นทุกคน
    e = % ราคาเปลี่ยน (เก็บใน S.adj จึงติดไปกับราคาจริงเดือนต่อ ๆ ไป) · cash = เงินสดที่ผู้เล่นทุกคนได้/เสีย */
 const OPP_NEWS=[
- {t:'ไทยเทคเปิดตัวสมาร์ตโฟน AI ขายหมดในวันเดียว',ty:'mnews',cat:'st',tone:'g',e:{TTEC:20}},
- {t:'ธนาคารสยามประกาศกำไรสูงสุดเป็นประวัติการณ์',ty:'mnews',cat:'st',tone:'g',e:{BNK:12}},
+ {t:'Apple เปิดตัวสมาร์ตโฟน AI ขายหมดในวันเดียว',ty:'mnews',cat:'st',tone:'g',e:{TTEC:20}},
+ {t:'JPMorgan ประกาศกำไรสูงสุดเป็นประวัติการณ์',ty:'mnews',cat:'st',tone:'g',e:{BNK:12}},
  {t:'รัฐบาลลดภาษีนิติบุคคล หุ้นขึ้นยกแผง',ty:'mnews',cat:'st',tone:'g',e:{TTEC:8,PWR:8,BNK:8,FOOD:8,REIT:5,GROW:12}},
- {t:'อาหารไทยได้สัญญาส่งออกล็อตใหญ่',ty:'mnews',cat:'st',tone:'g',e:{FOOD:15}},
- {t:'สตาร์ทอัพโกรว์ได้ลูกค้ารายใหญ่ระดับโลก',ty:'mnews',cat:'st',tone:'g',e:{GROW:35}},
- {t:'ไทยเทคถูกสอบสวนข้อหาผูกขาดการค้า',ty:'mnews',cat:'st',tone:'b',e:{TTEC:-15}},
- {t:'แท่นขุดเจาะของพลังงานไทยเกิดอุบัติเหตุ',ty:'mnews',cat:'st',tone:'b',e:{PWR:-18}},
+ {t:'McDonald’s ยอดขายทั่วโลกโตเกินคาด',ty:'mnews',cat:'st',tone:'g',e:{FOOD:15}},
+ {t:'Tesla ได้ลูกค้ารายใหญ่ระดับโลก',ty:'mnews',cat:'st',tone:'g',e:{GROW:35}},
+ {t:'Apple ถูกสอบสวนข้อหาผูกขาดการค้า',ty:'mnews',cat:'st',tone:'b',e:{TTEC:-15}},
+ {t:'แท่นขุดเจาะของ ExxonMobil เกิดอุบัติเหตุ',ty:'mnews',cat:'st',tone:'b',e:{PWR:-18}},
  {t:'ดอกเบี้ยขาขึ้น หุ้นอสังหาฯ และหุ้นเติบโตร่วง',ty:'mnews',cat:'st',tone:'b',e:{REIT:-12,GROW:-10,BNK:5}},
  {t:'นักลงทุนเทขายตกใจ ตลาดหุ้นดิ่งหนัก',ty:'mnews',cat:'st',tone:'b',e:{TTEC:-10,PWR:-10,BNK:-10,FOOD:-8,REIT:-8,GROW:-18}},
- {t:'สตาร์ทอัพโกรว์ขาดทุนหนัก เลื่อนแผนขยายธุรกิจ',ty:'mnews',cat:'st',tone:'b',e:{GROW:-30}},
+ {t:'Tesla ขาดทุนหนัก เลื่อนแผนขยายธุรกิจ',ty:'mnews',cat:'st',tone:'b',e:{GROW:-30}},
  {t:'เงินต่างชาติไหลเข้าตลาดหุ้นไทย',ty:'mnews',cat:'fd',tone:'g',e:{SET50:10,DIVF:5}},
  {t:'ตลาดหุ้นโลกทำจุดสูงสุดใหม่',ty:'mnews',cat:'fd',tone:'g',e:{GLOB:9,SET50:4}},
  {t:'แบงก์ชาติส่งสัญญาณลดดอกเบี้ย',ty:'mnews',cat:'fd',tone:'g',e:{BOND:4,DIVF:5,SET50:3}},
@@ -2216,11 +2220,11 @@ async function mnewsCard(p,c){
   const ch=shockPrices(c.e),[ico,cn]=MNCAT[c.cat];
   const rows=S.players.map(q=>{let dv=0;for(const x of ch){const h=q.stocks[x.s];if(h&&h.q)dv+=h.q*(x.np-x.old)}return {q,dv:Math.round(dv)}});
   if(c.cash)for(const q of S.players){if(c.cash>0)q.cash+=c.cash;else pay(q,-c.cash)}
-  log(`${ico} ${esc(p.name)} เปิดข่าว: ${esc(c.t)} · ${ch.map(x=>`${x.a.s} ${x.pct>0?'+':''}${x.pct}%`).join(' ')}${c.cash?` · ทุกคน${c.cash>0?'ได้':'จ่าย'} ${B(Math.abs(c.cash))}`:''}`);
+  log(`${ico} ${esc(p.name)} เปิดข่าว: ${esc(c.t)} · ${ch.map(x=>`${SN(x.a)} ${x.pct>0?'+':''}${x.pct}%`).join(' ')}${c.cash?` · ทุกคน${c.cash>0?'ได้':'จ่าย'} ${B(Math.abs(c.cash))}`:''}`);
   if(c.cash)ruleNote(p,c.cash>0?'ข่าวดี: ทุกคนได้เงิน':'ข่าวร้าย: ทุกคนจ่ายเงิน',`${c.cnote} ${B(Math.abs(c.cash))} (${esc(c.t)})`);
   render();
   const body=`${newsImg(c.tone!=='g',c.cat)}${chips([chip(ico,cn,'','tag'),chip(c.tone==='g'?'🟢':'🔴',c.tone==='g'?'ข่าวดี · ราคาขึ้น':'ข่าวร้าย · ราคาลง','',c.tone==='g'?'gain':'cost')])}
-   <div class="mnl">${ch.map(x=>`<div class="ln"><span>${x.a.n} <span class="muted">${x.a.s}</span></span><span class="num ${x.pct>0?'pos':'neg'}">${x.pct>0?'+':''}${x.pct}% → ${fmtP(x.a,x.np)}</span></div>`).join('')||'<p class="muted">สินทรัพย์ในข่าวยังไม่เข้าตลาด</p>'}</div>
+   <div class="mnl">${ch.map(x=>`<div class="ln"><span>${x.a.n}${SYMH(x.a)}</span><span class="num ${x.pct>0?'pos':'neg'}">${x.pct>0?'+':''}${x.pct}% → ${fmtP(x.a,x.np)}</span></div>`).join('')||'<p class="muted">สินทรัพย์ในข่าวยังไม่เข้าตลาด</p>'}</div>
    <h4 style="margin:10px 0 4px;font-size:13px">ผลกระทบต่อผู้เล่นทุกคน</h4>
    <div class="mnl">${rows.map(r=>`<div class="ln"><span>${esc(r.q.name)}</span><span class="num ${r.dv+(c.cash||0)>0?'pos':r.dv+(c.cash||0)<0?'neg':'muted'}">${r.dv?`พอร์ต ${r.dv>0?'+':'−'}${B(Math.abs(r.dv)).replace('−','')}`:'ไม่ได้ถือ'}${c.cash?` · เงินสด ${c.cash>0?'+':'−'}${B(Math.abs(c.cash))}`:''}</span></div>`).join('')}</div>
    ${c.cash?`<p class="muted" style="font-size:12px">${c.cnote} ${B(Math.abs(c.cash))}</p>`:''}<p class="muted" style="font-size:12px">ราคาใหม่ติดไปกับราคาจริงในเดือนต่อ ๆ ไป · ซื้อขายได้ที่แท็บเทรด/ธนาคารในเทิร์นของคุณ</p>`;
@@ -2349,7 +2353,7 @@ async function oppCard(p,c,src){
   }else if(c.ty==='ipo'){
     const pr=Math.round(S.prices.GROW*.6*10)/10;
     const nb=needBox(p,Math.round(pr*5000),c.nt||0,c.nk||0,c.nh||0,true);
-    const v=await choose({actor:p,kind:'opp',title:c.t,body:`<p>ซื้อหุ้นสตาร์ทอัพโกรว์ราคาจอง ฿${pr.toFixed(1)} (ตลาด ฿${S.prices.GROW.toFixed(1)}) ไม่มีปันผล ราคาผันผวนสูงมาก อาจเป็นศูนย์ได้</p>${(c.nt||c.nh||c.nk)?nb.html:''}`,
+    const v=await choose({actor:p,kind:'opp',title:c.t,body:`<p>ซื้อหุ้น Tesla ราคาจอง ฿${pr.toFixed(1)} (ตลาด ฿${S.prices.GROW.toFixed(1)}) ไม่มีปันผล ราคาผันผวนสูงมาก อาจเป็นศูนย์ได้</p>${(c.nt||c.nh||c.nk)?nb.html:''}`,
       opts:[{v:5,l:loanLbl(p,pr*5000,`5,000 หุ้น ${B(pr*5000)}`),c:'pri',dis:nb.lack},{v:10,l:loanLbl(p,pr*10000,`10,000 หุ้น ${B(pr*10000)}`),dis:nb.lack},{v:0,l:'ข้าม'}],bot:p.cash>pr*5000+fin(p).expenses&&Math.random()<.5?5:0});
     if(v){adj(p,{t:-(c.nt||0),h:-(c.nh||0),k:-(c.nk||0)},true);const q=v*1000;loanFor(p,pr*q);p.cash-=pr*q;addHold(p,'GROW',q,pr*q);log(`📈 ${esc(p.name)} จองซื้อ GROW ${q} หุ้น`)}
   }else if(c.ty==='gold'){
@@ -2385,7 +2389,7 @@ async function trade(s,dir,lots){
   if(dir<0){if(!hd||!hd.q){toast('ยังไม่มีให้ขาย');return}q=Math.min(q,hd.q)}
   const v=pr*q,fee=commission(p,v),prS=a.k==='com'?B(pr):'฿'+pr.toFixed(2);
   const row=(k,val,cls='')=>`<b>${k}</b><span class="num ${cls}">${val}</span>`;
-  let body=`<div class="kv">${row('สินทรัพย์',`${a.n} (${a.s})`)}${row('ราคาตอนนี้',`${prS} ต่อ${unit}`)}${row('จำนวน',`${q.toLocaleString()} ${unit}`)}${row('มูลค่า',B(v))}${row('ค่าคอม',fee?B(fee):'ฟรี',fee?'neg':'')}`;
+  let body=`<div class="kv">${row('สินทรัพย์',AN(a))}${row('ราคาตอนนี้',`${prS} ต่อ${unit}`)}${row('จำนวน',`${q.toLocaleString()} ${unit}`)}${row('มูลค่า',B(v))}${row('ค่าคอม',fee?B(fee):'ฟรี',fee?'neg':'')}`;
   let opts;
   if(dir>0){
     const total=v+fee,after=p.cash-total,L=Math.ceil(Math.max(0,-after)/1000)*1000;
@@ -2713,13 +2717,13 @@ function cryTag(a){if(!cryLive(a,S))return `<span class="mk neg">ยังไม
 function mrow(a,p,dis,acc){
   const pr=S.prices[a.s],hs=S.hist[a.s],prev=hs.length>1?hs[hs.length-2]:pr,ch=(pr-prev)/prev*100,h=p.stocks[a.s];
   const pl=h&&h.q?(()=>{const avg=h.c/h.q,val=h.q*pr,pl=val-h.c;acc.tc+=h.c;acc.tv+=val;return `<span class="mk">ทุน ${fmtAvg(a,avg)}</span><span class="mk ${pl>=0?'pos':'neg'}">${pl>=0?'+':'−'}${B(Math.abs(pl)).replace('−','')} (${pl>=0?'+':''}${(pl/h.c*100).toFixed(1)}%)</span>`})():'';
-  return `<div class="mi"><div class="mi1 tap" role="button" tabindex="0" aria-label="ซื้อขาย ${a.n}" onclick="tradeDlg('${a.s}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tradeDlg('${a.s}')}">${MICO(a)}<div class="mname"><b>${a.s}</b><span class="muted">${a.n}</span></div>${spark(hs)}<div class="mprice"><b class="num">${fmtP(a,pr)}</b><span class="num ${ch>=0?'pos':'neg'}">${ch>=0?'+':''}${ch.toFixed(1)}%</span></div><span class="mgo" aria-hidden="true">›</span></div>
+  return `<div class="mi"><div class="mi1 tap" role="button" tabindex="0" aria-label="ซื้อขาย ${a.n}" onclick="tradeDlg('${a.s}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tradeDlg('${a.s}')}">${MICO(a)}<div class="mname">${a.k==='stock'?`<b>${esc(a.n)}</b>`:`<b>${a.s}</b><span class="muted">${a.n}</span>`}</div>${spark(hs)}<div class="mprice"><b class="num">${fmtP(a,pr)}</b><span class="num ${ch>=0?'pos':'neg'}">${ch>=0?'+':''}${ch.toFixed(1)}%</span></div><span class="mgo" aria-hidden="true">›</span></div>
     <div class="mi2"><div class="mtags">${a.risk?`<span class="mk">เสี่ยง${RISK[a.risk]}</span>`:''}${a.k==='cry'?cryTag(a):''}${a.div?`<span class="mk">ปันผล ฿${a.k==='fund'?a.div.toFixed(2):a.div.toFixed(1)}/${UNIT(a)}</span>`:''}<span class="mk">ถือ ${h&&h.q?h.q.toLocaleString():0}</span>${pl}</div></div></div>`;
 }
 function renderMkt(){
   const act=canAct(),p=act?cp():P(S.view),dis=act?'':'disabled';
   const acc={tc:0,tv:0};
-  return `<p class="trhint">👆 แตะชื่อหุ้นหรือสินค้า เพื่อเลือก <b>ซื้อ / ขาย</b> แล้วกดปุ่มจำนวน · ค่าธรรมเนียม 1%<br>📅 ราคาทุกตัวเดินตาม<b>ราคาจริง</b>ช่วงที่สุ่มจาก 10 ปีที่ผ่านมา (เดือนที่ ${(S.cmo??0)+1}) · ชื่อในเกมเป็นชื่อสมมติ เฉลยตอนจบเกม${S.freeComm?' <b class="pos">(เทิร์นนี้ฟรี)</b>':''}${act?'':' · <span class="neg">ซื้อขายได้เฉพาะในเทิร์นของคุณ</span>'}</p>
+  return `<p class="trhint">👆 แตะชื่อหุ้นหรือสินค้า เพื่อเลือก <b>ซื้อ / ขาย</b> แล้วกดปุ่มจำนวน · ค่าธรรมเนียม 1%<br>📅 ราคาทุกตัวเดินตาม<b>ราคาจริง</b>ช่วงที่สุ่มจาก 10 ปีที่ผ่านมา (เดือนที่ ${(S.cmo??0)+1}) · หุ้นเป็นบริษัทจริง · เฉลยช่วงเวลาตอนจบเกม${S.freeComm?' <b class="pos">(เทิร์นนี้ฟรี)</b>':''}${act?'':' · <span class="neg">ซื้อขายได้เฉพาะในเทิร์นของคุณ</span>'}</p>
   <div class="mlist">
   ${[['stock','หุ้น','as-stock'],['com','สินค้าโภคภัณฑ์','as-commod'],['cry','คริปโต','as-crypto']].map(([k,t,im])=>`<h4 class="mgh"><img class="mghi" src="img/${im}.webp" alt="">${t}${k==='cry'?` <span class="crydate">ราคาจริง (บาท) · 1 รอบ = 1 เดือน</span>`:''}</h4>`+ASSETS.filter(a=>a.k===k).map(a=>mrow(a,p,dis,acc)).join('')).join('')}</div>
   ${acc.tc?`<div class="ln" style="margin-top:6px"><span><b>รวมพอร์ต ${esc(p.name)}</b><br><span class="muted" style="font-size:12px">ทุน ${B(acc.tc)} · มูลค่าตอนนี้ ${B(acc.tv)}</span></span><b class="num ${acc.tv>=acc.tc?'pos':'neg'}">${acc.tv>=acc.tc?'+':'−'}${B(Math.abs(acc.tv-acc.tc)).replace('−','')} (${acc.tv>=acc.tc?'+':''}${((acc.tv-acc.tc)/acc.tc*100).toFixed(1)}%)</b></div>`:''}
@@ -2762,7 +2766,7 @@ async function tradeDlg(s){
   const p=cp(),a=AS(s),hd=p.stocks[s],have=hd?hd.q:0,unit=UNIT(a);
   TR={s,dir:1,q:0,loan:0};
   const body=`<div class="trbox">
-   <div class="trhead">${MICO(a)}<div><b>${a.s}</b> <span class="muted">${a.n}</span><div class="muted" style="font-size:12px">ราคาตอนนี้ <b class="num" style="color:var(--ink)">${fmtP(a,S.prices[s])}</b> ต่อ${unit}${a.k==='cry'?' (ราคาจริงช่วงสุ่ม)':''} · ถืออยู่ ${have.toLocaleString()} ${unit}${have?` · ทุนเฉลี่ย ${fmtAvg(a,hd.c/have)}`:''} · เงินสด ${B(p.cash)}</div></div></div>
+   <div class="trhead">${MICO(a)}<div>${a.k==='stock'?`<b>${esc(a.n)}</b>`:`<b>${a.s}</b> <span class="muted">${a.n}</span>`}<div class="muted" style="font-size:12px">ราคาตอนนี้ <b class="num" style="color:var(--ink)">${fmtP(a,S.prices[s])}</b> ต่อ${unit}${a.k==='cry'?' (ราคาจริงช่วงสุ่ม)':''} · ถืออยู่ ${have.toLocaleString()} ${unit}${have?` · ทุนเฉลี่ย ${fmtAvg(a,hd.c/have)}`:''} · เงินสด ${B(p.cash)}</div></div></div>
    <div class="seg trdir"><button data-d="1" onclick="trDir(1)">ซื้อ</button><button data-d="-1" onclick="trDir(-1)" ${have?'':'disabled'}>ขาย</button></div>
    <div class="trqty"><span>จำนวน</span><b class="num" id="trq">0</b><span>${unit}</span></div>
    <div class="trsteps">${TSTEP(a).map(n=>`<button onclick="trAdd(${n})">+${n.toLocaleString(undefined,{maximumFractionDigits:3})}</button>`).join('')}</div>
@@ -2773,10 +2777,10 @@ async function tradeDlg(s){
   const pr=S.prices[s],hd2=p.stocks[s];
   if(t.dir>0){const v=pr*t.q,fee=commission(p,v),total=v+fee;
     if(p.cash<total){const L=Math.ceil((total-p.cash)/1000)*1000;p.loan+=L;p.cash+=L;log(`🏦 ${esc(p.name)} กู้ ${B(L)} เพื่อซื้อ${a.n}`)}
-    p.cash-=total;addHold(p,s,t.q,total);log(`${esc(p.name)} ซื้อ ${a.n} ${t.q.toLocaleString()} ${unit} @ ${fmtP(a,pr)} รวม ${B(total)} (ค่าธรรมเนียม ${B(fee)})`);toast(`ซื้อ ${a.s} ${t.q.toLocaleString()} ${unit} แล้ว`)}
+    p.cash-=total;addHold(p,s,t.q,total);log(`${esc(p.name)} ซื้อ ${a.n} ${t.q.toLocaleString()} ${unit} @ ${fmtP(a,pr)} รวม ${B(total)} (ค่าธรรมเนียม ${B(fee)})`);toast(`ซื้อ ${SN(a)} ${t.q.toLocaleString()} ${unit} แล้ว`)}
   else{if(!hd2||!hd2.q)return;const q=Math.min(t.q,hd2.q),v=pr*q,fee=commission(p,v),get=v-fee,cost=hd2.c/hd2.q*q,pl=get-cost;
     hd2.q=QR(hd2.q-q);hd2.c-=cost;if(hd2.q<=0)delete p.stocks[s];p.cash+=get;
-    log(`${esc(p.name)} ขาย ${a.n} ${q.toLocaleString()} ${unit} @ ${fmtP(a,pr)} ได้ ${B(get)} (${pl>=0?'กำไร':'ขาดทุน'} ${B(Math.abs(pl))})`);toast(`ขาย ${a.s} ได้ ${B(get)}`)}
+    log(`${esc(p.name)} ขาย ${a.n} ${q.toLocaleString()} ${unit} @ ${fmtP(a,pr)} ได้ ${B(get)} (${pl>=0?'กำไร':'ขาดทุน'} ${B(Math.abs(pl))})`);toast(`ขาย ${SN(a)} ได้ ${B(get)}`)}
   render();save();checkWin();
 }
 
@@ -3234,7 +3238,7 @@ function onTag(){let t=$('#roomTag');if(!ON.code){if(t)t.remove();return}
   if(!t){t=document.createElement('span');t.id='roomTag';t.className='roomtag';t.setAttribute('role','button');t.title='ดูข้อมูลห้อง';t.onclick=onRoomInfo;const h=document.querySelector('header .logo')?.parentElement||document.querySelector('header');h.appendChild(t)}
   t.textContent='ห้อง '+ON.code+' ⓘ'}
 /* เวอร์ชันของไฟล์เกม (เปลี่ยนทุกครั้งที่แก้ระบบออนไลน์) · ส่งไปกับสถานะออนไลน์ เพื่อดูว่าใครยังเปิดเวอร์ชันเก่า */
-const BUILD='2026-11-16.21';
+const BUILD='2026-11-16.22';
 /* ป้ายเลขห้อง → ข้อมูลห้อง: เจ้าของห้อง · เครื่องที่คุมรอบ · สถานะผู้เล่นแต่ละคน */
 function onRoomInfo(){const r=ON.room;if(!r||!ON.code)return;
   const seatName=u=>{const q=S&&S.players&&S.players.find(x=>x.uid===u);if(q)return q.name;const s=Object.values(r.seats||{}).find(x=>x&&x.uid===u);return s?(s.name||'ผู้เล่น'):'—'};
@@ -3496,11 +3500,11 @@ async function parQueueNews(p,kind,c){
 function parApplyNews(list,npc){ /* npc=true: ข่าวที่ NPC เปิดต้นรอบ (มีผลทันที) · ไม่ใส่: ข่าวที่ผู้เล่น/บอทเปิดระหว่างรอบ มีผลตอนจบรอบ */const blocks=[],me=ON.play?S.players.find(q=>q.uid===ON.user.uid):null;let myDv=0,myCash=0;
   for(const e of list){const c=e.c;if(!c||!c.e)continue;const ch=shockPrices(c.e);
     if(c.cash)for(const q of S.players){if(c.cash>0)q.cash+=c.cash;else pay(q,-c.cash)}
-    const t=`${esc(c.t)} · ${ch.map(x=>`${x.a.s} ${x.pct>0?'+':''}${x.pct}%`).join(' ')}${c.cash?` · ทุกคน${c.cash>0?'ได้':'จ่าย'} ${B(Math.abs(c.cash))}`:''}`;log(`📰 ข่าวมีผลแล้ว (${esc(e.by)}): ${t}`);
+    const t=`${esc(c.t)} · ${ch.map(x=>`${SN(x.a)} ${x.pct>0?'+':''}${x.pct}%`).join(' ')}${c.cash?` · ทุกคน${c.cash>0?'ได้':'จ่าย'} ${B(Math.abs(c.cash))}`:''}`;log(`📰 ข่าวมีผลแล้ว (${esc(e.by)}): ${t}`);
     if(me){for(const x of ch){const h=me.stocks[x.s];if(h&&h.q)myDv+=h.q*(x.np-x.old)}myCash+=c.cash||0}
     const ico=(MNCAT[c.cat]||['📰'])[0];
     blocks.push(`<div class="nwb"><div class="nwt">${ico} <b>${esc(c.t)}</b></div>
-      <div class="mnl">${ch.map(x=>`<div class="ln"><span>${esc(x.a.n)} <span class="muted">${x.a.s}</span></span><span class="num ${x.pct>0?'pos':'neg'}">${x.pct>0?'▲ +':'▼ '}${x.pct}% → ${fmtP(x.a,x.np)}</span></div>`).join('')||'<div class="ln muted">สินทรัพย์ในข่าวยังไม่เข้าตลาด</div>'}
+      <div class="mnl">${ch.map(x=>`<div class="ln"><span>${esc(x.a.n)}${SYMH(x.a)}</span><span class="num ${x.pct>0?'pos':'neg'}">${x.pct>0?'▲ +':'▼ '}${x.pct}% → ${fmtP(x.a,x.np)}</span></div>`).join('')||'<div class="ln muted">สินทรัพย์ในข่าวยังไม่เข้าตลาด</div>'}
       ${c.cash?`<div class="ln"><span>เงินสดทุกคน</span><span class="num ${c.cash>0?'pos':'neg'}">${c.cash>0?'+':'−'}${B(Math.abs(c.cash))}</span></div>`:''}</div>
       <div class="muted nwby">เปิดโดย ${esc(e.by)}</div></div>`)}
   if(blocks.length){myDv=Math.round(myDv);const my=me?`<div class="nwme"><span>ผลต่อคุณ</span><span class="num ${myDv+myCash>0?'pos':myDv+myCash<0?'neg':'muted'}">${myDv?`พอร์ต ${myDv>0?'+':'−'}${B(Math.abs(myDv)).replace('−','')}`:'ไม่ได้ถือสินทรัพย์ในข่าว'}${myCash?` · เงินสด ${myCash>0?'+':'−'}${B(Math.abs(myCash))}`:''}</span></div>`:'';
