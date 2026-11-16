@@ -1662,6 +1662,9 @@ const NET_RANKS=[
  {n:'เอเมอรัลด์',req:'3 สายถึง 21% ติดต่อกัน 2 เดือน'},
  {n:'ไดมอนด์',req:'สายงานถึง 21% ครบ 6 สาย (A–F)'},
 ];
+/* รางวัลทุกเทิร์นตามระดับธุรกิจ A (นับเฉพาะระดับสูงสุดที่ถึง ไม่รวมทุกระดับ) · index = n.rank */
+const NET_TURN=[null,{k:1},{k:1},{k:2},{t:1,k:2},{h:1,t:2,k:2},{h:2,t:3,k:3},{h:3,t:4,k:4}];
+const netTurnTxt=r=>{const b=NET_TURN[r];return b?[b.h?'❤ +'+b.h:'',b.t?'⏳ +'+b.t:'',b.k?'📚 +'+b.k:''].filter(Boolean).join(' '):''};
 const NET_BRACKETS=[[150000,.21],[90000,.18],[55000,.15],[30000,.12],[15000,.09],[7000,.06],[3000,.03]];
 function buildQ(){}
 function netNew(){return {on:false,rank:0,ppv:0,legs:{A:0,B:0,C:0,D:0,E:0,F:0},pas:0,q:{fl:[],q12:[],q21:[]},s21:0,sq3:0}}
@@ -2759,7 +2762,7 @@ function renderNet(){
     <p class="muted" style="font-size:12px">จั่วการ์ดกอง "ธุรกิจ A" เพื่อสร้างและขยายสายงาน</p></div>
    <div class="box"><h3><span>ขั้นบันไดโบนัส</span></h3>
     ${[...NET_BRACKETS].reverse().map(([t,r])=>`<div class="ln ${gv>=t?'':'muted'}"><span>${t.toLocaleString()} PV ขึ้นไป</span><span class="num">${Math.round(r*100)}%</span></div>`).join('')}
-    <h3 style="margin-top:10px"><span>ระดับ (พิน)</span></h3>${NET_RANKS.map((r,i)=>`<div class="ln ${i<=n.rank?'':'muted'}"><span><img class="rpin" src="img/rank-${i}.webp" alt="" style="${i<=n.rank?'':'filter:grayscale(1);opacity:.45'}">${i<=n.rank?'✓ ':''}${r.n}</span><span style="font-size:12px;text-align:right">${r.req}</span></div>`).join('')}</div>
+    <h3 style="margin-top:10px"><span>ระดับ (พิน)</span></h3>${NET_RANKS.map((r,i)=>`<div class="ln ${i<=n.rank?'':'muted'}"><span><img class="rpin" src="img/rank-${i}.webp" alt="" style="${i<=n.rank?'':'filter:grayscale(1);opacity:.45'}">${i<=n.rank?'✓ ':''}${r.n}</span><span style="font-size:12px;text-align:right">${r.req}${i?`<br><b class="pos">ทุกเทิร์น ${netTurnTxt(i)}</b>`:''}</span></div>`).join('')}<p class="muted" style="font-size:12px;margin:4px 0 0">โบนัสทุกเทิร์นนับเฉพาะระดับสูงสุดที่ถึง (ไม่รวมทุกระดับ)</p></div>
   </div>`;
 }
 function spark(arr){const w=64,h=20,mn=Math.min(...arr),mx=Math.max(...arr),sp=mx-mn||1;const pts=arr.map((v,i)=>`${(i/(Math.max(1,arr.length-1)))*w},${h-2-((v-mn)/sp)*(h-4)}`).join(' ');const up=arr[arr.length-1]>=arr[0];
@@ -3296,7 +3299,7 @@ function onTag(){let t=$('#roomTag');if(!ON.code){if(t)t.remove();return}
   if(!t){t=document.createElement('span');t.id='roomTag';t.className='roomtag';t.setAttribute('role','button');t.title='ดูข้อมูลห้อง';t.onclick=onRoomInfo;const h=document.querySelector('header .logo')?.parentElement||document.querySelector('header');h.appendChild(t)}
   t.textContent='ห้อง '+ON.code+' ⓘ'}
 /* เวอร์ชันของไฟล์เกม (เปลี่ยนทุกครั้งที่แก้ระบบออนไลน์) · ส่งไปกับสถานะออนไลน์ เพื่อดูว่าใครยังเปิดเวอร์ชันเก่า */
-const BUILD='2026-11-16.26';
+const BUILD='2026-11-16.27';
 /* ป้ายเลขห้อง → ข้อมูลห้อง: เจ้าของห้อง · เครื่องที่คุมรอบ · สถานะผู้เล่นแต่ละคน */
 function onRoomInfo(){const r=ON.room;if(!r||!ON.code)return;
   const seatName=u=>{const q=S&&S.players&&S.players.find(x=>x.uid===u);if(q)return q.name;const s=Object.values(r.seats||{}).find(x=>x&&x.uid===u);return s?(s.name||'ผู้เล่น'):'—'};
@@ -3499,12 +3502,16 @@ function parBanner(){let el=$('#rbanner');if(!el){el=document.createElement('div
   const me=parMe();el.innerHTML=`<b>🔔 เริ่มรอบที่ ${S.round}</b><span>${me&&me.afk?'คุณติดสถานะ Bot · กดปลดเพื่อกลับมาเล่น':'ทุกคนเล่นพร้อมกัน · คนละ 3 นาที'}</span>`;el.classList.add('on');clearTimeout(parBanner.t);parBanner.t=setTimeout(()=>el.classList.remove('on'),2800)}
 /* ---------- จบเทิร์นของตัวเอง ---------- */
 /* ทุกเทิร์น (ตอนจบเทิร์น): รายได้จากทรัพย์สิน ≥25/50/75% ของรายจ่าย → ⏳ +1/+2/+3 */
-function turnPassiveTime(p){if(!p||S.winner!=null)return;turnLv1Bonus(p);const f=fin(p),pr=f.expenses>0?f.passive/f.expenses:0,ft=pr>=.75?3:pr>=.5?2:pr>=.25?1:0;if(!ft)return;
+function turnPassiveTime(p){if(!p||S.winner!=null)return;turnLv1Bonus(p);turnNetBonus(p);const f=fin(p),pr=f.expenses>0?f.passive/f.expenses:0,ft=pr>=.75?3:pr>=.5?2:pr>=.25?1:0;if(!ft)return;
   const sx=adj(p,{t:ft},true);if(!sx)return;log(`⏳ ${esc(p.name)} รายได้จากทรัพย์สิน ${Math.floor(pr*100)}% ของรายจ่าย ได้เวลาคืน${sx}`);
   if(!p.bot){toast(`⏳ Passive ${Math.floor(pr*100)}% ของรายจ่าย ได้เวลา +${ft}`);if(!p._rnPT){p._rnPT=1;ruleNote(p,'ได้เวลาคืนทุกเทิร์น',`รายได้จากทรัพย์สินถึง 25% / 50% / 75% ของรายจ่าย ได้ ⏳ +1 / +2 / +3 ทุกครั้งที่จบเทิร์น (ตอนนี้ ${Math.floor(pr*100)}%)`)}}}
 /* ชนะ Lv.1 แล้ว: ทุกครั้งที่จบเทิร์น ❤ +2 ⏳ +2 📚 +1 (เพิ่มจากโบนัสเวลาของ Passive) */
 function turnLv1Bonus(p){if(!p.badge1)return;const sx=adj(p,{h:2,t:2,k:1},true);if(!sx)return;log(`🏆 ${esc(p.name)} ชนะ Lv.1 แล้ว ได้โบนัสทุกเทิร์น${sx}`);
   if(!p.bot){toast('🏆 โบนัสชนะ Lv.1: ❤ +2 ⏳ +2 📚 +1');if(!p._rnL1){p._rnL1=1;ruleNote(p,'โบนัสชนะ Lv.1 ทุกเทิร์น','ชนะ Lv.1 แล้ว ทุกครั้งที่จบเทิร์นได้ ❤ +2 ⏳ +2 📚 +1 (ค่าพลังเต็มที่ 10)')}}}
+/* ธุรกิจ A: ทุกครั้งที่จบเทิร์นได้ค่าพลังตามระดับสูงสุดที่ถึง (NET_TURN) */
+function turnNetBonus(p){const r=p.net&&p.net.on?p.net.rank||0:0,b=NET_TURN[r];if(!b)return;const sx=adj(p,{...b},true);if(!sx)return;
+  log(`🏅 ${esc(p.name)} ธุรกิจ A ระดับ${NET_RANKS[r].n} ได้โบนัสทุกเทิร์น${sx}`);
+  if(!p.bot){toast(`🏅 โบนัสระดับ${NET_RANKS[r].n}: ${netTurnTxt(r)}`);if(p._rnNT!==r){p._rnNT=r;ruleNote(p,`โบนัสทุกเทิร์น ระดับ${NET_RANKS[r].n}`,`ธุรกิจ A ระดับ${NET_RANKS[r].n} ทุกครั้งที่จบเทิร์นได้ ${netTurnTxt(r)} (นับเฉพาะระดับสูงสุด ค่าพลังเต็มที่ 10)`)}}}
 function parEndTurn(early){
   const p=cp();S.bonusPicks=0;S.freeComm=false;S.picks=0;p.hired=false;S.timeoutNote=null;
   if(S.rp==='h'){
