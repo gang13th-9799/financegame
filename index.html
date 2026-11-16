@@ -1059,6 +1059,9 @@ body.fs #gameView:not(.mapmin){grid-template-columns:minmax(288px,1.2fr) minmax(
 #wikiov{position:fixed;inset:0;z-index:9000;background:var(--bg);display:flex;flex-direction:column}#wikiov[hidden]{display:none}
 #wikiov .wkbar{display:flex;align-items:center;gap:8px;padding:6px 10px;border-bottom:1px solid var(--line);background:var(--surface)}#wikiov .wkbar b{flex:1;font-family:var(--display)}
 #wikiov .wkbtn{text-decoration:none;color:var(--ink)}#wikiov .wkback{background:var(--accent);border-color:#4b8645;color:#fff;font-weight:700}#wikiov iframe{flex:1;border:0;width:100%;background:var(--bg)}body.wkopen{overflow:hidden}
+#specbar{position:fixed;left:0;right:0;bottom:0;z-index:8000;display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:8px 12px;background:#2f3a4a;color:#fff;font-size:14px;box-shadow:0 -4px 14px rgba(0,0,0,.2)}#specbar span{flex:1;min-width:180px}
+body.spec main{padding-bottom:64px}
+.adm .admrow{margin:8px 0}.adm .admt{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .jl.afkc{background:#eef0f4;color:#3f4652;border:1px solid #c5cad3}
 .afk-box{background:#fffdf3;border-radius:22px;padding:22px 20px;max-width:420px;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,.3)}
 .afk-box .afk-ic{font-size:48px}.afk-box h2{margin:6px 0}.afk-box button{margin-top:12px;font-size:18px;min-height:48px;padding:0 28px}
@@ -2920,7 +2923,7 @@ function closeWiki(){const ov=$('#wikiov');if(ov)ov.hidden=true;document.body.cl
 addEventListener('keydown',e=>{if(e.key==='Escape'&&$('#wikiov')&&!$('#wikiov').hidden)closeWiki()});
 addEventListener('message',e=>{if(e.data==='fg-close-wiki')closeWiki()}); /* ปุ่ม 🎮 กลับเกม ใน wiki */
 $('#btnRules').onclick=()=>{if(!MODAL)openWiki()};
-$('#btnNew').onclick=async()=>{if(MODAL)return;if(ON.play){onLeave();return}if(!S||$('#gameView').hidden){showSetup();return}const v=await choose({title:'เริ่มเกมใหม่?',body:'<p>เกมปัจจุบันจะถูกแทนที่</p>',opts:[{v:'y',l:'เริ่มใหม่',c:'pri'},{v:'n',l:'ยกเลิก'}]});if(v==='y')showSetup()};
+$('#btnNew').onclick=async()=>{if(MODAL)return;if(ON.spec){specExit();return}if(ON.play){onLeave();return}if(!S||$('#gameView').hidden){showSetup();return}const v=await choose({title:'เริ่มเกมใหม่?',body:'<p>เกมปัจจุบันจะถูกแทนที่</p>',opts:[{v:'y',l:'เริ่มใหม่',c:'pri'},{v:'n',l:'ยกเลิก'}]});if(v==='y')showSetup()};
 loadDB();
 
 /* ===================== ONLINE MODE (Firebase) =====================
@@ -3007,12 +3010,13 @@ async function onLogout(){const u=ON.user;if(!u)return;const fromSet=!$('#setov'
   if(code)try{await ON.be.remove(`rooms/${code}/on/${u.uid}`)}catch(e){}
   try{await ON.be.out()}catch(e){onErr(e)}toast('ออกจากระบบแล้ว')}
 function onExit(){localStorage.removeItem('fg-online');onStop();ON.play=false;showSetup()}
-function onStop(){ON.unsub.forEach(f=>{try{f()}catch(e){}});ON.unsub=[];ON.room=null;ON.code=null;ON.play=false;ON.subbed=0;ON.turnKey='';ON.ver=0;onTag()}
+function onStop(){if(ON.spec){ON.spec=false;document.body.classList.remove('spec');const b=$('#specbar');if(b)b.remove()}ON.unsub.forEach(f=>{try{f()}catch(e){}});ON.unsub=[];ON.room=null;ON.code=null;ON.play=false;ON.subbed=0;ON.turnKey='';ON.ver=0;onTag()}
 async function onAuthed(u){
   ON.user=u;if(!u){onStop();onLogin();return}
   let me=await ON.be.get('users/'+u.uid)||{};
   if(!me.name){me.name=u.name||('แขก '+u.uid.slice(-4).toUpperCase());await ON.be.update('users/'+u.uid,{name:me.name})}
   ON.name=me.name;
+  if(ON.admGo){ON.admGo=0;adminHome();return}
   const q=location.search.match(/[?&]room=(\d{5})/);
   if(me.room){const r=await ON.be.get('rooms/'+me.room);
     if(r&&r.status!=='end'&&onSeatOf(r,u.uid)>=0){onEnter(me.room);return}
@@ -3037,7 +3041,7 @@ function lbCalc(p){const st=standings(),rank=st.findIndex(x=>x[0]===p),f=fin(p),
   rows.push(p.bk?[`ล้มละลาย ${p.bk} ครั้ง`,-5]:['ไม่เคยล้มละลาย',3]);rows.push(['เล่นจนจบเกม',2]);
   const raw=rows.reduce((a,r)=>a+r[1],0);return {pts:Math.max(0,Math.round(raw*lbMult(hum))),rows,mult:lbMult(hum),hum,rank,win:rank===0}}
 /* lbAward(): จบเกมขณะอยู่ในห้อง · lbAward(code,G,true): เก็บย้อนหลังตอนล็อกอินกลับมา (G = สถานะเกมสุดท้ายของห้อง) */
-async function lbAward(code=ON.code,G=S,late=false){
+async function lbAward(code=ON.code,G=S,late=false){if(ON.spec)return;
   if(!code||!ON.user||!G||G.winner==null||(!late&&!ON.play))return;const me=G.players.find(q=>q.uid===ON.user.uid);if(!me)return;
   const gk=(code+'_'+(G.gid||'old')).replace(/[.#$\[\]\/]/g,'');if(ON.lbDone===gk)return;ON.lbDone=gk;
   const keep=S;S=G;let c;try{c=lbCalc(me)}finally{S=keep}
@@ -3069,6 +3073,44 @@ async function lbRender(){const el=$('#lbBox');if(!el)return;
 function lbCard(){setTimeout(lbRender,0);return `<div class="ol-card lbcard"><h3>🏅 อันดับคะแนนสะสม</h3><div id="lbBox"><p class="muted">กำลังโหลด…</p></div>
 </div>`}
 
+/* ===================== ADMIN (เบต้า: รหัสอย่างเดียว — รหัสอยู่ในโค้ดสาธารณะ ใครดูโค้ดก็เห็น · อนาคตควรผูกบัญชี admin ในกฎ Firebase) =====================
+   ดูห้องทั้งหมด · ปิดห้องถาวร (ลบห้อง) · เข้าดูห้องแบบผู้ชม (ON.spec: ไม่อยู่ในที่นั่ง ไม่ส่งข้อมูลเข้าเกม) */
+const ADMIN_PW='9799';
+async function adminLogin(){if(MODAL)return;
+  if(sessionStorage.getItem('fg-admin')!=='1'){const x=await ask({npc:false,title:'🛡 เข้าสู่ระบบ Admin',body:'<div class="fld"><label for="admPw">รหัสผ่าน</label><input id="admPw" data-f="pw" type="password" inputmode="numeric" autocomplete="off"></div>',opts:[{v:'n',l:'ยกเลิก'},{v:'y',l:'เข้าสู่ระบบ',c:'pri'}],onShow:()=>setTimeout(()=>{const i=$('#admPw');if(i){i.focus();i.onkeydown=e=>{if(e.key==='Enter'){const b=[...document.querySelectorAll('#ov button')].find(b=>b.textContent==='เข้าสู่ระบบ');if(b)b.click()}}}},50)});
+    if(!x||x.v!=='y')return;if((x.form&&x.form.pw)!==ADMIN_PW){toast('⚠ รหัสผ่านไม่ถูกต้อง');return}sessionStorage.setItem('fg-admin','1')}
+  try{if(!ON.be)ON.be=onMock()?beMock():await beFirebase();if(!ON.authOn){ON.authOn=1;ON.be.onAuth(onAuthed)}if(!ON.user){ON.admGo=1;await ON.be.guest();return}}catch(e){ON.admGo=0;onErr(e);return} /* ยังไม่ล็อกอิน: เข้าแบบแขก แล้ว onAuthed พาไปหน้า Admin */
+  adminHome()}
+function adminOut(){sessionStorage.removeItem('fg-admin');ON.adm=null;if(ON.user)onHome();else onLogin()}
+async function adminHome(){onStop();const v=$('#setupView');$('#gameView').hidden=true;v.hidden=false;
+  v.innerHTML=`<div class="setup onl adm"><div class="hero"><i class="logo hero-logo"></i><div><div class="hero-t">🛡 Admin</div><div class="muted" id="admSum">กำลังโหลด…</div></div></div>
+   <div class="btnrow" style="justify-content:flex-start"><button class="sm" onclick="adminHome()">⟳ รีเฟรช</button><button class="sm" onclick="adminOut()">ออกจาก Admin</button></div><div id="admList"></div></div>`;
+  let rooms;try{rooms=await ON.be.get('rooms')||{}}catch(e){$('#admSum').textContent='โหลดห้องไม่ได้: '+(e.code||e.message||e)+' (ต้อง Publish กฎ Firebase ใหม่)';return}
+  const rows=Object.entries(rooms).map(([code,r])=>{const seats=Object.values(r.seats||{}).slice(0,r.n||6),on=Object.keys(r.on||{}),hum=seats.filter(x=>x&&x.uid),host=seats.find(x=>x&&x.uid===r.host);
+      return {code,r,st:r.status||'lobby',hum:hum.length,bots:seats.filter(x=>x&&!x.uid&&x.t==='b').length+(r.status!=='lobby'?seats.filter(x=>x&&!x.uid&&x.t!=='b').length:0),on:on.length,host:host?host.name:'—',round:r.st&&r.st.h?r.st.h.r:null}})
+    .sort((a,b)=>({play:0,lobby:1,end:2}[a.st]-{play:0,lobby:1,end:2}[b.st])||b.on-a.on);
+  const nPlay=rows.filter(x=>x.st==='play').length,nLive=rows.filter(x=>x.st==='play'&&x.on>0).length;
+  $('#admSum').innerHTML=`ห้องทั้งหมด <b>${rows.length}</b> · กำลังเล่น <b>${nPlay}</b> (มีคนออนไลน์อยู่ <b class="pos">${nLive}</b> ห้อง) · ล็อบบี้ ${rows.filter(x=>x.st==='lobby').length} · จบแล้ว ${rows.filter(x=>x.st==='end').length}`;
+  const stl={play:'🟢 กำลังเล่น',lobby:'🕓 ล็อบบี้',end:'🏁 จบแล้ว'};
+  $('#admList').innerHTML=rows.length?rows.map(x=>`<div class="ol-card admrow"><div class="admt"><b>ห้อง ${x.code}</b> <span class="chip">${stl[x.st]||x.st}</span>${x.round?` <span class="muted">รอบที่ ${x.round}</span>`:''}</div>
+     <div class="muted" style="font-size:13px">👑 ${esc(x.host)} · คน ${x.hum} · บอท ${x.bots} · ออนไลน์ ${x.on}${x.r.st&&x.r.st.v?'':''}</div>
+     <div class="btnrow" style="justify-content:flex-start;margin-top:6px">${x.st!=='lobby'?`<button class="sm pri" onclick="specEnter('${x.code}')">👁 เข้าดู</button>`:''}<button class="sm" onclick="adminClose('${x.code}')">🗑 ปิดห้องถาวร</button></div></div>`).join(''):'<p class="muted">ยังไม่มีห้อง</p>'}
+async function adminClose(code){if(MODAL)return;const v=await choose({title:`ปิดห้อง ${code} ถาวร?`,body:'<p>ห้องและเกมในห้องจะถูกลบ ผู้เล่นทุกคนจะกลับหน้าแรก กู้คืนไม่ได้</p>',opts:[{v:'n',l:'ยกเลิก'},{v:'y',l:'ปิดห้องถาวร',c:'pri'}]});
+  if(v!=='y')return;try{await ON.be.remove('rooms/'+code);toast(`ปิดห้อง ${code} แล้ว`)}catch(e){onErr(e)}if(ON.spec&&ON.code===code)specExit();else adminHome()}
+/* ผู้ชม: อ่านอย่างเดียว · ไม่ตั้งสถานะออนไลน์ ไม่นั่งที่นั่ง · ดูแท็บต่างๆ ได้ระหว่างที่ผู้เล่น/บอทเล่น */
+function specEnter(code){onStop();ON.code=code;ON.spec=true;ON.play=true;ON.lastDrv=false;ON.specFirst=true;document.body.classList.add('spec');
+  const b=document.createElement('div');b.id='specbar';b.innerHTML=`<span>👁 กำลังดูห้อง <b>${esc(code)}</b> แบบผู้ชม (ผู้เล่นไม่เห็นคุณ)</span><button class="sm" onclick="adminClose('${code}')">🗑 ปิดห้อง</button><button class="sm pri" onclick="specExit()">← กลับหน้า Admin</button>`;document.body.appendChild(b);
+  ON.unsub.push(ON.be.on('rooms/'+code,r=>{if(!r){toast('ห้องนี้ถูกปิดแล้ว');specExit();return}ON.room=r;ON.pres=r.on||{};if(S&&!$('#gameView').hidden)render()}));
+  ON.unsub.push(ON.be.on(`rooms/${code}/st`,specState));
+  ON.unsub.push(ON.be.on(`rooms/${code}/p`,specP));onTag()}
+async function specState(st){if(!ON.spec||!st||!st.z)return;let o;try{o=JSON.parse(await zDec(st.z))}catch(e){return}
+  const view=S&&!ON.specFirst?S.view:0;S=o;S.view=S.players[view]?view:0;
+  if(ON.specFirst){ON.specFirst=false;startView()}else render();
+  if(S.par&&S.rp==='h')ON.be.get(`rooms/${ON.code}/p`).then(specP)}
+/* โหมดพร้อมกัน: ระหว่างรอบ ข้อมูลผู้เล่นล่าสุดอยู่ที่ p/{idx} — ถอดมาแสดง (ไม่แก้อะไรในห้อง) */
+async function specP(m){if(!ON.spec||!S||!m)return;let ch=false;for(const i in m){const e=m[i];if(!e||!e.z||e.r!==S.round||!S.players[+i])continue;try{const o=JSON.parse(await zDec(e.z));S.players[+i]=o;ch=true}catch(x){}}if(ch&&!$('#gameView').hidden)render()}
+function specExit(){onStop();S=null;adminHome()}
+
 /* ---------- หน้าล็อกอิน ---------- */
 function onLogin(mode){
   const v=$('#setupView');$('#gameView').hidden=true;v.hidden=false;
@@ -3086,7 +3128,7 @@ function onLogin(mode){
     <button class="ol-guest" onclick="onSign('guest')">👤 เล่นแบบแขก (ไม่ต้องสมัคร)</button>
    </div>
    <p class="muted" style="font-size:12px">แขก: ถ้าล้างข้อมูลเบราว์เซอร์หรือเปลี่ยนเครื่อง จะกลับเข้าห้องเดิมไม่ได้ ผูกบัญชี Google ทีหลังได้ในหน้าถัดไป</p>
-   <div class="btnrow" style="justify-content:flex-start"><button class="sm" onclick="onExit()">← เล่นบนเครื่องนี้ (ออฟไลน์)</button></div></div>${lbCard()}</div>`}
+   <div class="btnrow" style="justify-content:flex-start"><button class="sm" onclick="onExit()">← เล่นบนเครื่องนี้ (ออฟไลน์)</button><button class="sm" onclick="adminLogin()">🛡 Admin</button></div></div>${lbCard()}</div>`}
 async function onSign(k){try{await ON.be[k]()}catch(e){onErr(e)}}
 async function onMail(reg){const e=$('#olE').value.trim(),p=$('#olP').value,n=reg?$('#olN').value.trim():'';if(!e||!p){toast('กรอกอีเมลและรหัสผ่าน');return}
   try{await ON.be.email(e,p,!!reg,n);if(reg&&n&&ON.user)await ON.be.update('users/'+ON.user.uid,{name:n})}catch(x){onErr(x)}}
@@ -3102,7 +3144,7 @@ function onHome(){
    <div class="ol-row"><input id="olCode" inputmode="numeric" maxlength="5" placeholder="เลขห้อง 5 หลัก" aria-label="เลขห้อง" oninput="this.value=this.value.replace(/[^0-9]/g,'')" onkeydown="if(event.key==='Enter')onJoin(this.value)"><button class="pri" onclick="onJoin($('#olCode').value)">เข้าห้อง</button></div>
    <div class="olor"><span>หรือ</span></div>
    <button class="olbig oloff" onclick="onExit()">🎲 เล่นออฟไลน์บนเครื่องนี้</button>
-   <div class="olfoot">${u.anon?`<button class="linkbtn" onclick="onLink()">🔗 ผูกบัญชี Google</button> · `:''}<button class="linkbtn" onclick="ON.be.out()">ออกจากระบบ</button></div>
+   <div class="olfoot">${u.anon?`<button class="linkbtn" onclick="onLink()">🔗 ผูกบัญชี Google</button> · `:''}<button class="linkbtn" onclick="ON.be.out()">ออกจากระบบ</button> · <button class="linkbtn" onclick="adminLogin()">🛡 Admin</button></div>
   </div>${lbCard()}</div>`}
 async function onRename(){const n=$('#olMe').value.trim().slice(0,16);if(!n)return;ON.name=n;await ON.be.update('users/'+ON.user.uid,{name:n});onHome();toast('บันทึกชื่อแล้ว')}
 async function onLink(){try{await ON.be.link();ON.user.anon=false;toast('ผูกบัญชี Google แล้ว');if(!ON.code)onHome()}catch(e){onErr(e)}}
@@ -3136,7 +3178,7 @@ function onTag(){let t=$('#roomTag');if(!ON.code){if(t)t.remove();return}
   if(!t){t=document.createElement('span');t.id='roomTag';t.className='roomtag';t.setAttribute('role','button');t.title='ดูข้อมูลห้อง';t.onclick=onRoomInfo;const h=document.querySelector('header .logo')?.parentElement||document.querySelector('header');h.appendChild(t)}
   t.textContent='ห้อง '+ON.code+' ⓘ'}
 /* เวอร์ชันของไฟล์เกม (เปลี่ยนทุกครั้งที่แก้ระบบออนไลน์) · ส่งไปกับสถานะออนไลน์ เพื่อดูว่าใครยังเปิดเวอร์ชันเก่า */
-const BUILD='2026-11-16.9';
+const BUILD='2026-11-16.10';
 /* ป้ายเลขห้อง → ข้อมูลห้อง: เจ้าของห้อง · เครื่องที่คุมรอบ · สถานะผู้เล่นแต่ละคน */
 function onRoomInfo(){const r=ON.room;if(!r||!ON.code)return;
   const seatName=u=>{const q=S&&S.players&&S.players.find(x=>x.uid===u);if(q)return q.name;const s=Object.values(r.seats||{}).find(x=>x&&x.uid===u);return s?(s.name||'ผู้เล่น'):'—'};
@@ -3158,7 +3200,7 @@ function onRoomInfo(){const r=ON.room;if(!r||!ON.code)return;
     <p class="muted" style="font-size:12px">เครื่องที่คุมรอบจะสั่งเริ่มช่วงบอทและรอบใหม่ ปกติเป็นเจ้าของห้อง · ถ้าเจ้าของห้องออฟไลน์หรือติดสถานะ Bot ผู้เล่นคนอื่นที่ยังเล่นอยู่จะคุมแทนอัตโนมัติ</p>`,
     opts:[{v:'share',l:'📤 แชร์ลิงก์ห้อง'},
       ...(inGame&&S.winner==null&&(PAR()?parMaster():iDrive())?[{v:'end',l:'🏁 จบเกมและสรุปผล'}]:[]),
-      ...(r.host===ON.user.uid?[{v:'close',l:'🗑 ปิดห้อง'}]:inGame?[{v:'leave',l:'🚪 ออกจากเกม'}]:[]),
+      ...(ON.spec?[]:r.host===ON.user.uid?[{v:'close',l:'🗑 ปิดห้อง'}]:inGame?[{v:'leave',l:'🚪 ออกจากเกม'}]:[]),
       {v:'ok',l:'ปิด',c:'pri'}]}).then(x=>{const v=x&&x.v||x;if(v==='share')onShare();else if(v==='end')setTimeout(confirmEnd,50);else if(v==='close')setTimeout(onCloseRoom,50);else if(v==='leave')setTimeout(onLeave,50)})}
 /* เจ้าของห้องปิดห้อง: ลบห้องทิ้ง ทุกเครื่องกลับหน้าแรก (เครื่องอื่นจะเห็น "ห้องนี้ถูกลบแล้ว") */
 async function onCloseRoom(){const r=ON.room,code=ON.code;if(!r||r.host!==ON.user.uid||MODAL)return;
@@ -3211,12 +3253,12 @@ async function onStart(){const r=ON.room;if(!r||r.host!==ON.user.uid)return;cons
   await ON.be.update('rooms/'+ON.code,{status:'play',started:ON.be.now()})}
 
 /* ---------- ซิงก์เกม ---------- */
-function onMine(){return !ON.play||!S||(cp()&&cp().uid===ON.user.uid)}
+function onMine(){if(ON.spec)return false;return !ON.play||!S||(cp()&&cp().uid===ON.user.uid)}
 /* ถือว่ายังออนไลน์ถ้าหลุดไม่เกิน 25 วิ (กันสลับแอปแป๊บเดียวแล้วโดนคนอื่นยึดตา) */
 function onLive(u){return !!u&&(!!ON.pres[u]||u===ON.user.uid||(ON.gone&&ON.gone[u]&&Date.now()-ON.gone[u]<25000))}
 function onDriverUid(){const r=ON.room;if(!r||!S)return null;const c=cp();if(c&&!c.bot&&c.uid&&onLive(c.uid))return c.uid;
   if(onLive(r.host))return r.host;const h=S.players.find(q=>!q.bot&&q.uid&&onLive(q.uid));return h?h.uid:null}
-function iDrive(){if(!ON.play)return true;if(PAR())return S.rp==='h'?!!(cp()&&cp().uid===ON.user.uid):parMaster();return onDriverUid()===ON.user.uid}
+function iDrive(){if(ON.spec)return false;if(!ON.play)return true;if(PAR())return S.rp==='h'?!!(cp()&&cp().uid===ON.user.uid):parMaster();return onDriverUid()===ON.user.uid}
 /* ส่งขึ้นเมื่อเราถือตาอยู่ · หรือเป็นครั้งสุดท้ายตอนส่งตาต่อให้คนอื่น */
 function onSave(){if(!ON.play||!ON.code)return;
   if(PAR()){if(S.rp==='h')parPushMe();else if(parMaster()){clearTimeout(ON.pushT);ON.pushT=setTimeout(onPush,250)}return}
@@ -3280,7 +3322,7 @@ function onDrive(){if(!ON.play||!S||S.winner!=null||$('#gameView').hidden)return
   if(ON.turnKey===key||MODAL)return;ON.turnKey=key;if(S.phase==='busy')S.phase='card';
   if(S.phase==='roll')botTurn();else if(S.phase==='card')sleep(S.speed).then(()=>pickPile(botPile(p)));else if(S.phase==='free')sleep(S.speed).then(()=>endTurn(true))}
 /* โหมดเล่นทีละคน: เครื่องที่ถือตา ให้ผู้เล่นที่ออฟไลน์เกิน 1 นาทีติดสถานะ Bot */
-function seqOfflineAfk(){if(!ON.play||PAR()||!S||S.winner!=null)return;const now=Date.now(),left=(ON.room&&ON.room.left)||{};ON.gone=ON.gone||{};let ch=false;
+function seqOfflineAfk(){if(ON.spec||!ON.play||PAR()||!S||S.winner!=null)return;const now=Date.now(),left=(ON.room&&ON.room.left)||{};ON.gone=ON.gone||{};let ch=false;
   for(const q of S.players){if(q.bot||!q.uid||q.afk||left[q.uid]||q.uid===ON.user.uid)continue;
     if(ON.pres[q.uid]){delete ON.gone[q.uid];continue}
     if(!ON.gone[q.uid]){ON.gone[q.uid]=now;continue}
@@ -3312,7 +3354,7 @@ function parMe(){return S&&S.players.find(q=>q.uid&&q.uid===ON.user.uid)}
 function parMasterUid(){const r=ON.room;if(!r||!S)return null;const now=Date.now(),away=u=>{const q=S.players.find(x=>x.uid===u);return !!(q&&(q.afk||q._afkb||(S.rp==='h'&&!q.done&&now>(q.tEnd||0)+20000)))};
   if(onLive(r.host)&&!away(r.host))return r.host;const h=S.players.find(q=>!q.bot&&q.uid&&onLive(q.uid)&&!away(q.uid));if(h)return h.uid;
   if(onLive(r.host))return r.host;const k=S.players.find(q=>q.uid&&onLive(q.uid)&&(!q.bot||q._afkb));return k?k.uid:null}
-function parMaster(){return parMasterUid()===ON.user.uid}
+function parMaster(){return !ON.spec&&parMasterUid()===ON.user.uid}
 const PAR_HAND={life:4,learn:6,opp:4,netc:4,news:2};
 function parDeck(k){const DEF={life:LIFE,learn:LEARN,opp:OPP,news:NEWS,netc:NETDB}[k];if(!S.decks[k]||S.decks[k].some(i=>i>=DEF.length))S.decks[k]=[];if(!S.decks[k].length)S.decks[k]=shuffle(DEF.map((_,i)=>i));return S.decks[k]}
 function parDeal(hum){

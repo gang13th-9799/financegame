@@ -9,7 +9,7 @@
     "rooms": {
       "$code": {
         ".read": "auth != null",
-        ".write": "auth != null && (!data.exists() || data.child('host').val() === auth.uid)",
+        ".write": "auth != null && (!data.exists() || data.child('host').val() === auth.uid || !newData.exists())",
         ".validate": "$code.matches(/^[0-9]{5}$/)",
         "seats": {
           "$i": {
@@ -72,7 +72,8 @@
         "mk": {
           ".write": "auth != null && data.parent().child('mem').child(auth.uid).exists()"
         }
-      }
+      },
+      ".read": "auth != null"
     },
     "lb": {
       ".read": true,
