@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Wiki · เกมอิสรภาพทางการเงิน</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Mali:wght@500;600;700&family=IBM+Plex+Sans+Thai+Looped:wght@400;500;600&display=swap" rel="stylesheet">
+<!-- Wiki เกม: หน้าเดียว ไม่พึ่งไฟล์อื่นนอกจาก img/ · ตัวเลขทั้งหมดอิงโค้ดใน index.html (อัปเดตพร้อมกันเมื่อแก้กติกา) -->
+<style>
+:root{--bg:#f7f1e1;--surface:#fffdf6;--surface2:#f4ecd8;--ink:#3f3a2c;--muted:#837b66;--line:#e5d9bb;--accent:#5f9e57;--gold:#e3a63a;--bad:#d0644d;--good:#4e8f45;--blue:#5b86c5;
+  --display:"Mali","IBM Plex Sans Thai Looped",system-ui,sans-serif;--body:"IBM Plex Sans Thai Looped","Mali",system-ui,sans-serif}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:120px}
+.embed{--x:0}
+body{margin:0;overflow-x:hidden;background:var(--bg);color:var(--ink);font:15px/1.65 var(--body)}
+a{color:var(--blue)}
+img{max-width:100%}
+header.top{position:sticky;top:0;z-index:20;background:rgba(247,241,225,.96);backdrop-filter:blur(6px);border-bottom:1px solid var(--line);padding:10px 14px}
+.brand{display:flex;align-items:center;gap:10px;font:700 18px var(--display)}
+.brand small{font:500 12px var(--body);color:var(--muted)}
+.srch{display:flex;gap:6px;margin-top:8px;align-items:center}
+.srch input{flex:1;min-width:0;font:15px var(--body);padding:10px 14px;border:1.5px solid var(--line);border-radius:999px;background:#fff;color:var(--ink);outline:none}
+.srch input:focus{border-color:var(--accent)}
+.srch .cnt{font-size:12px;color:var(--muted);white-space:nowrap}
+.btn{font:600 13px var(--display);border:1.5px solid var(--line);background:#fff;border-radius:999px;padding:7px 12px;cursor:pointer;color:var(--ink)}
+.btn.tocbtn{display:none}
+.wrap{display:grid;grid-template-columns:250px minmax(0,1fr);gap:20px;max-width:1180px;margin:0 auto;padding:16px}
+nav.toc{position:sticky;top:120px;align-self:start;max-height:calc(100vh - 136px);overflow:auto;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:12px}
+nav.toc h2{font:700 15px var(--display);margin:0 0 6px}
+nav.toc ol{margin:0;padding-left:20px}
+nav.toc li{margin:3px 0}
+nav.toc a{color:var(--ink);text-decoration:none;font-size:14px}
+nav.toc a:hover,nav.toc a.on{color:var(--accent);font-weight:600}
+nav.toc ul{padding-left:14px;margin:2px 0;list-style:"· "}
+nav.toc ul a{font-size:13px;color:var(--muted)}
+main section{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:16px 18px;margin:0 0 16px}
+main section.hide{display:none}
+h2.st{font:700 21px var(--display);margin:0 0 10px;display:flex;align-items:center;gap:10px}
+h2.st img{width:40px;height:40px;object-fit:contain}
+h3{font:700 16px var(--display);margin:16px 0 6px}
+.lead{font-size:16px}
+.muted{color:var(--muted)}
+.pos{color:var(--good);font-weight:600}.neg{color:var(--bad);font-weight:600}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px}
+.card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:10px 12px}
+.card h4{margin:0 0 4px;font:700 15px var(--display);display:flex;align-items:center;gap:8px}
+.card h4 img{width:34px;height:34px;object-fit:contain;flex:none}
+.card p{margin:2px 0;font-size:14px}
+.ic{width:20px;height:20px;vertical-align:-4px;object-fit:contain}
+table{width:100%;border-collapse:collapse;font-size:14px;margin:6px 0}
+th,td{padding:7px 6px;border-bottom:1px dashed var(--line);text-align:left;vertical-align:top}
+th{font-weight:600;color:var(--muted);font-size:13px;border-bottom:1.5px solid var(--line)}
+td.r,th.r{text-align:right;white-space:nowrap}
+.tbl{overflow-x:auto}
+.steps{counter-reset:s;list-style:none;padding:0;margin:8px 0}
+.steps li{counter-increment:s;position:relative;padding:8px 10px 8px 46px;background:#fff;border:1px solid var(--line);border-radius:12px;margin:6px 0}
+.steps li::before{content:counter(s);position:absolute;left:10px;top:8px;width:26px;height:26px;border-radius:50%;background:var(--accent);color:#fff;font:700 14px/26px var(--display);text-align:center}
+.tip{background:#eef6e6;border:1px solid #cfe3bf;border-radius:12px;padding:8px 12px;margin:8px 0;font-size:14px}
+.warn{background:#fdecea;border:1px solid #f2c4bb;border-radius:12px;padding:8px 12px;margin:8px 0;font-size:14px}
+.chip{display:inline-block;padding:1px 9px;border-radius:999px;background:var(--surface2);border:1px solid var(--line);font-size:12.5px;white-space:nowrap}
+.ranks{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.ranks .card{text-align:center}
+.ranks img{width:58px;height:58px;object-fit:contain}
+.zone{display:flex;gap:10px;align-items:center}
+.zone img{width:64px;height:64px;object-fit:cover;border-radius:10px;flex:none}
+.dot{display:inline-block;width:11px;height:11px;border-radius:50%;vertical-align:0;margin-right:4px}
+mark{background:#ffe27a;color:inherit;border-radius:3px;padding:0 1px}
+.noresult{display:none;text-align:center;padding:30px;color:var(--muted)}
+.embed .brand{display:none}.embed .srch{margin-top:0}
+.totop{position:fixed;right:14px;bottom:14px;z-index:15}
+footer{text-align:center;color:var(--muted);font-size:12px;padding:10px 0 30px}
+@media (max-width:860px){
+  .wrap{grid-template-columns:minmax(0,1fr);padding:10px}
+  .brand{font-size:16px}.brand small{display:none}
+  header.top{padding:8px 10px}
+  nav.toc{display:none;position:fixed;top:112px;left:10px;right:10px;max-height:70vh;z-index:30;box-shadow:0 10px 30px rgba(0,0,0,.18)}
+  nav.toc.open{display:block}
+  .btn.tocbtn{display:inline-block}
+  main section{padding:14px}
+  h2.st{font-size:19px}
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="brand"><img src="img/ic-cash.webp" alt="" width="30" height="30"> Wiki เกมอิสรภาพทางการเงิน <small>กติกา · เงื่อนไข · วิธีเล่น</small></div>
+  <div class="srch">
+    <button class="btn tocbtn" id="tocBtn" aria-expanded="false">☰ สารบัญ</button>
+    <input id="q" type="search" placeholder="🔍 ค้นหา เช่น เงินเดือน, ตกงาน, ไดมอนด์, กู้" autocomplete="off" aria-label="ค้นหาใน wiki">
+    <span class="cnt" id="cnt"></span>
+  </div>
+</header>
+
+<div class="wrap">
+<nav class="toc" id="toc" aria-label="สารบัญ"><h2>📑 สารบัญ</h2><ol id="tocList"></ol></nav>
+<main id="main">
+
+<section id="start" data-t="เริ่มต้น">
+  <h2 class="st"><img src="img/npc-wave.webp" alt="">เริ่มต้น: เกมนี้คืออะไร</h2>
+  <p class="lead">เกมกระดานการเงิน ผสม <b>เกมเศรษฐี</b> + <b>Cashflow</b> + <b>ตลาดหุ้น/สินค้า/คริปโต</b> + <b>ธุรกิจเครือข่าย (ธุรกิจ A)</b> เล่นได้ 2–6 คน (คนหรือบอท) บนเครื่องเดียว หรือออนไลน์กับเพื่อน</p>
+  <div class="grid">
+    <div class="card"><h4>🏆 ชนะ Lv.1</h4><p>รายได้จากทรัพย์สิน (Passive) <b>มากกว่า</b>รายจ่ายรวมต่อเดือน ได้ถ้วยข้างชื่อ เกมยังเล่นต่อได้</p></div>
+    <div class="card"><h4><img src="img/rank-7.webp" alt="">💎 ชนะ Lv.2</h4><p>ธุรกิจ A ถึงระดับ <b>ไดมอนด์</b> เกมจบทันที</p></div>
+    <div class="card"><h4>🏁 จบเกมเมื่อไรก็ได้</h4><p>กด "จบเกมและสรุปผล" (ออนไลน์อยู่ในหน้าข้อมูลห้อง) จัดอันดับตามความใกล้ชนะ</p></div>
+  </div>
+  <h3 id="start-rank">จัดอันดับยังไง</h3>
+  <p>คนที่ชนะ Lv.2 อยู่บนสุด ตามด้วยคนที่ชนะ Lv.1 ที่เหลือเรียงตาม <b>ความใกล้ชนะ</b> = รายได้จากทรัพย์สิน ÷ รายจ่ายรวม (เต็ม 100%)</p>
+</section>
+
+<section id="turn" data-t="เทิร์นของคุณ">
+  <h2 class="st"><img src="img/c0-thumb.webp" alt="">เทิร์นของคุณ</h2>
+  <ol class="steps">
+    <li><b>ทอยลูกเต๋า</b> ปกติ 1 ลูก (ถ้าได้สิทธิ์จากช่องบริจาค เลือกทอย 1 หรือ 2 ลูกได้ 3 เทิร์น)</li>
+    <li><b>เดิน</b> ตามแต้ม ผ่านช่องเงินเดือนได้รับเงินเดือน · ผ่านช่องถนนเลือกข้ามไปอีกชั้นได้</li>
+    <li><b>ทำตามช่องที่หยุด</b> เช่น ซื้ออสังหาฯ จ่ายค่าผ่านทาง พักผ่อน เรียนรู้</li>
+    <li><b>จั่วการ์ดได้ 3 ใบ</b> เลือกจากกองไหนก็ได้ ซ้ำกองได้ (กด "พอแล้ว" เพื่อหยุดก่อนครบ)</li>
+    <li><b>จัดการเงิน</b> ซื้อขายหุ้น กองทุน กู้ ฝาก ซื้อดีลจากตลาด จ้างคนช่วยงาน ใช้การ์ดทักษะ</li>
+    <li><b>จบเทิร์น</b> (ระบบถามยืนยันก่อน)</li>
+  </ol>
+  <div class="grid">
+    <div class="card"><h4>⏱ 3 นาทีต่อเทิร์น</h4><p>หมดเวลาระบบจบเทิร์นให้ คำถามที่ค้างถือว่าตอบ "ไม่"</p></div>
+    <div class="card"><h4><img src="img/ic-t.webp" alt="">จบไว ได้เวลา +1</h4><p>กดจบเทิร์นก่อนครบ 3 นาที ได้ ⏳ +1</p></div>
+    <div class="card"><h4>🧹 จ้างคนช่วยงาน</h4><p>฿10,000 ได้ ⏳ +1 จ้างได้เทิร์นละครั้ง</p></div>
+  </div>
+</section>
+
+<section id="stats" data-t="ค่าพลัง">
+  <h2 class="st"><img src="img/ic-h.webp" alt="">ค่าพลัง ❤ ⏳ 📚</h2>
+  <p>ค่าพลังมี 3 อย่าง เต็มอย่างละ 10 การ์ดและดีลส่วนใหญ่ต้องใช้ค่าพลังด้วย ไม่ใช่แค่เงิน</p>
+  <div class="grid">
+    <div class="card"><h4><img src="img/ic-h.webp" alt="">หัวใจ</h4><p>สุขภาพกายและใจ ใช้กับการ์ดธุรกิจ/งานบางใบ</p></div>
+    <div class="card"><h4><img src="img/ic-t.webp" alt="">เวลา</h4><p>ใช้มากที่สุด เรียนรู้ ดีลธุรกิจ อสังหาฯ ธุรกิจ A</p></div>
+    <div class="card"><h4><img src="img/ic-k.webp" alt="">ความรู้</h4><p>เป็นเกณฑ์ขั้นต่ำของการลงทุน · 7 ขึ้นไปมองเห็นกลโกง</p></div>
+  </div>
+  <h3 id="stats-turn">ได้ทุกเทิร์น</h3>
+  <table><tr><th>เงื่อนไข</th><th class="r">ได้</th></tr>
+    <tr><td>รายได้จากทรัพย์สินถึง 25% ของรายจ่าย (ตอนจบเทิร์น)</td><td class="r pos">⏳ +1</td></tr>
+    <tr><td>… ถึง 50%</td><td class="r pos">⏳ +2</td></tr>
+    <tr><td>… ถึง 75%</td><td class="r pos">⏳ +3</td></tr>
+    <tr><td>จบเทิร์นก่อนหมดเวลา</td><td class="r pos">⏳ +1</td></tr>
+    <tr><td>จ้างคนช่วยงาน ฿10,000</td><td class="r pos">⏳ +1</td></tr>
+  </table>
+  <h3 id="stats-pay">ทุกครั้งที่รับเงินเดือน</h3>
+  <table><tr><th>ค่าพลัง</th><th>การเปลี่ยนแปลง</th></tr>
+    <tr><td><img class="ic" src="img/ic-h.webp" alt=""> หัวใจ</td><td>สุ่ม 0 / +1 / +2 แล้ว <span class="neg">−1 ต่อความเครียด</span> 1 ข้อ</td></tr>
+    <tr><td><img class="ic" src="img/ic-t.webp" alt=""> เวลา</td><td>สุ่ม +1 ถึง +3 แล้ว <span class="neg">−1 ต่อลูก</span> 1 คน</td></tr>
+    <tr><td><img class="ic" src="img/ic-k.webp" alt=""> ความรู้</td><td>สุ่ม 0 หรือ <span class="neg">−1</span> (ความรู้ลดลงตามเวลา)</td></tr>
+  </table>
+  <p><b>ความเครียด</b> (ข้อละ ❤ −1): รายรับไม่พอรายจ่าย · หนี้ธนาคารเกิน 3 เท่าของเงินเดือน · เวลาเหลือ 2 หรือต่ำกว่า · ตกงานหรือโดนใบเตือน</p>
+  <h3 id="stats-other">ได้เป็นครั้งๆ</h3>
+  <ul>
+    <li>🌿 ช่องพักผ่อน: ❤ +1 · ⏳ +1 ถึง +2</li>
+    <li>🎓 ช่องศูนย์เรียนรู้: 📚 +2 ถึง +4 และได้การ์ดทักษะฟรี 1 ใบ</li>
+    <li>🏅 ธุรกิจ A เลื่อนระดับ: ❤ +2 · ⏳ + เท่ากับจำนวนระดับที่ขึ้น</li>
+    <li>การ์ดเรียนรู้และการ์ดความรู้ธุรกิจ: 📚 +</li>
+    <li>การ์ดทักษะ "พักฟื้นพลัง" (❤ +3) และ "บริหารเวลา" (⏳ +3)</li>
+    <li>การ์ดชีวิตบางใบ เช่น โบนัสประจำปี ฟิตเนส ของขวัญ</li>
+  </ul>
+  <h3 id="stats-low">หัวใจต่ำ</h3>
+  <div class="warn">❤ เหลือ 2 หรือต่ำกว่า: ทุกวันเงินเดือนต้องจ่าย<b>ค่ารักษา 20% ของเงินเดือน</b></div>
+  <h3 id="stats-use">การหักค่าพลัง</h3>
+  <p>การ์ดชีวิต/โอกาส/ธุรกิจ A และการซื้อทอง/หุ้นจอง <b>หักค่าพลังออกจริง</b> · การ์ดเรียนรู้และอสังหาฯบนกระดานใช้ 📚 เป็น<b>เกณฑ์ขั้นต่ำ ไม่หัก</b> · ถ้าค่าพลังไม่พอ ซื้อไม่ได้ (เงินไม่พอกู้ได้ แต่ค่าพลังต้องครบ)</p>
+</section>
+
+<section id="money" data-t="เงิน รายรับ รายจ่าย">
+  <h2 class="st"><img src="img/ic-cash.webp" alt="">เงิน: รายรับ รายจ่าย</h2>
+  <div class="grid">
+    <div class="card"><h4>💼 Active</h4><p>เงินเดือน + รายได้เสริมที่ต้องลงแรง หายไปตอนตกงาน</p></div>
+    <div class="card"><h4>🌱 Passive</h4><p>รายได้จากทรัพย์สิน: ค่าเช่า กำไรธุรกิจ ปันผล ดอกเบี้ยเงินฝาก ธุรกิจ A <b>ตัวนี้ทำให้ชนะ</b></p></div>
+    <div class="card"><h4>🧾 รายจ่ายรวม</h4><p>ภาษี ผ่อนบ้าน ผ่อนรถ บัตรเครดิต ค่าครองชีพ ค่าเลี้ยงลูก ดอกเบี้ยเงินกู้ รายจ่ายเพิ่มจากการ์ด</p></div>
+  </div>
+  <h3 id="money-pay">วันเงินเดือน</h3>
+  <p>เดินผ่านหรือหยุดช่องเงินเดือน (หรือเปิดได้การ์ดเงินเดือนในกองธุรกิจ A) ได้ <b>กระแสเงินสด = เงินเดือน + Active + Passive − รายจ่ายรวม</b> พร้อมป๊อปอัปสรุปบัญชี</p>
+  <h3 id="money-neg">เงินสดติดลบ</h3>
+  <p>ระบบ<b>ถอนเงินฝากประจำมาจ่ายก่อน</b> ถ้ายังไม่พอจะ<b>กู้ธนาคารให้อัตโนมัติ</b> (มีกล่อง 📌 แจ้งสาเหตุ)</p>
+</section>
+
+<section id="jobs" data-t="อาชีพ">
+  <h2 class="st"><img src="img/head-4.webp" alt="">อาชีพ 8 แบบ</h2>
+  <p>เริ่มเกมสุ่มอาชีพให้ทุกคน อาชีพกำหนดเงินเดือน เงินเก็บ รายจ่าย ค่าเลี้ยงลูก และค่าพลังเริ่มต้น</p>
+  <div class="tbl"><table>
+    <tr><th>อาชีพ</th><th class="r">เงินเดือน</th><th class="r">เงินเก็บ</th><th class="r">รายจ่าย</th><th class="r">ค่าเลี้ยงลูก/คน</th><th>❤ ⏳ 📚</th></tr>
+    <tr><td><img class="ic" src="img/head-0.webp" alt=""> พนักงานส่งของ</td><td class="r">฿20,000</td><td class="r">฿15,000</td><td class="r">฿14,000</td><td class="r">฿2,000</td><td>8 · 6 · 2</td></tr>
+    <tr><td><img class="ic" src="img/head-1.webp" alt=""> ครู</td><td class="r">฿33,000</td><td class="r">฿15,000</td><td class="r">฿22,000</td><td class="r">฿2,300</td><td>6 · 5 · 5</td></tr>
+    <tr><td><img class="ic" src="img/head-2.webp" alt=""> พยาบาล</td><td class="r">฿36,000</td><td class="r">฿20,000</td><td class="r">฿25,000</td><td class="r">฿2,500</td><td>5 · 4 · 4</td></tr>
+    <tr><td><img class="ic" src="img/head-3.webp" alt=""> ผู้จัดการ</td><td class="r">฿46,000</td><td class="r">฿20,000</td><td class="r">฿31,000</td><td class="r">฿3,200</td><td>5 · 3 · 4</td></tr>
+    <tr><td><img class="ic" src="img/head-4.webp" alt=""> วิศวกร</td><td class="r">฿50,000</td><td class="r">฿25,000</td><td class="r">฿33,000</td><td class="r">฿3,500</td><td>6 · 4 · 5</td></tr>
+    <tr><td><img class="ic" src="img/head-5.webp" alt=""> ทนายความ</td><td class="r">฿75,000</td><td class="r">฿30,000</td><td class="r">฿53,000</td><td class="r">฿5,300</td><td>4 · 3 · 6</td></tr>
+    <tr><td><img class="ic" src="img/head-6.webp" alt=""> นักบิน</td><td class="r">฿95,000</td><td class="r">฿35,000</td><td class="r">฿68,000</td><td class="r">฿6,700</td><td>5 · 3 · 5</td></tr>
+    <tr><td><img class="ic" src="img/head-7.webp" alt=""> แพทย์</td><td class="r">฿130,000</td><td class="r">฿40,000</td><td class="r">฿94,000</td><td class="r">฿9,100</td><td>4 · 2 · 7</td></tr>
+  </table></div>
+  <p class="muted">รายจ่าย = ภาษี + ผ่อนบ้าน + ผ่อนรถ + บัตรเครดิต + ค่าครองชีพ ตอนเริ่มเกม (ค่าเริ่มต้น แก้ได้ในหน้าตั้งค่า → ฐานข้อมูล) · เงินเดือนสูงก็รายจ่ายสูง ชนะยากพอๆ กัน</p>
+</section>
+
+<section id="board" data-t="กระดาน">
+  <h2 class="st"><img src="img/sq-start.webp" alt="">กระดาน 2 ชั้น</h2>
+  <div class="grid">
+    <div class="card"><h4>🌾 ชั้นนอก = ต่างจังหวัด</h4><p>40 ช่อง 4 เขต ที่ดินถูก ค่าครองชีพต่ำ</p></div>
+    <div class="card"><h4>🏙 ชั้นใน = เมืองหลวง</h4><p>32 ช่อง 4 ย่าน อสังหาฯแพง ค่าครองชีพสูง แต่สร้างธุรกิจง่าย: <b>ดีลธุรกิจลด 20%</b> ตอนอยู่ชั้นใน และมีช่องศูนย์ธุรกิจ</p></div>
+    <div class="card"><h4><img src="img/sq-road.webp" alt="">ถนน</h4><p>ทุกเขตมีช่องถนน เดินผ่านแล้วเลือกข้ามไปถนนอีกชั้นได้ การข้ามนับ 1 ก้าว</p></div>
+  </div>
+  <h3 id="board-zones">เขตและย่าน</h3>
+  <p>ค่าครองชีพ = ตัวคูณค่าใช้จ่ายของการ์ดชีวิต ตามเขตที่ยืนอยู่ · ผลตอบแทน = กำไรต่อเดือนของอสังหาฯ/ธุรกิจในเขตนั้น (ยิ่งสูงยิ่งต้องใช้ความรู้มาก ×1–2.5)</p>
+  <div class="tbl"><table>
+    <tr><th>เขต</th><th class="r">ค่าครองชีพ</th><th class="r">ผลตอบแทน/เดือน</th></tr>
+    <tr><td class="zone"><img src="img/zone-o0.webp" alt=""><span><span class="dot" style="background:#8cc263"></span>เขตเกษตรกรรม</span></td><td class="r">×0.7</td><td class="r">6%</td></tr>
+    <tr><td class="zone"><img src="img/zone-o1.webp" alt=""><span><span class="dot" style="background:#9aa0b5"></span>เขตอุตสาหกรรม</span></td><td class="r">×0.8</td><td class="r">7%</td></tr>
+    <tr><td class="zone"><img src="img/zone-o2.webp" alt=""><span><span class="dot" style="background:#5ec0cf"></span>เขตท่องเที่ยว</span></td><td class="r">×1.0</td><td class="r">7.5%</td></tr>
+    <tr><td class="zone"><img src="img/zone-o3.webp" alt=""><span><span class="dot" style="background:#f0ad5e"></span>เขตชุมชน</span></td><td class="r">×0.85</td><td class="r">6.5%</td></tr>
+    <tr><td class="zone"><img src="img/zone-i0.webp" alt=""><span><span class="dot" style="background:#b993de"></span>ย่านที่พักหรู</span></td><td class="r">×1.7</td><td class="r">6.5%</td></tr>
+    <tr><td class="zone"><img src="img/zone-i1.webp" alt=""><span><span class="dot" style="background:#ef8db2"></span>ย่านช้อปปิ้ง</span></td><td class="r">×1.5</td><td class="r">7%</td></tr>
+    <tr><td class="zone"><img src="img/zone-i2.webp" alt=""><span><span class="dot" style="background:#e8866a"></span>ย่านธุรกิจ</span></td><td class="r">×1.4</td><td class="r">7.5%</td></tr>
+    <tr><td class="zone"><img src="img/zone-i3.webp" alt=""><span><span class="dot" style="background:#6f9ad9"></span>ย่านการเงิน</span></td><td class="r">×1.3</td><td class="r">8%</td></tr>
+  </table></div>
+  <h3 id="board-squares">ช่องพิเศษ</h3>
+  <div class="grid">
+    <div class="card"><h4><img src="img/sq-pay.webp" alt="">เงินเดือน</h4><p>รับกระแสเงินสด · ชั้นนอก 4 มุม (มุมแรก = จุดเริ่ม) · ชั้นใน 2 มุม</p></div>
+    <div class="card"><h4><img src="img/sq-rest.webp" alt="">พักผ่อน</h4><p>❤ +1 · ⏳ +1 ถึง +2</p></div>
+    <div class="card"><h4>🎓 ศูนย์เรียนรู้</h4><p>📚 +2 ถึง +4 + การ์ดทักษะสุ่ม 1 ใบ ฟรี ไม่เสียหัวใจ/เวลา</p></div>
+    <div class="card"><h4><img src="img/sq-jobless.webp" alt="">ตกงาน</h4><p>ชั้นละ 1 ช่อง · รอบ 1–5 แค่ใบเตือน 🟨 · ตั้งแต่รอบ 6 ตกงานจริง (ดู <a href="#events">เหตุการณ์</a>)</p></div>
+    <div class="card"><h4><img src="img/sq-charity.webp" alt="">บริจาคการกุศล</h4><p>บริจาค 10% ของรายรับรวม แล้วเลือกทอย 1 หรือ 2 ลูกได้ 3 เทิร์น</p></div>
+    <div class="card"><h4><img src="img/sq-luxury.webp" alt="">ฟุ่มเฟือย</h4><p>บังคับจั่วการ์ดรายจ่าย 1 ใบ</p></div>
+    <div class="card"><h4><img src="img/sq-market.webp" alt="">ตลาดหลักทรัพย์</h4><p>ชั้นใน · เทิร์นนี้ซื้อขายหุ้น/สินค้าไม่เสียค่าคอม + ได้ข่าวตลาด</p></div>
+    <div class="card"><h4><img src="img/sq-news.webp" alt="">ข่าวตลาด</h4><p>ชั้นใน · เปิดข่าว ราคาหุ้น/สินค้าขยับ</p></div>
+    <div class="card"><h4><img src="img/sq-bank.webp" alt="">ศูนย์ธุรกิจ</h4><p>ชั้นใน · ได้ข้อเสนอดีลธุรกิจ 1 ดีล ลดเงินลงทุน 20%</p></div>
+  </div>
+</section>
+
+<section id="property" data-t="อสังหาฯบนกระดาน">
+  <h2 class="st"><img src="img/prop-o24.webp" alt="">อสังหาฯบนกระดาน</h2>
+  <ul>
+    <li><b>หยุดช่องว่าง:</b> ซื้อได้ ได้ค่าเช่า (Passive) ทุกเดือน · ต้องมีความรู้ถึงเกณฑ์</li>
+    <li><b>หยุดช่องของตัวเอง:</b> อัปเกรดได้ 2 ขั้น ใช้ ⏳ 1 ต่อขั้น ค่าเช่าเพิ่ม</li>
+    <li><b>หยุดช่องของคนอื่น:</b> จ่ายค่าผ่านทางให้เจ้าของ (ยิ่งอัปเกรดยิ่งแพง)</li>
+    <li><b>ครบทั้งเขต:</b> ค่าเช่า ×1.5 และค่าผ่านทาง ×2</li>
+    <li><b>ขายคืนธนาคาร:</b> ได้ 80% ของเงินที่ลงไป</li>
+  </ul>
+  <p>ราคาชั้นนอก ฿20,000–95,000 · ชั้นใน ฿120,000–400,000 · แตะช่องบนกระดานเพื่อดูรายละเอียด</p>
+</section>
+
+<section id="cards" data-t="การ์ด">
+  <h2 class="st"><img src="img/back-opp.webp" alt="">การ์ด 4 กอง</h2>
+  <p>จั่วได้ 3 ใบต่อเทิร์น เลือกกองเองได้</p>
+  <div class="grid">
+    <div class="card"><h4><img src="img/back-life.webp" alt="">ดำเนินชีวิต</h4><p>แหล่งเติม ❤ ⏳ ไม่หักค่าพลัง จ่ายเป็นเงินแทน ราคาคูณค่าครองชีพเขต · ข้ามได้ ยกเว้นอุบัติเหตุและลูกคนที่ 1–2</p></div>
+    <div class="card"><h4><img src="img/back-learn.webp" alt="">เรียนรู้</h4><p>จ่ายค่าเรียน ได้ความรู้และ/หรือการ์ดทักษะ · ระวังคอร์สหลอกลวง</p></div>
+    <div class="card"><h4><img src="img/back-opp.webp" alt="">โอกาสชีวิต</h4><p>อสังหาฯ ธุรกิจ ทองราคาพิเศษ หุ้นจอง (IPO) คนขอซื้อทรัพย์สิน รีไฟแนนซ์บ้าน และแชร์ลูกโซ่</p></div>
+    <div class="card"><h4><img src="img/back-net.webp" alt="">ธุรกิจ A</h4><p>ยังไม่สมัคร = เปิดแล้วสมัครได้ ฿900 (เสียสิทธิ์จั่วใบนั้น) · สมัครแล้ว = สร้างสายงาน ทำ PV การ์ดชีวิตประจำวัน</p></div>
+  </div>
+  <h3 id="cards-scam">กลโกง</h3>
+  <p>แชร์ลูกโซ่และคอร์สหลอกลวงดูเหมือนดีลดี · <b>ความรู้ 7 ขึ้นไป</b> หรือมีทักษะ "รู้ทันกลโกง" จะเห็นว่าเป็นกลโกง · แชร์ลูกโซ่มีโอกาส 50% ทุกวันเงินเดือนที่จะปิดตัวหนีพร้อมเงินลงทุน</p>
+  <h3 id="cards-kids">ลูก</h3>
+  <ul>
+    <li>สูงสุด 4 คน · คนที่ 1–2 บังคับรับ คนที่ 3–4 เลือกได้</li>
+    <li>ค่าเลี้ยงดูรายเดือนตามอาชีพ · ⏳ −1 ต่อคนทุกวันเงินเดือน</li>
+    <li>แรงบันดาลใจ: การ์ดที่ใช้ ❤ ลดลง 1 ต่อลูก · รายได้ธุรกิจ (กองโอกาส + ธุรกิจ A) +5% ต่อลูก</li>
+  </ul>
+</section>
+
+<section id="net" data-t="ธุรกิจ A">
+  <h2 class="st"><img src="img/rank-0.webp" alt="">ธุรกิจ A (ธุรกิจเครือข่าย)</h2>
+  <p>ไม่มีช่องบนกระดาน · <b>สมัคร ฿900</b> ได้ที่แท็บธุรกิจ A หรือตอนเปิดกองการ์ดธุรกิจ A · การ์ดในกองนี้ใช้เงินน้อยแต่ใช้ค่าพลังมาก</p>
+  <h3 id="net-pv">PV และสายงาน</h3>
+  <p>สร้างสายงาน 6 สาย (A–F) แต่ละการ์ดเพิ่ม PV ให้สายใดสายหนึ่ง · <b>ยอดกลุ่ม</b> = PV ส่วนตัว + PV ทุกสาย กำหนด<b>ขั้นโบนัส</b>:</p>
+  <div class="tbl"><table><tr><th>ยอดกลุ่ม (PV)</th><th class="r">ขั้นโบนัส</th></tr>
+    <tr><td>3,000</td><td class="r">3%</td></tr><tr><td>7,000</td><td class="r">6%</td></tr><tr><td>15,000</td><td class="r">9%</td></tr><tr><td>30,000</td><td class="r">12%</td></tr><tr><td>55,000</td><td class="r">15%</td></tr><tr><td>90,000</td><td class="r">18%</td></tr><tr><td><b>150,000</b></td><td class="r"><b>21%</b></td></tr></table></div>
+  <p>สายงานที่ทำได้ 150,000 PV ขึ้นไป = <b>สายที่ถึง 21%</b></p>
+  <h3 id="net-ranks">ระดับ</h3>
+  <p>เช็กทุกวันเงินเดือน · ขึ้นระดับได้โบนัสพินเป็นเงินสด + ❤ +2 + ⏳ เท่าจำนวนระดับที่ขึ้น</p>
+  <div class="ranks">
+    <div class="card"><img src="img/rank-0.webp" alt=""><h4 style="justify-content:center">สมาชิก</h4><p>สมัครแล้ว</p></div>
+    <div class="card"><img src="img/rank-1.webp" alt=""><h4 style="justify-content:center">ซิลเวอร์</h4><p>ยอดกลุ่มถึง 21%<br><span class="pos">+฿10,000</span></p></div>
+    <div class="card"><img src="img/rank-2.webp" alt=""><h4 style="justify-content:center">โกลด์</h4><p>21% ติดกัน 2 เดือน<br><span class="pos">+฿20,000</span></p></div>
+    <div class="card"><img src="img/rank-3.webp" alt=""><h4 style="justify-content:center">แพลทินัม</h4><p>21% ติดกัน 3 เดือน<br><span class="pos">+฿50,000</span></p></div>
+    <div class="card"><img src="img/rank-4.webp" alt=""><h4 style="justify-content:center">รูบี้</h4><p>ยอดกลุ่ม 300,000 PV<br><span class="pos">+฿80,000</span></p></div>
+    <div class="card"><img src="img/rank-5.webp" alt=""><h4 style="justify-content:center">เพิร์ล</h4><p>3 สายถึง 21%<br><span class="pos">+฿100,000</span></p></div>
+    <div class="card"><img src="img/rank-6.webp" alt=""><h4 style="justify-content:center">เอเมอรัลด์</h4><p>3 สายถึง 21% ติดกัน 2 เดือน<br><span class="pos">+฿150,000</span></p></div>
+    <div class="card"><img src="img/rank-7.webp" alt=""><h4 style="justify-content:center">ไดมอนด์ 💎</h4><p>ครบ 6 สาย (A–F) ถึง 21%<br><span class="pos">+฿300,000 · ชนะ Lv.2</span></p></div>
+  </div>
+  <div class="tip">การ์ดโอกาส "คนรู้จักสนใจธุรกิจ A" ให้สมาชิก +6,000 PV และ Passive +฿1,000/เดือน (ยังไม่สมัครจะไม่เจอการ์ดนี้)</div>
+</section>
+
+<section id="bank" data-t="ธนาคาร">
+  <h2 class="st"><img src="img/npc-std.webp" alt="">ธนาคาร (แท็บธนาคาร)</h2>
+  <p>แท็บธนาคารมีแท็บย่อย: 🏦 ธนาคาร · 📈 กองทุน · 🏪 ตลาด · 🔁 เทรด</p>
+  <div class="grid">
+    <div class="card"><h4><img src="img/as-loan.webp" alt="">เงินกู้</h4><p>ดอกเบี้ย <b>2% ต่อเดือน</b> (นับในรายจ่าย) · กู้ซื้อการ์ดทุกใบได้ แต่ค่าพลังต้องครบ</p></div>
+    <div class="card"><h4><img src="img/as-saving.webp" alt="">ฝากประจำ</h4><p>ดอกเบี้ย <b>0.25% ต่อเดือน</b> นับเป็น Passive · เงินสดติดลบถอนเงินฝากก่อนกู้</p></div>
+  </div>
+  <div class="warn"><b>ล้มละลาย:</b> หนี้ธนาคารเกินเพดาน = มากกว่า ฿400,000 หรือ 12 เท่าของเงินเดือน (เอาที่มากกว่า) · ทรัพย์สินถูกยึดหมด เริ่มใหม่ด้วยเงินเก็บของอาชีพเดิม</div>
+  <h3 id="bank-fund">กองทุนรวม (แท็บย่อยกองทุน)</h3>
+  <p>ซื้อขายเป็นหน่วย ราคา (NAV) เริ่ม ฿10 เดินตามราคาจริงของกองทุนจริงช่วงเดียวกัน · ค่าธรรมเนียม 1%</p>
+  <div class="tbl"><table><tr><th>กองทุน</th><th>ความเสี่ยง</th></tr>
+    <tr><td>MMF ตลาดเงิน</td><td>ต่ำมาก</td></tr><tr><td>BOND ตราสารหนี้</td><td>ต่ำ</td></tr><tr><td>DIVF หุ้นปันผล (ปันผล ฿0.04/หน่วย)</td><td>ปานกลางค่อนสูง</td></tr><tr><td>SET50 ดัชนี</td><td>สูง</td></tr><tr><td>GLOB หุ้นโลก</td><td>สูงมาก</td></tr><tr><td>GOLDF ทองคำ</td><td>สูง</td></tr></table></div>
+  <h3 id="bank-trade">เทรด หุ้น · สินค้า · คริปโต (แท็บย่อยเทรด)</h3>
+  <div class="grid">
+    <div class="card"><h4><img src="img/as-stock.webp" alt="">หุ้น</h4><p>TTEC · PWR · BNK · FOOD · REIT · GROW · บางตัวมีปันผล (นับเป็น Passive)</p></div>
+    <div class="card"><h4><img src="img/as-commod.webp" alt="">สินค้า</h4><p>ทองคำ · น้ำมันดิบ · ข้าวหอมมะลิ · เหล็ก</p></div>
+    <div class="card"><h4><img src="img/as-crypto.webp" alt="">คริปโต</h4><p>BTC · ETH · SOL · DOGE ราคาเดินตามของจริงย้อนหลัง (เฉลยช่วงเวลาตอนจบเกม)</p></div>
+  </div>
+  <p>ค่าคอม 1% · ฟรีเมื่อหยุดช่องตลาดหลักทรัพย์ หรือมีทักษะ "นักวิเคราะห์หุ้น" · ซื้อขายได้ตลอดเทิร์นของคุณ</p>
+  <h3 id="bank-market">ตลาด NPC (แท็บย่อยตลาด)</h3>
+  <ul>
+    <li>ทุกต้นรอบ NPC เปิดการ์ดโอกาส 2 ใบ · ธุรกิจ/อสังหาฯขึ้นแท็บตลาด อยู่ 2 รอบ</li>
+    <li>ซื้อได้ในตาของคุณ ใครยืนยันก่อนได้ก่อน (บอทซื้อได้เฉพาะตาของบอท)</li>
+    <li>ติดป้ายขายทรัพย์สิน ซื้อจากป้ายคนอื่น หรือขายให้ธนาคารได้</li>
+  </ul>
+  <h3 id="bank-news">ข่าวสาร</h3>
+  <p>ข่าวหุ้น/คริปโต/สินค้า/กองทุน ขึ้นแท็บข่าวสาร มีผลกับราคาทันที โชว์ 2 รอบ</p>
+</section>
+
+<section id="skills" data-t="ทักษะ">
+  <h2 class="st"><img src="img/c1-think.webp" alt="">ทักษะ (การ์ดทักษะ)</h2>
+  <p>ได้จากการ์ดเรียนรู้และศูนย์เรียนรู้ · ดูได้ที่แท็บผู้เล่น → ทักษะ</p>
+  <div class="tbl"><table><tr><th>ทักษะ</th><th>ชนิด</th><th>ผล</th></tr>
+    <tr><td>นักลงทุนอสังหาฯ</td><td><span class="chip">ติดตัว</span></td><td>ค่าเช่าอสังหาฯ +20%</td></tr>
+    <tr><td>นักวิเคราะห์หุ้น</td><td><span class="chip">ติดตัว</span></td><td>ไม่เสียค่าคอมหุ้น · ปันผล +20%</td></tr>
+    <tr><td>เจ้าของกิจการ</td><td><span class="chip">ติดตัว</span></td><td>กำไรธุรกิจ +25%</td></tr>
+    <tr><td>ผู้นำเครือข่าย</td><td><span class="chip">ติดตัว</span></td><td>ธุรกิจ A: PV และ Passive จากการ์ด +20%</td></tr>
+    <tr><td>วางแผนภาษี</td><td><span class="chip">ติดตัว</span></td><td>ภาษี −30%</td></tr>
+    <tr><td>นักเจรจา</td><td><span class="chip">ติดตัว</span></td><td>ซื้ออสังหาฯและดีลถูกลง 10%</td></tr>
+    <tr><td>รู้ทันกลโกง</td><td><span class="chip">ติดตัว</span></td><td>มองเห็นกลโกง</td></tr>
+    <tr><td>ปริญญาโท</td><td><span class="chip">ติดตัว</span></td><td>เงินเดือน +15%</td></tr>
+    <tr><td>เดินตามใจ</td><td><span class="chip">ใช้ 2 ครั้ง</span></td><td>เลือกแต้มเดินเอง</td></tr>
+    <tr><td>พักฟื้นพลัง</td><td><span class="chip">ใช้ 2 ครั้ง</span></td><td>❤ +3</td></tr>
+    <tr><td>บริหารเวลา</td><td><span class="chip">ใช้ 2 ครั้ง</span></td><td>⏳ +3</td></tr>
+    <tr><td>ต่อรองดีลใหญ่</td><td><span class="chip">ใช้ 2 ครั้ง</span></td><td>ส่วนลด 20% การซื้อครั้งถัดไป</td></tr>
+    <tr><td>ประกันรายได้</td><td><span class="chip">ใช้ 1 ครั้ง</span></td><td>กันการตกงาน</td></tr>
+    <tr><td>ข่าววงใน</td><td><span class="chip">ใช้ 2 ครั้ง</span></td><td>ดูข่าวตลาดใบถัดไปล่วงหน้า</td></tr>
+    <tr><td>ขยันจั่ว</td><td><span class="chip">ใช้ 2 ครั้ง</span></td><td>จั่วการ์ดเพิ่ม +1</td></tr>
+  </table></div>
+</section>
+
+<section id="events" data-t="เหตุการณ์">
+  <h2 class="st"><img src="img/c2-sad.webp" alt="">เหตุการณ์สำคัญ</h2>
+  <div class="grid">
+    <div class="card"><h4><img src="img/ic-warn.webp" alt="">ใบเตือน 🟨</h4><p>หยุดช่องตกงานในรอบที่ 1–5: ยังไม่ตกงาน แต่เงินเดือนลด 50% ในวันเงินเดือน 2 ครั้งถัดไป</p></div>
+    <div class="card"><h4><img src="img/sq-jobless.webp" alt="">ตกงาน</h4><p>ตั้งแต่รอบที่ 6 หรือจากการ์ดตกงาน: ❤ −2 และวันเงินเดือน 2 ครั้งถัดไปได้แค่ Passive − รายจ่าย · เงินไม่พอต้องกู้หรือขายทรัพย์สินราคา 50%</p></div>
+    <div class="card"><h4>💀 ล้มละลาย</h4><p>หนี้ธนาคารเกินเพดาน ทรัพย์สินถูกยึดหมด เริ่มใหม่จากอาชีพเดิม</p></div>
+    <div class="card"><h4>🚑 หัวใจต่ำ</h4><p>❤ 2 หรือต่ำกว่า ทุกวันเงินเดือนจ่ายค่ารักษา 20% ของเงินเดือน</p></div>
+  </div>
+  <p class="muted">กติกาที่ระบบทำให้อัตโนมัติ (กู้อัตโนมัติ ค่ารักษา ล้มละลาย ใบเตือน ได้เวลาคืน) จะมีกล่อง 📌 มุมจอแจ้งสาเหตุ</p>
+</section>
+
+<section id="online" data-t="ออนไลน์">
+  <h2 class="st"><img src="img/online-hero.webp" alt="">เล่นออนไลน์</h2>
+  <ol class="steps">
+    <li>เข้าสู่ระบบ (Google · อีเมล · แขก)</li>
+    <li>สร้างห้อง ได้เลขห้อง 5 หลัก ส่งให้เพื่อน หรือแชร์ลิงก์ห้อง</li>
+    <li>เจ้าของห้องเลือกที่นั่งเป็นคนหรือบอท (2–6 ที่) แล้วกดเริ่ม</li>
+  </ol>
+  <h3 id="online-par">เล่นพร้อมกัน</h3>
+  <p>ห้องใหม่ทุกคนเล่นเทิร์นของตัวเองพร้อมกัน คนละ 3 นาที → แล้วบอทเล่นทีละตัว → ขึ้นรอบใหม่ · ที่ดินและดีลในตลาด ใครยืนยันก่อนได้ก่อน · ห้องเก่าบางห้องยังเป็นแบบเล่นทีละคน</p>
+  <h3 id="online-afk">💤 สถานะ Bot</h3>
+  <ul>
+    <li>ติดเมื่อ: ไม่ทอยเต๋าภายใน 3 นาที หรือออฟไลน์เกิน 1 นาที</li>
+    <li>ระหว่างติด: บอททอยเต๋าแทน ตอบ "ไม่" ทุกคำถาม ไม่จั่วการ์ด แล้วจบเทิร์นทันที</li>
+    <li>กลับมาเล่น: กดปุ่ม "ปลดสถานะ Bot" บนหน้าจอเทา</li>
+  </ul>
+  <h3 id="online-room">ข้อมูลห้อง</h3>
+  <p>แตะป้าย "ห้อง xxxxx ⓘ" ดูเจ้าของห้อง 👑 · เครื่องที่คุมรอบ 🎮 · สถานะทุกคน · เวอร์ชันเกม (ขึ้นเตือนถ้าใครเปิดเวอร์ชันเก่า) · ปุ่มแชร์ลิงก์ · จบเกม (เครื่องคุมรอบ) · ปิดห้อง (เจ้าของห้อง) · ออกจากเกม</p>
+  <div class="tip">เครื่องที่คุมรอบคือเครื่องที่สั่งเริ่มช่วงบอทและรอบใหม่ ปกติเป็นเจ้าของห้อง ถ้าเจ้าของห้องออฟไลน์หรือติดสถานะ Bot คนอื่นที่ยังเล่นอยู่จะคุมแทนเอง</div>
+</section>
+
+<section id="score" data-t="คะแนนสะสม">
+  <h2 class="st"><img src="img/rank-2.webp" alt="">คะแนนสะสม &amp; Leader board</h2>
+  <p>ทุกครั้งที่จบเกมออนไลน์ได้คะแนนผูกกับบัญชี ดูอันดับได้ที่หน้าล็อกอินและหน้าแรก (เดือนนี้ / ตลอดกาล) · บัญชีแขกไม่เก็บคะแนน · เกมจบตอนไม่อยู่ ได้คะแนนย้อนหลังตอนกลับมา</p>
+  <p><b>คะแนน = (อันดับ + โบนัส) × ตัวคูณจำนวนคน</b></p>
+  <div class="tbl"><table><tr><th>รายการ</th><th class="r">คะแนน</th></tr>
+    <tr><td>อันดับที่ 1 / 2 / 3 / 4 / 5–6</td><td class="r">10 / 6 / 4 / 2 / 1</td></tr>
+    <tr><td>🏆 ชนะ Lv.1</td><td class="r pos">+10</td></tr>
+    <tr><td>💎 ธุรกิจ A ไดมอนด์</td><td class="r pos">+25</td></tr>
+    <tr><td>ความใกล้ชนะ ทุก 10%</td><td class="r pos">+1 (สูงสุด +10)</td></tr>
+    <tr><td>ไม่เคยล้มละลาย / ล้มละลาย</td><td class="r">+3 / <span class="neg">−5</span></td></tr>
+    <tr><td>เล่นจนจบเกม</td><td class="r pos">+2</td></tr>
+    <tr><td>ตัวคูณ: คนเดียว (กับบอท) · 2 คน · 3–4 คน · 5–6 คน</td><td class="r">×0.5 · ×1 · ×1.2 · ×1.5</td></tr>
+  </table></div>
+  <p class="muted">เกมสั้นกว่า 10 รอบได้แค่ +2 · ออกจากเกมกลางคันไม่ได้คะแนน · คะแนนต่อเกมไม่ติดลบ</p>
+</section>
+
+<section id="faq" data-t="คำถามพบบ่อย">
+  <h2 class="st"><img src="img/npc-think.webp" alt="">คำถามพบบ่อย</h2>
+  <h3>เวลาหมดบ่อย ทำยังไงดี</h3><p>จบเทิร์นให้เร็ว (+1) · จ้างคนช่วยงาน (+1) · หยุดช่องพักผ่อน · สร้างรายได้จากทรัพย์สินให้ถึง 25% ของรายจ่าย แล้วจะได้เวลาคืนทุกเทิร์น</p>
+  <h3>ความรู้ลดลงเอง</h3><p>ใช่ ทุกวันเงินเดือนสุ่มลด 0–1 · เติมที่ศูนย์เรียนรู้ การ์ดเรียนรู้ และการ์ดความรู้ธุรกิจ</p>
+  <h3>เงินไม่พอซื้อดีล</h3><p>กู้ได้ตอนซื้อ (ดอกเบี้ย 2%/เดือน) แต่ระวังเพดานหนี้ และค่าพลังต้องครบ</p>
+  <h3>เกมค้าง รอนาน (ออนไลน์)</h3><p>เปิดหน้าข้อมูลห้อง ดูว่าใครคุมรอบ และทุกคนใช้เวอร์ชันล่าสุดหรือยัง ถ้ามีคำเตือนเวอร์ชันเก่า ให้คนนั้นรีเฟรช</p>
+</section>
+
+<div class="noresult" id="nores">ไม่พบหัวข้อที่ตรงกับ "<b id="nq"></b>" · ลองคำอื่น เช่น เงินเดือน ตกงาน ธุรกิจ A</div>
+</main>
+</div>
+<footer>Wiki อัปเดต 16 พ.ย. 2026 · ตัวเลขอิงค่าเริ่มต้นของเกม (ผู้เล่นแก้ฐานข้อมูลการ์ดเองได้ในหน้าตั้งค่า)</footer>
+<button class="btn totop" onclick="scrollTo({top:0})" aria-label="กลับขึ้นบนสุด">↑</button>
+
+<script>
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+if(window.self!==window.top)document.body.classList.add('embed'); /* เปิดซ้อนในเกม: หัวเกมมีชื่อแล้ว */
+const secs=$$('main section');
+/* สร้างสารบัญจากหัวข้อ (h2 + h3 ที่มี id) */
+$('#tocList').innerHTML=secs.map(s=>{const h=s.querySelector('h2').textContent.trim(),subs=[...s.querySelectorAll('h3[id]')];
+  return `<li><a href="#${s.id}">${h}</a>${subs.length?`<ul>${subs.map(x=>`<li><a href="#${x.id}">${x.textContent}</a></li>`).join('')}</ul>`:''}</li>`}).join('');
+const toc=$('#toc'),tb=$('#tocBtn');
+tb.onclick=()=>{toc.classList.toggle('open');tb.setAttribute('aria-expanded',toc.classList.contains('open'))};
+toc.addEventListener('click',e=>{if(e.target.closest('a')&&innerWidth<=860)toc.classList.remove('open')});
+/* ไฮไลต์หัวข้อที่กำลังอ่าน */
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){$$('nav.toc a').forEach(a=>a.classList.toggle('on',a.getAttribute('href')==='#'+e.target.id))}}),{rootMargin:'-130px 0px -60% 0px'});
+secs.forEach(s=>io.observe(s));
+/* ค้นหา: ซ่อนหัวข้อที่ไม่ตรง + ไฮไลต์คำ (ทุกคำที่พิมพ์ต้องเจอในหัวข้อนั้น) */
+const orig=new Map(secs.map(s=>[s,s.innerHTML]));
+const norm=t=>t.toLowerCase().replace(/[,฿]/g,'');
+function search(raw){
+  const q=raw.trim();secs.forEach(s=>{s.innerHTML=orig.get(s)});
+  if(!q){secs.forEach(s=>s.classList.remove('hide'));$('#cnt').textContent='';$('#nores').style.display='none';return}
+  const words=norm(q).split(/\s+/).filter(Boolean);let shown=0;
+  secs.forEach(s=>{const t=norm(s.textContent+' '+(s.dataset.t||''));const ok=words.every(w=>t.includes(w));s.classList.toggle('hide',!ok);if(ok){shown++;mark(s,words)}});
+  $('#cnt').textContent=shown?`เจอ ${shown} หัวข้อ`:'';$('#nores').style.display=shown?'none':'block';$('#nq').textContent=q;
+  const first=secs.find(s=>!s.classList.contains('hide'));if(first&&scrollY>first.offsetTop)scrollTo({top:0});
+}
+function mark(root,words){const re=new RegExp('('+words.map(w=>w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|')+')','gi');
+  const walk=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);const nodes=[];while(walk.nextNode())nodes.push(walk.currentNode);
+  nodes.forEach(n=>{if(!re.test(n.nodeValue))return;re.lastIndex=0;const span=document.createElement('span');span.innerHTML=n.nodeValue.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])).replace(re,'<mark>$1</mark>');n.replaceWith(span)})}
+let st;$('#q').addEventListener('input',e=>{clearTimeout(st);st=setTimeout(()=>{search(e.target.value);try{history.replaceState(null,'',e.target.value?'?q='+encodeURIComponent(e.target.value):location.pathname+location.hash)}catch(x){}},180)});
+/* เปิดพร้อมคำค้น ?q=... หรือกระโดดไปหัวข้อ #... */
+const q0=new URLSearchParams(location.search).get('q');if(q0){$('#q').value=q0;search(q0)}
+addEventListener('keydown',e=>{if(e.key==='/'&&document.activeElement!==$('#q')){e.preventDefault();$('#q').focus()}if(e.key==='Escape'){$('#q').value='';search('')}});
+</script>
+</body>
+</html>

@@ -1056,6 +1056,9 @@ body.fs #gameView:not(.mapmin){grid-template-columns:minmax(288px,1.2fr) minmax(
 .subtabs button{flex:1;min-height:34px;padding:4px 8px;border:none!important;border-radius:999px;background:transparent!important;box-shadow:none!important;transform:none!important;color:var(--muted);font-size:13px;white-space:nowrap;font-family:var(--display)}
 .subtabs button.on{background:#fff!important;color:var(--ink);font-weight:700;box-shadow:0 1px 3px rgba(0,0,0,.12)!important}
 .lbt td{padding:6px 4px}.lbt .lbn{width:30px;text-align:center}.lbt tr.lbme td{background:#fff6d8}.lbhow summary{cursor:pointer;font-size:13px;color:var(--muted);margin-top:6px}
+#wikiov{position:fixed;inset:0;z-index:9000;background:var(--bg);display:flex;flex-direction:column}#wikiov[hidden]{display:none}
+#wikiov .wkbar{display:flex;align-items:center;gap:8px;padding:6px 10px;border-bottom:1px solid var(--line);background:var(--surface)}#wikiov .wkbar b{flex:1;font-family:var(--display)}
+#wikiov .wkbtn{text-decoration:none;color:var(--ink)}#wikiov iframe{flex:1;border:0;width:100%;background:var(--bg)}body.wkopen{overflow:hidden}
 .jl.afkc{background:#eef0f4;color:#3f4652;border:1px solid #c5cad3}
 .afk-box{background:#fffdf3;border-radius:22px;padding:22px 20px;max-width:420px;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,.3)}
 .afk-box .afk-ic{font-size:48px}.afk-box h2{margin:6px 0}.afk-box button{margin-top:12px;font-size:18px;min-height:48px;padding:0 28px}
@@ -1150,7 +1153,7 @@ body:has(#setupView .setup.onl) header{position:relative;z-index:5}
   <span class="round num" id="roundLbl"></span>
   <span class="sp"></span>
   <button id="btnSet">ตั้งค่า</button>
-  <button id="btnRules">กติกา</button>
+  <button id="btnRules">📖 กติกา</button>
   <button id="btnNew">เกมใหม่</button>
   <span class="tzbox"><button id="tzMinus" title="ลดขนาดตัวอักษร" aria-label="ลดขนาดตัวอักษร">A−</button><button id="tzPlus" title="เพิ่มขนาดตัวอักษร" aria-label="เพิ่มขนาดตัวอักษร">A+</button></span>
   <button id="btnFS" class="fsbtn" title="เต็มจอ" aria-label="ขยายเต็มจอ">⛶ <span>เต็มจอ</span></button>
@@ -1669,7 +1672,7 @@ function showSetup(){
       <button class="pri" id="go">สุ่มอาชีพและเริ่มเกม</button>
       ${saved&&saved.winner==null?`<button id="resume">เล่นต่อเกมที่บันทึกไว้ (รอบ ${saved.round})</button>`:''}
     </div>
-    <h3 style="margin-top:18px;font-size:15px">กติกาย่อ</h3>${RULES}</div>`;
+    <h3 style="margin-top:18px;font-size:15px">กติกาย่อ <button class="sm" onclick="openWiki()">📖 เปิด Wiki ฉบับเต็ม</button></h3>${RULES}</div>`;
   v.querySelectorAll('.seg button').forEach(b=>b.onclick=()=>{const i=+b.dataset.s;seats.forEach((s,j)=>s.n=$('#seat'+j).value);seats[i].bot=b.dataset.b==='1';showSetup()});
   $('#go').onclick=()=>{seats.forEach((s,j)=>s.n=$('#seat'+j).value.trim()||('ผู้เล่น '+(j+1)));newGame(+$('#speed').value)};
   if($('#resume'))$('#resume').onclick=()=>{S=saved;startView();resume()};
@@ -1687,7 +1690,7 @@ const RULES=`<ol class="rules">
 <li>ตลาดหุ้นและสินค้าเทรดได้ตลอดเทิร์นของคุณ ช่องตลาดหลักทรัพย์ (เมืองหลวง) เทรดฟรีค่าคอม</li>
 <li><b>ธุรกิจ A</b> (ธุรกิจเครือข่าย): ไม่มีช่องบนแผนที่ สมัคร ฿900 เพื่อเปิดแท็บธุรกิจ A · จั่วกองการ์ดธุรกิจ A เพื่อสร้างสายงาน A–F ทำยอด PV และไต่ระดับ สมาชิก → ซิลเวอร์ → โกลด์ → แพลทินัม → รูบี้ → เพิร์ล → เอเมอรัลด์ → ไดมอนด์ · การ์ดในกองนี้ส่วนใหญ่ใช้เวลา 1</li>
 <li><b>ศูนย์เรียนรู้</b> (ชั้นนอก 4 ช่อง ชั้นใน 2 ช่อง): ได้ความรู้ +2–4 และสกิลการ์ดสุ่ม 1 อย่าง ฟรี</li><li><b>แท็บตลาด</b>: ทุกต้นรอบ NPC เปิดการ์ดโอกาส 2 ใบ · ธุรกิจ/อสังหาฯ ขึ้นแท็บตลาด ซื้อได้ในตาของคุณ ใครยืนยันก่อนได้ (บอทซื้อได้เฉพาะตาของบอท) · ข่าวหุ้น/คริปโต/สินค้า/กองทุน ขึ้นแท็บข่าวสารและมีผลกับราคาทันที · โชว์ 2 รอบ · ในแท็บตลาดยังติดป้ายขาย ซื้อจากป้ายคนอื่น และขายให้ธนาคารได้</li>
-<li>ซื้อขายทรัพย์สินกับผู้เล่นอื่นได้ กู้ธนาคารได้ ดอกเบี้ย 10% ต่อเดือน</li>
+<li>ซื้อขายทรัพย์สินกับผู้เล่นอื่นได้ กู้ธนาคารได้ ดอกเบี้ย 2% ต่อเดือน (เพดานหนี้ ฿400,000 หรือ 12 เท่าของเงินเดือน เกิน = ล้มละลาย)</li>
 <li>⏱ <b>เทิร์นละไม่เกิน 3 นาที</b> หมดเวลาแล้วจบเทิร์นอัตโนมัติ (การตัดสินใจที่ค้างจะถูกปฏิเสธ) · กด <b>จบเทิร์น</b> ก่อนครบ 3 นาทีได้ ⏳ เวลา +1</li>
 <li><b>ค่าพลัง (เต็ม 10)</b>: ❤ หัวใจ (สุขภาพกายและใจ) · ⏳ เวลา · 📚 ความรู้ — เรียนรู้ใช้เวลา 2 ได้ความรู้ +2 · ดีลธุรกิจใช้เวลา 2 อสังหาฯ นอกกระดานใช้เวลา 1 · ธุรกิจและอสังหาฯ (บนกระดานและการ์ดโอกาส) ให้ผลตอบแทน 6–8% ต่อเดือนตามเขต (เกษตร 6% · ชุมชน/ที่พักหรู 6.5% · อุตสาหกรรม/ช้อปปิ้ง 7% · ท่องเที่ยว/ธุรกิจ 7.5% · การเงิน 8%) ผลตอบแทนยิ่งสูงยิ่งต้องใช้ความรู้มาก (×1–2.5) · ความรู้ 7 ขึ้นไปมองเห็นกลโกง · ทุกวันเงินเดือน (ผ่านหรือหยุด) ❤ หัวใจ สุ่ม 0 ถึง +2 และ <b>ลด −1 ต่อความเครียดแต่ละข้อ</b> (รายรับไม่พอรายจ่าย · หนี้ธนาคารเกิน 3 เท่าของเงินเดือน · ⏳ เหลือ ≤2 · ตกงาน · มีลูก 2 คนขึ้นไป) · ⏳ เวลา +1–3 · 📚 ความรู้ −0–1 · <b>การ์ดชีวิต/โอกาส/ธุรกิจ A หัก ⏳ ❤ 📚 ที่ต้องใช้ออกจริง</b> (การ์ดเรียนรู้และอสังหาฯ บนกระดานใช้ 📚 เป็นเกณฑ์ขั้นต่ำ ไม่หัก) · <b>ได้ ⏳ คืนเพิ่ม</b>: ช่องพักผ่อน 🌿 (⏳+1–2 ❤+1) · การ์ดชีวิตบางใบ · ปุ่มจ้างคนช่วย ฿10,000 = ⏳+1 (เทิร์นละครั้ง) · <b>ทุกเทิร์น</b>ถ้า Passive ถึง 25%/50%/75% ของรายจ่าย ได้ ⏳+1/+2/+3 · ธุรกิจ A เลื่อนระดับละ ⏳+1 · จบเทิร์นก่อนเวลา ⏳+1 · หัวใจ ≤2 เสียค่ารักษา หัวใจหมดป่วยหนักขาดงาน</li>
 <li><b>❤ หัวใจต่ำ (2 หรือต่ำกว่า)</b>: ทุกวันเงินเดือนจ่ายค่ารักษา 20% ของเงินเดือน · ตกงานมาจากช่องตกงานหรือการ์ดตกงานเท่านั้น · เมื่อระบบใช้กติกาอัตโนมัติ (กู้อัตโนมัติ ค่ารักษา ล้มละลาย) จะมีกล่อง 📌 แจ้งสาเหตุ</li>
@@ -2077,7 +2080,7 @@ async function forcedPay(p,amt,title){
   while(p.cash<amt){
     const items=liquidList(p),short=amt-p.cash,L=Math.ceil(short/1000)*1000;
     const opts=[];if(items.length)opts.push({v:'sell',l:'ขายที่เลือก 50%'});opts.push({v:'loan',l:`กู้ธนาคาร ${B(L)}`,c:'pri'});
-    const r=await ask({actor:p,pose:'angry',title,body:`<p>ต้องจ่าย ${B(amt)} มีเงินสด ${B(p.cash)} <b class="neg">ขาด ${B(short)}</b></p>${items.length?`<div class="fld"><label for="lq">หรือขายทรัพย์สินในราคา 50%</label><select id="lq" data-f="i">${items.map((it,i)=>`<option value="${i}">${esc(it.n)} — ได้ ${B(it.v)}</option>`).join('')}</select></div>`:''}<p class="muted">เงินกู้มีดอกเบี้ย 10% ต่อเดือน</p>`,opts,bot:'loan'});
+    const r=await ask({actor:p,pose:'angry',title,body:`<p>ต้องจ่าย ${B(amt)} มีเงินสด ${B(p.cash)} <b class="neg">ขาด ${B(short)}</b></p>${items.length?`<div class="fld"><label for="lq">หรือขายทรัพย์สินในราคา 50%</label><select id="lq" data-f="i">${items.map((it,i)=>`<option value="${i}">${esc(it.n)} — ได้ ${B(it.v)}</option>`).join('')}</select></div>`:''}<p class="muted">เงินกู้มีดอกเบี้ย ${LOAN_TXT} ต่อเดือน</p>`,opts,bot:'loan'});
     if(r.v==='sell'){const it=items[+(r.form.i||0)];it.go();p.cash+=it.v;log(`🔻 ${esc(p.name)} ขาย ${esc(it.n)} ราคา 50% ได้ ${B(it.v)}`)}
     else{p.loan+=L;p.cash+=L;log(`🏦 ${esc(p.name)} กู้ ${B(L)}`)}
     render();
@@ -2892,7 +2895,13 @@ function dbImport(){
 /* ===================== WIRE UP ===================== */
 document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{TAB=SUB_LAST[b.dataset.tab]||b.dataset.tab;render()});
 $('#btnSet').onclick=openSettings;
-$('#btnRules').onclick=()=>{if(!MODAL)ask({npc:'wave',title:'กติกาเกม',body:RULES})};
+/* ปุ่มกติกา → Wiki (wiki.html) เปิดซ้อนบนหน้าเกม · ปิดด้วยปุ่ม ✕ หรือ Esc · เปิดในแท็บใหม่ได้ */
+function openWiki(q){let ov=$('#wikiov');if(!ov){ov=document.createElement('div');ov.id='wikiov';
+    ov.innerHTML=`<div class="wkbar"><b>📖 Wiki เกม</b><a class="sm wkbtn" href="wiki.html" target="_blank" rel="noopener">เปิดแท็บใหม่ ↗</a><button class="sm wkbtn" onclick="closeWiki()">✕ ปิด</button></div><iframe title="Wiki เกม"></iframe>`;document.body.appendChild(ov)}
+  const f=ov.querySelector('iframe'),src='wiki.html'+(q?'?q='+encodeURIComponent(q):'');if(!f.src||q)f.src=src;ov.hidden=false;document.body.classList.add('wkopen')}
+function closeWiki(){const ov=$('#wikiov');if(ov)ov.hidden=true;document.body.classList.remove('wkopen')}
+addEventListener('keydown',e=>{if(e.key==='Escape'&&$('#wikiov')&&!$('#wikiov').hidden)closeWiki()});
+$('#btnRules').onclick=()=>{if(!MODAL)openWiki()};
 $('#btnNew').onclick=async()=>{if(MODAL)return;if(ON.play){onLeave();return}if(!S||$('#gameView').hidden){showSetup();return}const v=await choose({title:'เริ่มเกมใหม่?',body:'<p>เกมปัจจุบันจะถูกแทนที่</p>',opts:[{v:'y',l:'เริ่มใหม่',c:'pri'},{v:'n',l:'ยกเลิก'}]});if(v==='y')showSetup()};
 loadDB();
 
@@ -3106,7 +3115,7 @@ function onTag(){let t=$('#roomTag');if(!ON.code){if(t)t.remove();return}
   if(!t){t=document.createElement('span');t.id='roomTag';t.className='roomtag';t.setAttribute('role','button');t.title='ดูข้อมูลห้อง';t.onclick=onRoomInfo;const h=document.querySelector('header .logo')?.parentElement||document.querySelector('header');h.appendChild(t)}
   t.textContent='ห้อง '+ON.code+' ⓘ'}
 /* เวอร์ชันของไฟล์เกม (เปลี่ยนทุกครั้งที่แก้ระบบออนไลน์) · ส่งไปกับสถานะออนไลน์ เพื่อดูว่าใครยังเปิดเวอร์ชันเก่า */
-const BUILD='2026-11-16.5';
+const BUILD='2026-11-16.6';
 /* ป้ายเลขห้อง → ข้อมูลห้อง: เจ้าของห้อง · เครื่องที่คุมรอบ · สถานะผู้เล่นแต่ละคน */
 function onRoomInfo(){const r=ON.room;if(!r||!ON.code)return;
   const seatName=u=>{const q=S&&S.players&&S.players.find(x=>x.uid===u);if(q)return q.name;const s=Object.values(r.seats||{}).find(x=>x&&x.uid===u);return s?(s.name||'ผู้เล่น'):'—'};
