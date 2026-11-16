@@ -567,7 +567,7 @@ div.chip{min-width:78px;max-width:132px;padding:7px 10px 6px;text-align:center}
 .cell.corner .cimg{width:52%;max-width:38px}
 
 /* JRPG-style big portrait over the popup */
-.mwrap{position:relative;width:100%;max-width:440px;display:flex;flex-direction:column;max-height:100%}
+.mwrap{position:relative;width:100%;max-width:min(calc(440px * var(--tz,1) * var(--mz,1)),96vw);display:flex;flex-direction:column;max-height:100%}
 .mwrap .modal{max-height:calc(100dvh - 32px)}
 .ov.withfig{--fh:clamp(190px,40vh,380px);--ovl:70px}
 .ov.withfig .mwrap{padding-top:calc(var(--fh) - var(--ovl))}
@@ -578,7 +578,7 @@ div.chip{min-width:78px;max-width:132px;padding:7px 10px 6px;text-align:center}
 .ovfig .npcwrap{position:relative!important;width:auto!important;height:var(--fh)}
 .ovfig .npcname{position:absolute;left:50%;bottom:calc(var(--ovl) + 4px);transform:translateX(-50%);font-size:11px;padding:2px 8px;border-radius:999px;box-shadow:0 2px 4px rgba(0,0,0,.2)}
 .ov.withfig .modal.haspose .mh{min-height:calc(var(--ovl) + 6px);padding-right:clamp(120px,36%,170px);margin:8px 10px 4px}
-@media (max-height:560px){.ov.withfig{--fh:clamp(150px,70vh,300px);--ovl:56px}.ov.withfig .mwrap{padding-top:0;max-width:640px}.ov.withfig .modal{max-height:calc(100dvh - 32px);margin-right:clamp(110px,22vw,200px)}.ov.withfig .ovfig{top:auto;bottom:0;right:-8px}.ov.withfig .modal.haspose .mh{padding-right:16px}}
+@media (max-height:560px){.ov.withfig{--fh:clamp(150px,70vh,300px);--ovl:56px}.ov.withfig .mwrap{padding-top:0;max-width:min(calc(640px * var(--tz,1) * var(--mz,1)),96vw)}.ov.withfig .modal{max-height:calc(100dvh - 32px);margin-right:clamp(110px,22vw,200px)}.ov.withfig .ovfig{top:auto;bottom:0;right:-8px}.ov.withfig .modal.haspose .mh{padding-right:16px}}
 /* flat chips v2 */
 .chips{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:0;margin:10px 0;background:#fff;border:1px solid #ece2cb;border-radius:12px;overflow:hidden;justify-content:stretch}
 div.chip{display:grid;grid-template-columns:30px 1fr;grid-template-areas:"i v" "i s";column-gap:8px;align-items:center;justify-items:start;text-align:left;min-width:0;max-width:none;padding:9px 10px;margin:0;background:none!important;border:none!important;border-radius:0!important;box-shadow:none!important;animation:none!important;outline:1px solid #f2eadb}
@@ -691,9 +691,16 @@ div.chip{display:grid;grid-template-columns:30px 1fr;grid-template-areas:"i v" "
 body.pseudofs header{position:sticky;top:0}
 :fullscreen body,body.pseudofs{min-height:100dvh}
 
-:root{--tz:1}
+:root{--tz:1;--mz:1}
+/* จอคอมกว้าง: ป๊อปอัปใหญ่ขึ้นเอง (--mz) · ปุ่ม A−/A+ (--tz) ขยายทั้งตัวหนังสือและความกว้างป๊อปอัปไปด้วย ไม่ให้ตัวหนังสือล้น/ถูกตัด */
+@media (min-width:1280px) and (min-height:700px){:root{--mz:1.15}}
+@media (min-width:1700px) and (min-height:850px){:root{--mz:1.3}}
+@media (min-width:2300px) and (min-height:1100px){:root{--mz:1.5}}
 /* text scale: panels, popups, notices, board labels */
-.layout>section:last-child,.modal .mh,.modal .mb,.modal .mf,.rnotes,#setupView,.setov{zoom:var(--tz)}
+.layout>section:last-child,.rnotes,#setupView,.setov{zoom:var(--tz)}
+.modal .mh,.modal .mb,.modal .mf{zoom:calc(var(--tz) * var(--mz))}
+.modal{max-width:min(calc(440px * var(--tz) * var(--mz)),96vw)!important}
+.modal.k-pick{max-width:min(calc(340px * var(--tz) * var(--mz)),96vw)!important}
 .cell .lbl{font-size:calc(1em * var(--tz))}
 .center{font-size:calc(1em * var(--tz))}
 .tzbox{display:inline-flex;gap:4px}.tzbox button{min-width:40px;font-weight:800;padding-left:8px;padding-right:8px}
@@ -3224,7 +3231,7 @@ function onTag(){let t=$('#roomTag');if(!ON.code){if(t)t.remove();return}
   if(!t){t=document.createElement('span');t.id='roomTag';t.className='roomtag';t.setAttribute('role','button');t.title='ดูข้อมูลห้อง';t.onclick=onRoomInfo;const h=document.querySelector('header .logo')?.parentElement||document.querySelector('header');h.appendChild(t)}
   t.textContent='ห้อง '+ON.code+' ⓘ'}
 /* เวอร์ชันของไฟล์เกม (เปลี่ยนทุกครั้งที่แก้ระบบออนไลน์) · ส่งไปกับสถานะออนไลน์ เพื่อดูว่าใครยังเปิดเวอร์ชันเก่า */
-const BUILD='2026-11-16.16';
+const BUILD='2026-11-16.17';
 /* ป้ายเลขห้อง → ข้อมูลห้อง: เจ้าของห้อง · เครื่องที่คุมรอบ · สถานะผู้เล่นแต่ละคน */
 function onRoomInfo(){const r=ON.room;if(!r||!ON.code)return;
   const seatName=u=>{const q=S&&S.players&&S.players.find(x=>x.uid===u);if(q)return q.name;const s=Object.values(r.seats||{}).find(x=>x&&x.uid===u);return s?(s.name||'ผู้เล่น'):'—'};
