@@ -2989,7 +2989,7 @@ async function onAuthed(u){
   const q=location.search.match(/[?&]room=(\d{5})/);
   if(me.room){const r=await ON.be.get('rooms/'+me.room);
     if(r&&r.status!=='end'&&onSeatOf(r,u.uid)>=0){onEnter(me.room);return}
-    if(r&&r.status==='end'&&onSeatOf(r,u.uid)>=0){await ON.be.remove('users/'+u.uid+'/room');onHome();
+    if(r&&r.status==='end'&&onSeatOf(r,u.uid)>=0){await ON.be.remove('users/'+u.uid+'/room');onHome();lbLate(me.room,r);
       ask({npc:'happy',title:`🏁 ห้อง ${me.room} จบเกมแล้ว`,body:`<p>เกมที่คุณเล่นค้างไว้จบแล้ว${r.win?` · อันดับ 1 คือ <b>${esc(r.win.name)}</b> (${esc(r.win.job||'')})`:''}</p>${r.win&&r.win.rank?`<ol>${r.win.rank.map(x=>`<li>${esc(x)}</li>`).join('')}</ol>`:''}`});return}
     await ON.be.remove('users/'+u.uid+'/room')}
   if(q){history.replaceState(null,'',location.pathname+location.search.replace(/[?&]room=\d{5}/,'').replace(/^&/,'?'));onJoin(q[1]);return}
@@ -3009,21 +3009,25 @@ function lbCalc(p){const st=standings(),rank=st.findIndex(x=>x[0]===p),f=fin(p),
   const pct=Math.min(100,f.passive/Math.max(1,f.expenses)*100),c=Math.min(10,Math.floor(pct/10));if(c)rows.push([`ความใกล้ชนะ ${Math.round(pct)}%`,c]);
   rows.push(p.bk?[`ล้มละลาย ${p.bk} ครั้ง`,-5]:['ไม่เคยล้มละลาย',3]);rows.push(['เล่นจนจบเกม',2]);
   const raw=rows.reduce((a,r)=>a+r[1],0);return {pts:Math.max(0,Math.round(raw*lbMult(hum))),rows,mult:lbMult(hum),hum,rank,win:rank===0}}
-async function lbAward(){
-  if(!ON.play||!ON.code||!ON.user||!S||S.winner==null)return;const me=S.players.find(q=>q.uid===ON.user.uid);if(!me)return;
-  const gk=(ON.code+'_'+(S.gid||'old')).replace(/[.#$\[\]\/]/g,'');if(ON.lbDone===gk)return;ON.lbDone=gk;
-  const c=lbCalc(me);
+/* lbAward(): จบเกมขณะอยู่ในห้อง · lbAward(code,G,true): เก็บย้อนหลังตอนล็อกอินกลับมา (G = สถานะเกมสุดท้ายของห้อง) */
+async function lbAward(code=ON.code,G=S,late=false){
+  if(!code||!ON.user||!G||G.winner==null||(!late&&!ON.play))return;const me=G.players.find(q=>q.uid===ON.user.uid);if(!me)return;
+  const gk=(code+'_'+(G.gid||'old')).replace(/[.#$\[\]\/]/g,'');if(ON.lbDone===gk)return;ON.lbDone=gk;
+  const keep=S;S=G;let c;try{c=lbCalc(me)}finally{S=keep}
+  const lateTxt=late?`<p class="muted">เกมห้อง ${esc(code)} จบระหว่างที่คุณไม่อยู่ ระบบเก็บคะแนนให้ย้อนหลัง</p>`:'';
   const tbl=`<table class="ft">${c.rows.map(([l,v])=>`<tr><td>${l}</td><td class="r num ${v<0?'neg':'pos'}">${v>0?'+':''}${v}</td></tr>`).join('')}${c.mult!==1?`<tr><td>ตัวคูณผู้เล่นที่เป็นคน ${c.hum} คน</td><td class="r num">×${c.mult}</td></tr>`:''}<tr class="th"><td><b>รวม</b></td><td class="r num pos"><b>+${c.pts}</b></td></tr></table>`;
-  if(ON.user.anon){ON.lbAnn=({t:`⭐ เกมนี้ได้ ${c.pts} คะแนน`,b:tbl+'<p class="neg">บัญชีแขกไม่เก็บคะแนนสะสมและไม่ติดอันดับ · ผูกบัญชี Google ที่หน้าแรกเพื่อเริ่มสะสมคะแนน</p>'});return}
+  if(ON.user.anon){ON.lbAnn=({t:`⭐ เกมนี้ได้ ${c.pts} คะแนน`,b:lateTxt+tbl+'<p class="neg">บัญชีแขกไม่เก็บคะแนนสะสมและไม่ติดอันดับ · ผูกบัญชี Google ที่หน้าแรกเพื่อเริ่มสะสมคะแนน</p>'});return}
   const mk=lbMonth();let dup=false,after=null;
   try{const x=await ON.be.tx(`lb/${ON.user.uid}`,cur=>{cur=cur||{};const g=cur.g||{};if(g[gk]){dup=true;return undefined}dup=false;
       const o={...cur,n:ON.name,pts:(cur.pts||0)+c.pts,games:(cur.games||0)+1,wins:(cur.wins||0)+(c.win?1:0),best:Math.max(cur.best||0,c.pts),t:Date.now()};
       if(cur.mk!==mk){o.mk=mk;o.mp=0;o.mg=0;o.mw=0}o.mp+=c.pts;o.mg+=1;o.mw+=c.win?1:0;
       const keys=Object.keys(g).slice(-29);o.g=Object.fromEntries(keys.map(k=>[k,g[k]]));o.g[gk]=c.pts;after=o;return o});
-    if(dup)return;if(x&&x.err)throw x.err;if(x&&!x.ok)throw new Error('ไม่ได้บันทึก');LB_CACHE=null;
-    ON.lbAnn=({t:`⭐ คะแนนสะสม +${c.pts}`,b:tbl+(after?`<p>คะแนนเดือนนี้ <b class="num">${after.mp}</b> · สะสมทั้งหมด <b class="num">${after.pts}</b> คะแนน (${after.games} เกม)</p>`:'')});
-    log(`⭐ ${esc(me.name)} ได้คะแนนสะสม +${c.pts}`);render()}
+    if(dup)return;if(x&&x.err)throw x.err;if(x&&!x.ok)throw new Error('ไม่ได้บันทึก');LB_CACHE=null;setTimeout(lbRender,0);
+    ON.lbAnn=({t:`⭐ คะแนนสะสม +${c.pts}${late?' (ย้อนหลัง)':''}`,b:lateTxt+tbl+(after?`<p>คะแนนเดือนนี้ <b class="num">${after.mp}</b> · สะสมทั้งหมด <b class="num">${after.pts}</b> คะแนน (${after.games} เกม)</p>`:'')});
+    if(!late&&S===G){log(`⭐ ${esc(me.name)} ได้คะแนนสะสม +${c.pts}`);render()}}
   catch(e){ON.lbDone=null;toast('⚠ บันทึกคะแนนสะสมไม่สำเร็จ: '+(e.code||e.message||e))}}
+/* เก็บคะแนนย้อนหลัง: เกมจบตอนเราไม่อยู่ → ถอดสถานะสุดท้ายของห้องแล้วคิดคะแนนแบบเดียวกัน (ออกจากเกมกลางคัน = ไม่ได้) */
+async function lbLate(code,r){try{if(!r||!r.st||!r.st.z||(r.left&&r.left[ON.user.uid]))return;const G=JSON.parse(await zDec(r.st.z));if(G&&G.winner!=null)await lbAward(code,G,true)}catch(e){}}
 let LB_CACHE=null,LB_TAB='m';
 async function lbLoad(){if(LB_CACHE&&Date.now()-LB_CACHE.t<60000)return LB_CACHE.d;const d=await ON.be.get('lb')||{};LB_CACHE={t:Date.now(),d};return d}
 async function lbRender(){const el=$('#lbBox');if(!el)return;
@@ -3102,7 +3106,7 @@ function onTag(){let t=$('#roomTag');if(!ON.code){if(t)t.remove();return}
   if(!t){t=document.createElement('span');t.id='roomTag';t.className='roomtag';t.setAttribute('role','button');t.title='ดูข้อมูลห้อง';t.onclick=onRoomInfo;const h=document.querySelector('header .logo')?.parentElement||document.querySelector('header');h.appendChild(t)}
   t.textContent='ห้อง '+ON.code+' ⓘ'}
 /* เวอร์ชันของไฟล์เกม (เปลี่ยนทุกครั้งที่แก้ระบบออนไลน์) · ส่งไปกับสถานะออนไลน์ เพื่อดูว่าใครยังเปิดเวอร์ชันเก่า */
-const BUILD='2026-11-16.3';
+const BUILD='2026-11-16.4';
 /* ป้ายเลขห้อง → ข้อมูลห้อง: เจ้าของห้อง · เครื่องที่คุมรอบ · สถานะผู้เล่นแต่ละคน */
 function onRoomInfo(){const r=ON.room;if(!r||!ON.code)return;
   const seatName=u=>{const q=S&&S.players&&S.players.find(x=>x.uid===u);if(q)return q.name;const s=Object.values(r.seats||{}).find(x=>x&&x.uid===u);return s?(s.name||'ผู้เล่น'):'—'};
