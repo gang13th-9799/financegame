@@ -1297,7 +1297,9 @@ const ZPROPS={
  i3:[['อาคารธนาคาร',220000,26000,18000],['ตึกตลาดหลักทรัพย์',280000,33000,23000],['ตึกระฟ้า',350000,41000,28000],['ทาวเวอร์ใจกลางเมือง',400000,47000,32000]],
 };
 const SQN={study:'ศูนย์เรียนรู้',mkt:'ตลาดกลาง',rest:'พักผ่อน',charity:'บริจาคการกุศล',jobless:'ตกงาน',pay:'เงินเดือน',news:'ข่าวตลาด',net:'เครือข่าย',exch:'ตลาดหลักทรัพย์',splurge:'ฟุ่มเฟือย',crisis:'วิกฤตชีวิต',road:'ถนน',bizc:'ศูนย์ธุรกิจ',ent:'สถานบันเทิง'};
-const ENTN={o0:'ร้านคาราโอเกะ',o1:'สนามไดรฟ์กอล์ฟ',o2:'บีชคลับ',o3:'โรงภาพยนตร์'};/* ช่องสถานบันเทิงประจำเขต (พักผ่อนแบบเสียเงิน) */
+const ENTN={o0:'คอนเสิร์ต',o1:'สนามกอล์ฟ',o2:'ปาร์ตี้ริมหาด',o3:'โรงภาพยนตร์'};
+/* คำถามของแต่ละสถานบันเทิง [ไอคอน, คำถาม] · ปุ่ม จ่าย / ไม่จ่าย */
+const ENTQ={o0:['🎤','ซื้อตั๋วคอนเสิร์ตไหม?'],o1:['⛳','ออกรอบตีกอล์ฟไหม?'],o2:['🏖️','ไปปาร์ตี้ริมหาดไหม?'],o3:['🎬','ซื้อตั๋วดูหนังไหม?']};/* ช่องสถานบันเทิงประจำเขต (พักผ่อนแบบเสียเงิน) */
 const SQ_SUB={study:'📚+2–4 · สกิลการ์ดฟรี 1',mkt:'ป้ายขาย · ธนาคารรับซื้อ',rest:'❤+1 ⏳+1–2',charity:'10% ได้ทอย 2 ลูก',jobless:'❤−2 · 2 เดือนได้แค่ Passive (รอบ 1–5: ใบเตือน 🟨)',pay:'รับกระแสเงินสด',news:'ราคาตลาดขยับ',net:'ธุรกิจเครือข่าย',exch:'เทรดฟรี',splurge:'จั่วรายจ่าย',crisis:'ทอยเสี่ยง',road:'เข้า/ออกเมือง · ค่าผ่าน ฿200–1k',bizc:'ดีลธุรกิจ −20%',ent:'จ่าย ฿1k–20k · ❤⏳📚 +1–5'};
 const LIVING={o:.85,i:1.3};
 const ZLIVE={o0:.7,o1:.8,o2:1,o3:.85,i0:1.7,i1:1.5,i2:1.4,i3:1.3};
@@ -2172,10 +2174,11 @@ async function resolveSquare(p){
   else if(sq.t==='study'){await studySquare(p)}else if(sq.t==='mkt'){await marketSquare(p)}
   else if(sq.t==='ent'){/* สถานบันเทิง: ไม่บังคับ ถามก่อน · ค่าเที่ยวสุ่ม ฿1,000–20,000 (ขั้นละ 500) ได้ ❤⏳📚 ตามช่วงเงิน */
     const cost=1000+Math.floor(Math.random()*39)*500,tier=1+Math.min(4,Math.floor((cost-1000)/3800)),g=()=>Math.max(1,tier-Math.floor(Math.random()*2));
-    const ok=await buyFlow(p,cost,{nodisc:1,verb:'เที่ยว',no:'ไม่เที่ยว',bot:p.cash-cost>fin(p).expenses&&(p.st.h<6||p.st.t<6),title:`🎉 ${esc(sq.n)}`,
-      body:`<p>แวะเที่ยวพักผ่อนไหม? <b>ไม่บังคับ</b></p><div class="kv"><b>ค่าเที่ยว</b><span class="num neg">${B(cost)}</span><b>ได้รับ</b><span class="pos">❤ ⏳ 📚 อย่างละ +${Math.max(1,tier-1)}${tier>1?'–'+tier:''}</span></div><p class="muted">ยิ่งจ่ายมากยิ่งได้มาก (ค่าพลังเต็มที่ 10)</p>`});
-    if(!ok){log(`🎉 ${esc(p.name)} ผ่าน${esc(sq.n)} ไม่แวะเที่ยว`);return}
-    const sx=adj(p,{h:g(),t:g(),k:g()});log(`🎉 ${esc(p.name)} เที่ยว${esc(sq.n)} จ่าย ${B(cost)}${sx}`)}
+    const eq=ENTQ[sq.z]||['🎉','แวะพักผ่อนไหม?'];
+    const ok=await buyFlow(p,cost,{nodisc:1,verb:'จ่าย',no:'ไม่จ่าย',bot:p.cash-cost>fin(p).expenses&&(p.st.h<6||p.st.t<6),title:`${eq[0]} ${esc(sq.n)}`,
+      body:`<p>${eq[1]} <span class="muted">(ไม่บังคับ)</span></p><div class="kv"><b>ค่าใช้จ่าย</b><span class="num neg">${B(cost)}</span><b>ได้รับ</b><span class="pos">❤ ⏳ 📚 อย่างละ +${Math.max(1,tier-1)}${tier>1?'–'+tier:''}</span></div><p class="muted">ยิ่งจ่ายมากยิ่งได้มาก (ค่าพลังเต็มที่ 10)</p>`});
+    if(!ok){log(`${eq[0]} ${esc(p.name)} ผ่าน${esc(sq.n)} ไม่จ่าย`);return}
+    const sx=adj(p,{h:g(),t:g(),k:g()});log(`${eq[0]} ${esc(p.name)} ไป${esc(sq.n)} จ่าย ${B(cost)}${sx}`)}
   else if(sq.t==='rest'){const sx=adj(p,{h:1,t:1+Math.floor(Math.random()*2)});log(`🌿 ${esc(p.name)} พักผ่อน${sx}`);toast(`🌿 ${p.name} พักผ่อน${sx}`)}
   else if(sq.t==='bizc'){const biz=OPP.filter(c=>c.ty==='biz');if(biz.length)await oppCard(p,biz[Math.floor(Math.random()*biz.length)],'ศูนย์ธุรกิจเมืองหลวง')}
   else if(sq.t==='charity'){
@@ -2620,7 +2623,7 @@ const SQ_DESC={
  exch:()=>`<p>จั่วข่าวตลาด 1 ใบ และ<b>ซื้อขายหุ้นไม่เสียค่าคอม</b>ตลอดเทิร์นนี้</p>`,
  splurge:()=>`<p>จั่วการ์ดดำเนินชีวิตแบบ<b>ใช้จ่าย/เสียหาย</b> 1 ใบ เช่น ซื้อมือถือ เที่ยว รถเสีย</p>`,
  bizc:()=>`<p><b>ศูนย์ธุรกิจเมืองหลวง</b>: ได้ข้อเสนอดีลธุรกิจ 1 ดีล ลดเงินลงทุน 20%</p>`,
- ent:()=>`<p><b>สถานบันเทิงประจำเขต</b>: <b>ไม่บังคับ</b> ระบบสุ่มค่าเที่ยว <b>฿1,000–20,000</b> แล้วถามก่อน ถ้าเลือกเที่ยวได้ ❤ ⏳ 📚 อย่างละ <b>+1 ถึง +5</b> ยิ่งจ่ายมากยิ่งได้มาก</p><p class="muted">฿1,000–4,500 ≈ +1 · … · ฿16,500–20,000 ≈ +4–5 · วงนอก 4 ช่อง (เขตละ 1)</p>`,
+ ent:()=>`<p><b>สถานบันเทิงประจำเขต</b>: <b>ไม่บังคับ</b> ระบบสุ่มค่าใช้จ่าย <b>฿1,000–20,000</b> แล้วถามก่อน ถ้าเลือกเที่ยวได้ ❤ ⏳ 📚 อย่างละ <b>+1 ถึง +5</b> ยิ่งจ่ายมากยิ่งได้มาก</p><p class="muted">฿1,000–4,500 ≈ +1 · … · ฿16,500–20,000 ≈ +4–5 · วงนอก 4 ช่อง (เขตละ 1)</p>`,
  rest:()=>`<p>พักผ่อนเติมพลัง ❤ หัวใจ +1 · ⏳ เวลา +1 ถึง +2 (สุ่ม)</p><p class="muted">วงนอก 4 ช่อง · วงใน 2 ช่อง</p>`,
 };
 function cellBody(k){const q=SQ(k),pr=S.props[k];
@@ -3357,7 +3360,7 @@ function onTag(){let t=$('#roomTag');if(!ON.code){if(t)t.remove();return}
   if(!t){t=document.createElement('span');t.id='roomTag';t.className='roomtag';t.setAttribute('role','button');t.title='ดูข้อมูลห้อง';t.onclick=onRoomInfo;const h=document.querySelector('header .logo')?.parentElement||document.querySelector('header');h.appendChild(t)}
   t.textContent='ห้อง '+ON.code+' ⓘ'}
 /* เวอร์ชันของไฟล์เกม (เปลี่ยนทุกครั้งที่แก้ระบบออนไลน์) · ส่งไปกับสถานะออนไลน์ เพื่อดูว่าใครยังเปิดเวอร์ชันเก่า */
-const BUILD='2026-11-17.1';
+const BUILD='2026-11-17.3';
 /* ป้ายเลขห้อง → ข้อมูลห้อง: เจ้าของห้อง · เครื่องที่คุมรอบ · สถานะผู้เล่นแต่ละคน */
 function onRoomInfo(){const r=ON.room;if(!r||!ON.code)return;
   const seatName=u=>{const q=S&&S.players&&S.players.find(x=>x.uid===u);if(q)return q.name;const s=Object.values(r.seats||{}).find(x=>x&&x.uid===u);return s?(s.name||'ผู้เล่น'):'—'};
