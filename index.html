@@ -1105,6 +1105,12 @@ body.fs #gameView:not(.mapmin){grid-template-columns:minmax(288px,1.2fr) minmax(
 .rbanner b{display:block;font-size:clamp(24px,6vw,40px);color:#b8202f}.rbanner span{display:block;margin-top:4px;font-size:clamp(14px,3.6vw,18px)}
 .afkov{position:fixed;inset:0;z-index:9990;background:rgba(90,92,96,.72);backdrop-filter:grayscale(1);-webkit-backdrop-filter:grayscale(1);display:grid;place-items:center;padding:16px}
 .afkov[hidden]{display:none}
+.gbars{display:flex;flex-direction:column;gap:4px;margin:4px 0 6px}
+.gbr{display:grid;grid-template-columns:76px 1fr auto;gap:8px;align-items:center;font-size:13px}
+.gbc{display:flex;gap:2px}.gbc i{flex:1;height:8px;border-radius:3px;background:#ece4d2}
+.gbc i.on.h{background:#e0566b}.gbc i.on.t{background:#e0a92e}.gbc i.on.k{background:#4f86d9}
+.gbc i.gn{background:#3f9a52}.gbc i.gm{background:#a9dbb2}
+.gbv{white-space:nowrap;font-size:12.5px}
 .cdesc{margin:0 0 10px;padding:8px 12px;border-left:3px solid #d9c38f;background:#fffaf0;border-radius:8px;color:#5b4f3a;font-size:14px;line-height:1.45}
 .tsl{display:flex;flex-direction:column;gap:6px}
 .tsr{display:grid;grid-template-columns:28px 1fr auto;gap:8px;align-items:center;padding:8px 10px;border:1px solid #eadfc4;border-radius:12px;background:#fffdf6}
@@ -1591,6 +1597,10 @@ function cardsV15(D){for(const k of ['life','learn','opp','net'])for(const r of 
     if(k==='net')for(const [re,t,d] of NET_LEG_V15){const x=String(r.t).match(re);if(x){r.t=t;if(!r.d)r.d=d.replace('$1',x[1]).replace('$2',x[2]);break}}}}
 let CDESC=new Map();
 function buildCDesc(){CDESC=new Map();for(const k of ['life','learn','opp','net'])for(const r of DB[k]||[])if(r.d&&!CDESC.has(r.t))CDESC.set(r.t,r.d)}
+/* ขีดพลังเล็ก แสดงค่าพลังที่จะได้: ช่องเต็ม = ตอนนี้ · เขียวเข้ม = ได้แน่ · เขียวอ่อน = อาจได้เพิ่ม (สุ่ม) · เต็มที่ 10 */
+function gainBars(p,g){return `<div class="gbars">${[['h','❤','หัวใจ'],['t','⏳','เวลา'],['k','📚','ความรู้']].filter(([s])=>g[s]).map(([s,ic,nm])=>{const cur=p.st[s]||0,[lo,hi]=Array.isArray(g[s])?g[s]:[g[s],g[s]],a=Math.min(10,cur+lo),b=Math.min(10,cur+hi);
+  let c='';for(let i=1;i<=10;i++)c+=`<i class="${i<=cur?'on '+s:i<=a?'gn':i<=b?'gm':''}"></i>`;
+  return `<div class="gbr"><span class="gbn">${ic} ${nm}</span><span class="gbc">${c}</span><span class="gbv num">${cur} → <b class="pos">${a}${b>a?'–'+b:''}</b></span></div>`}).join('')}</div>`}
 function cardDescHTML(kind,title){if(!['life','learn','opp','netc'].includes(kind)||!CDESC.size)return '';const t=String(title||'').replace(/<[^>]*>/g,'').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&#39;/g,"'").trim();
   let d=CDESC.get(t);if(!d){let best='';for(const [k] of CDESC)if(k.length>best.length&&t.includes(k))best=k;if(best)d=CDESC.get(best)}return d?`<p class="cdesc">${esc(d)}</p>`:''}
 function loadDB(){for(const r of DEFAULT_DB.opp)if(r.ty==='biz'&&!(+r.nh>=1))r.nh=1;lifeNoDrain(DEFAULT_DB);balanceDB(DEFAULT_DB);cardsV15(DEFAULT_DB);DEFAULT_DB.ver=15;let d=null;try{d=JSON.parse(localStorage.getItem('ffdb-v1')||'null')}catch(e){}DB=d&&d.jobs?d:JSON.parse(JSON.stringify(DEFAULT_DB));if(!(DB.ver>=2)&&DB.skills){for(const r of DB.skills)if(!r.kind){r.kind='passive';r.uses=0}for(const r of DEFAULT_DB.skills)if(r.kind==='active'&&!DB.skills.some(x=>x.key===r.key))DB.skills.push({...r});if(DB.learn)for(const r of DEFAULT_DB.learn)if(DEFAULT_DB.skills.some(s=>s.key===r.ty&&s.kind==='active')&&!DB.learn.some(x=>x.t===r.t))DB.learn.push({...r});DB.ver=2;try{localStorage.setItem('ffdb-v1',JSON.stringify(DB))}catch(e){}}if(!(DB.ver>=3)&&DB.net){const H=[['ฟิตเนส',2],['ไอโฟน',1],['ซีรีส์',1],['เสื้อผ้าใหม่',1],['ของขวัญ',1],['น้ำท่วม',-1]];
@@ -2176,7 +2186,7 @@ async function resolveSquare(p){
     const cost=1000+Math.floor(Math.random()*39)*500,tier=1+Math.min(4,Math.floor((cost-1000)/3800)),g=()=>Math.max(1,tier-Math.floor(Math.random()*2));
     const eq=ENTQ[sq.z]||['🎉','แวะพักผ่อนไหม?'];
     const ok=await buyFlow(p,cost,{nodisc:1,verb:'จ่าย',no:'ไม่จ่าย',bot:p.cash-cost>fin(p).expenses&&(p.st.h<6||p.st.t<6),title:`${eq[0]} ${esc(sq.n)}`,
-      body:`<p>${eq[1]} <span class="muted">(ไม่บังคับ)</span></p><div class="kv"><b>ค่าใช้จ่าย</b><span class="num neg">${B(cost)}</span><b>ได้รับ</b><span class="pos">❤ ⏳ 📚 อย่างละ +${Math.max(1,tier-1)}${tier>1?'–'+tier:''}</span></div><p class="muted">ยิ่งจ่ายมากยิ่งได้มาก (ค่าพลังเต็มที่ 10)</p>`});
+      body:`<p>${eq[1]} <span class="muted">(ไม่บังคับ)</span></p><div class="kv"><b>ค่าใช้จ่าย</b><span class="num neg">${B(cost)}</span></div><p style="margin:8px 0 2px"><b>ได้รับ</b> <span class="muted">อย่างละ +${Math.max(1,tier-1)}${tier>1?'–'+tier:''} · ยิ่งจ่ายมากยิ่งได้มาก</span></p>${(()=>{const r=[Math.max(1,tier-1),tier];return gainBars(p,{h:r,t:r,k:r})})()}`});
     if(!ok){log(`${eq[0]} ${esc(p.name)} ผ่าน${esc(sq.n)} ไม่จ่าย`);return}
     const sx=adj(p,{h:g(),t:g(),k:g()});log(`${eq[0]} ${esc(p.name)} ไป${esc(sq.n)} จ่าย ${B(cost)}${sx}`)}
   else if(sq.t==='rest'){const sx=adj(p,{h:1,t:1+Math.floor(Math.random()*2)});log(`🌿 ${esc(p.name)} พักผ่อน${sx}`);toast(`🌿 ${p.name} พักผ่อน${sx}`)}
@@ -3360,7 +3370,7 @@ function onTag(){let t=$('#roomTag');if(!ON.code){if(t)t.remove();return}
   if(!t){t=document.createElement('span');t.id='roomTag';t.className='roomtag';t.setAttribute('role','button');t.title='ดูข้อมูลห้อง';t.onclick=onRoomInfo;const h=document.querySelector('header .logo')?.parentElement||document.querySelector('header');h.appendChild(t)}
   t.textContent='ห้อง '+ON.code+' ⓘ'}
 /* เวอร์ชันของไฟล์เกม (เปลี่ยนทุกครั้งที่แก้ระบบออนไลน์) · ส่งไปกับสถานะออนไลน์ เพื่อดูว่าใครยังเปิดเวอร์ชันเก่า */
-const BUILD='2026-11-17.3';
+const BUILD='2026-11-17.4';
 /* ป้ายเลขห้อง → ข้อมูลห้อง: เจ้าของห้อง · เครื่องที่คุมรอบ · สถานะผู้เล่นแต่ละคน */
 function onRoomInfo(){const r=ON.room;if(!r||!ON.code)return;
   const seatName=u=>{const q=S&&S.players&&S.players.find(x=>x.uid===u);if(q)return q.name;const s=Object.values(r.seats||{}).find(x=>x&&x.uid===u);return s?(s.name||'ผู้เล่น'):'—'};
