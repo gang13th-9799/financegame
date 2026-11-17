@@ -1105,6 +1105,8 @@ body.fs #gameView:not(.mapmin){grid-template-columns:minmax(288px,1.2fr) minmax(
 .rbanner b{display:block;font-size:clamp(24px,6vw,40px);color:#b8202f}.rbanner span{display:block;margin-top:4px;font-size:clamp(14px,3.6vw,18px)}
 .afkov{position:fixed;inset:0;z-index:9990;background:rgba(90,92,96,.72);backdrop-filter:grayscale(1);-webkit-backdrop-filter:grayscale(1);display:grid;place-items:center;padding:16px}
 .afkov[hidden]{display:none}
+.gtip{margin:8px 0 2px;font-size:14px}.gtip summary{list-style:none;cursor:pointer;display:inline-flex;align-items:center;gap:6px}.gtip summary::-webkit-details-marker{display:none}
+.gtip .gi{display:inline-grid;place-items:center;width:18px;height:18px;border-radius:50%;background:#efe6d0;color:#7a6a48;font-size:12px}.gtip[open] .gi{background:#d9c38f;color:#fff}.gtip>span{display:block;margin-top:2px;font-size:13px}
 .gbars{display:flex;flex-direction:column;gap:4px;margin:4px 0 6px}
 .gbr{display:grid;grid-template-columns:76px 1fr auto;gap:8px;align-items:center;font-size:13px}
 .gbc{display:flex;gap:2px}.gbc i{flex:1;height:8px;border-radius:3px;background:#ece4d2}
@@ -2186,7 +2188,7 @@ async function resolveSquare(p){
     const cost=1000+Math.floor(Math.random()*39)*500,tier=1+Math.min(4,Math.floor((cost-1000)/3800)),g=()=>Math.max(1,tier-Math.floor(Math.random()*2));
     const eq=ENTQ[sq.z]||['🎉','แวะพักผ่อนไหม?'];
     const ok=await buyFlow(p,cost,{nodisc:1,verb:'จ่าย',no:'ไม่จ่าย',bot:p.cash-cost>fin(p).expenses&&(p.st.h<6||p.st.t<6),title:`${eq[0]} ${esc(sq.n)}`,
-      body:`<p>${eq[1]} <span class="muted">(ไม่บังคับ)</span></p><div class="kv"><b>ค่าใช้จ่าย</b><span class="num neg">${B(cost)}</span></div><p style="margin:8px 0 2px"><b>ได้รับ</b> <span class="muted">อย่างละ +${Math.max(1,tier-1)}${tier>1?'–'+tier:''} · ยิ่งจ่ายมากยิ่งได้มาก</span></p>${(()=>{const r=[Math.max(1,tier-1),tier];return gainBars(p,{h:r,t:r,k:r})})()}`});
+      body:`<p>${eq[1]} <span class="muted">(ไม่บังคับ)</span></p><div class="kv"><b>ค่าใช้จ่าย</b><span class="num neg">${B(cost)}</span></div><details class="gtip"><summary><b>ได้รับ</b> <span class="gi">ⓘ</span></summary><span class="muted">อย่างละ +${Math.max(1,tier-1)}${tier>1?'–'+tier:''} (สุ่ม) · ยิ่งจ่ายมากยิ่งได้มาก · ค่าพลังเต็มที่ 10</span></details>${(()=>{const r=[Math.max(1,tier-1),tier];return gainBars(p,{h:r,t:r,k:r})})()}`});
     if(!ok){log(`${eq[0]} ${esc(p.name)} ผ่าน${esc(sq.n)} ไม่จ่าย`);return}
     const sx=adj(p,{h:g(),t:g(),k:g()});log(`${eq[0]} ${esc(p.name)} ไป${esc(sq.n)} จ่าย ${B(cost)}${sx}`)}
   else if(sq.t==='rest'){const sx=adj(p,{h:1,t:1+Math.floor(Math.random()*2)});log(`🌿 ${esc(p.name)} พักผ่อน${sx}`);toast(`🌿 ${p.name} พักผ่อน${sx}`)}
@@ -3370,7 +3372,7 @@ function onTag(){let t=$('#roomTag');if(!ON.code){if(t)t.remove();return}
   if(!t){t=document.createElement('span');t.id='roomTag';t.className='roomtag';t.setAttribute('role','button');t.title='ดูข้อมูลห้อง';t.onclick=onRoomInfo;const h=document.querySelector('header .logo')?.parentElement||document.querySelector('header');h.appendChild(t)}
   t.textContent='ห้อง '+ON.code+' ⓘ'}
 /* เวอร์ชันของไฟล์เกม (เปลี่ยนทุกครั้งที่แก้ระบบออนไลน์) · ส่งไปกับสถานะออนไลน์ เพื่อดูว่าใครยังเปิดเวอร์ชันเก่า */
-const BUILD='2026-11-17.4';
+const BUILD='2026-11-17.5';
 /* ป้ายเลขห้อง → ข้อมูลห้อง: เจ้าของห้อง · เครื่องที่คุมรอบ · สถานะผู้เล่นแต่ละคน */
 function onRoomInfo(){const r=ON.room;if(!r||!ON.code)return;
   const seatName=u=>{const q=S&&S.players&&S.players.find(x=>x.uid===u);if(q)return q.name;const s=Object.values(r.seats||{}).find(x=>x&&x.uid===u);return s?(s.name||'ผู้เล่น'):'—'};
