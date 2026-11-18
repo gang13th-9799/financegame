@@ -1258,6 +1258,7 @@ body:has(#setupView .setup.onl) header{position:relative;z-index:5}
 /* กระดาน 48 ช่อง: วงนอกใช้ขอบ 13×13 เต็ม ทุกแถว/คอลัมน์กว้างเท่ากัน (แถว 2,12 = แถบกลาง) */
 #board.board:not(.iso){grid-template-columns:repeat(13,minmax(0,1fr))!important;grid-template-rows:repeat(13,minmax(0,1fr))!important}
 .minib{grid-template-columns:repeat(13,1fr)!important;grid-template-rows:repeat(13,1fr)!important}
+.bdg.offn{font-size:.72em;font-weight:600;color:#8a5a00;background:#fff3d6;border:1px solid #f0d08a;border-radius:999px;padding:0 6px;white-space:nowrap;vertical-align:.1em}
 </style>
 </head>
 <body>
@@ -1489,7 +1490,7 @@ async function netCard(p){
       opts:[{v:'y',l:`สมัคร ${B(NET_FEE)}`,c:'pri',dis:p.cash<NET_FEE},{v:'n',l:'ไม่สนใจ'}],bot:p.cash>NET_FEE*20&&Math.random()<.4?'y':'n'});
     if(v==='y')netJoin(p,NET_FEE);return;
   }
-  const _c=draw('netc');if(_c[5]==='DL'){await dlCard(p,_c);return}
+  const _c=draw('netc');if(_c[5]==='DL'){await dlCard(p,_c);return}if(_c[5]==='OFF'){await offCard(p,_c);return}
   const [id,t,leg,pv,cost,cat,A,Pv,nT,nH,nK,dsc='']=_c;const tdx=t+' '+dsc;const n=p.net;const NEED={needT:nT,needH:nH,needK:nK};
   const info=`<div class="kv">${leg?`<b>เป้าหมาย</b><span>สายงาน ${leg} (ตอนนี้ ${n.legs[leg].toLocaleString()} PV)</span>`:''}${(()=>{const mm=leg&&tdx.match(/ได้\s*([\d,]+)\s*PV/i);if(mm){const g=Math.round(+mm[1].replace(/,/g,'')*(1+skV(p,'net')/100));return `<b>ผลลัพธ์</b><span class="num pos">สายงาน ${leg} ขึ้นเป็น ${g.toLocaleString()} PV${n.legs[leg]>=g?' (ตอนนี้สูงกว่าแล้ว ไม่เพิ่ม)':` (+${(g-n.legs[leg]).toLocaleString()})`}</span>`}return pv?`<b>PV</b><span class="num">+${pv.toLocaleString()}${leg?` เข้าสายงาน ${leg}`:' (ยอดส่วนตัว)'}</span>`:''})()}${cost?`<b>ค่าใช้จ่าย</b><span class="num neg">${B(cost)}</span>`:''}${A?`<b>Active</b><span class="num pos">+${B(A)}${cat==='ชีวิต'?' ต่อเดือน':' ครั้งเดียว'}</span>`:''}${Pv?`<b>Passive</b><span class="num pos">+${B(Pv)} ต่อเดือน</span>`:''}</div>${cat==='สร้างธุรกิจ'&&skV(p,'net')?`<p class="pos">ทักษะผู้นำเครือข่าย: PV และ Passive +${skV(p,'net')}%</p>`:''}<p class="muted">หมวด ${cat} · การ์ด ${id}</p>`;
   const ok1=(o)=>({v:'ok',l:'รับทราบ',c:'pri',...o});
@@ -1724,8 +1725,22 @@ const NET_DL=[
  ['dl-q1','DL เลิกทำธุรกิจ','',1,0,'DL',0,0,0,0,0,'ดาวน์ไลน์ในสายงานประกาศเลิกทำธุรกิจ กลับไปทำงานประจำเต็มตัว ลูกค้าที่เคยสั่งซื้อผ่านเขาหยุดสั่งตามไปด้วย'],
  ['dl-q2','DL เลิก ย้ายไปทำธุรกิจอื่น','',1,0,'DL',0,0,0,0,0,'ดาวน์ไลน์ถูกชวนไปทำธุรกิจอื่นที่สัญญาว่ารวยเร็วกว่า เลยเลิกทำและพาลูกค้าบางส่วนตามไปด้วย'],
  ['dl-d1','DL ท้อ หยุดนัดลูกค้า','',2,0,'DL',0,0,0,0,0,'ดาวน์ไลน์ท้อใจหลังโดนปฏิเสธติดกันหลายครั้ง หยุดนัดลูกค้าและไม่เข้าประชุมทีม ยอดสั่งซื้อเดือนนี้หายไปส่วนหนึ่ง'],
+ ['dl-off','หลุดบรรยากาศ','',3,0,'OFF',0,0,0,0,0,'งานประจำและเรื่องในบ้านรุมเข้ามาจนห่างหายจากทีม ไม่ได้เข้าประชุม ไม่ได้คุยกับอัพไลน์ ไฟในการทำธุรกิจเริ่มมอด กว่าจะกลับมาเข้าจังหวะต้องใช้เวลาสักพัก'],
  ['dl-d2','DL ท้อ คนรอบตัวไม่สนับสนุน','',2,0,'DL',0,0,0,0,0,'ครอบครัวและเพื่อนของดาวน์ไลน์ไม่เห็นด้วยกับธุรกิจ เขาเริ่มลังเลและทำน้อยลง ยอดในสายงานลดลงชัดเจน'],
 ];
+/* หลุดบรรยากาศ: ห้ามเปิดกองธุรกิจ A 2–5 เทิร์นของตัวเอง (p.offnet) · ป้องกัน: หัก ❤ 1–3 และ 📚 3–6 ตามจำนวนเทิร์น
+   นับลดตอนจบเทิร์นของผู้เล่นคนนั้น (offnetTick ใน turnPassiveTime) ยกเว้นเทิร์นที่เพิ่งโดน */
+function offnetTick(p){if(p.offnet>0){if(p._offnew){delete p._offnew;return}p.offnet--;if(!p.offnet){log(`🔥 ${esc(p.name)} กลับเข้าบรรยากาศธุรกิจ A แล้ว เปิดกองธุรกิจ A ได้`);ruleNote(p,'กลับเข้าบรรยากาศแล้ว','เปิดการ์ดกองธุรกิจ A ได้ตามปกติ')}}}
+const offNet=p=>p&&p.offnet>0;
+async function offCard(p,c){const [,t,,,,,,,,,,d]=c,n=2+Math.floor(Math.random()*4),nh=n<=2?1:n<=3?2:3,nk=n+1;
+  const can=p.st.h>nh&&p.st.k>=nk;
+  const body=`<p>${esc(d)}</p><div class="kv"><b>ผล</b><span class="neg">ติดสถานะ "หลุดบรรยากาศ" ห้ามเปิดการ์ดกองธุรกิจ A <b>${n} เทิร์น</b></span></div>
+   <p><b>ป้องกันได้</b> ถ้าฝืนกลับไปเข้าประชุมและคุยกับทีม: ใช้ ❤ ${nh} และ 📚 ${nk}</p>
+   <p class="muted" style="font-size:12px">ตอนนี้คุณมี ❤ ${p.st.h} · 📚 ${p.st.k}${can?'':` — ${p.st.h<=nh?`❤ ต้องเหลืออย่างน้อย 1 หลังใช้ (ต้องมี ${nh+1} ขึ้นไป)`:''}${p.st.h<=nh&&p.st.k<nk?' · ':''}${p.st.k<nk?`📚 ไม่พอ (ต้องใช้ ${nk})`:''}`}</p>`;
+  const v=await choose({actor:p,kind:'netc',title:`🌫️ ${esc(t)}`,body,opts:[{v:'save',l:`ฝืนกลับเข้าทีม (❤−${nh} 📚−${nk})`,c:'pri',dis:!can},{v:'lose',l:`ยอมพัก ${n} เทิร์น`}],bot:can?'save':'lose'});
+  if(v==='save'&&can){const sx=adj(p,{h:-nh,k:-nk},true);log(`🔥 ${esc(p.name)} ฝืนกลับเข้าทีมได้ ไม่หลุดบรรยากาศ${sx}`);ruleNote(p,'ไม่หลุดบรรยากาศ',`ใช้ ❤ ${nh} และ 📚 ${nk} กลับเข้าประชุมและคุยกับทีม ยังเปิดกองธุรกิจ A ได้`);return}
+  p.offnet=Math.max(p.offnet||0,n);p._offnew=1;log(`🌫️ ${esc(p.name)} หลุดบรรยากาศ ห้ามเปิดกองธุรกิจ A ${n} เทิร์น`);
+  ruleNote(p,`หลุดบรรยากาศ (${n})`,`ห้ามเปิดการ์ดกองธุรกิจ A ${n} เทิร์น${can?' (เลือกไม่ป้องกัน)':` · ค่าพลังไม่พอป้องกัน (ต้องมี ❤ มากกว่า ${nh} และ 📚 อย่างน้อย ${nk})`}`)}
 async function dlCard(p,c){const [id,t,,kind,,,,,,,,d]=c,n=p.net;
   const legs=LEGS.filter(l=>n.legs[l]>0);
   if(!legs.length){log(`📉 ${esc(p.name)} เปิดการ์ด ${esc(t)} แต่ยังไม่มีสายงานที่มี PV ไม่มีผล`);await choose({actor:p,kind:'netc',title:`📉 ${esc(t)}`,body:`<p>${esc(d)}</p><p class="muted">คุณยังไม่มีสายงานที่มี PV การ์ดนี้จึงไม่มีผล</p>`,opts:[{v:'ok',l:'รับทราบ',c:'pri'}],bot:'ok'});return}
@@ -2016,11 +2031,12 @@ const PICKS=3;
 function picksMax(){return PICKS+(S.bonusPicks||0)}
 
 const PILEN={life:'ดำเนินชีวิต',learn:'เรียนรู้',opp:'โอกาสชีวิต',net:'ธุรกิจ A'};
-async function previewPile(k){if(!canAct()||S.phase!=='card')return;const img=k==='net'?'net':k;
+async function previewPile(k){if(!canAct()||S.phase!=='card')return;if(k==='net'&&offNet(cp())){pickPile(k);return}const img=k==='net'?'net':k;
   const v=await choose({actor:cp(),kind:'pick',npc:false,title:`กอง${PILEN[k]}`,body:`<div class="pickwrap"><img class="pickcard" src="img/back-${img}.webp" alt=""></div><p class="muted" style="text-align:center;margin:6px 0 0">จั่วการ์ดใบที่ ${(S.picks||0)+1}/${picksMax()} · เปิดเลยหรือเปลี่ยนกอง?</p>`,opts:[{v:'go',l:'🃏 เปิดการ์ดใบนี้',c:'pri'},{v:'no',l:'เปลี่ยนใจ'}],bot:'go'});
   if(v==='go'&&canAct()&&S.phase==='card')pickPile(k)}
 async function pickPile(k){
-  const p=cp();if(S.phase!=='card')return;S.phase='busy';render();
+  const p=cp();if(S.phase!=='card')return;
+  if(k==='net'&&offNet(p)){if(p.bot)k='opp';else{toast(`🌫️ หลุดบรรยากาศ: เปิดกองธุรกิจ A ไม่ได้อีก ${p.offnet} เทิร์น`);ruleNote(p,`หลุดบรรยากาศ (${p.offnet})`,'ช่วงนี้เปิดการ์ดกองธุรกิจ A ไม่ได้ เลือกกองอื่นแทน');return}}S.phase='busy';render();
   if(k==='life'){let c=draw('life');
     /* ภัยพิบัติห้ามซ้อน: ถ้ายังมีภัยพิบัติอยู่ ใบที่เปิดได้ไปไว้ใต้กอง แล้วเปิดใบใหม่อัตโนมัติ (ไม่แสดงให้ผู้เล่นเห็น) */
     for(let i=0;i<8&&c&&c.dis&&disOn();i++){const ix=LIFE.indexOf(c);if(ix>=0&&S.decks.life)S.decks.life.unshift(ix);c=draw('life')}
@@ -2159,7 +2175,7 @@ async function payday(p){
   }
 }
 function rankPin(p,c='rpin'){return p&&p.net&&p.net.on?`<img class="${c}" src="img/rank-${Math.min(7,p.net.rank||0)}.webp" alt="${NET_RANKS[p.net.rank||0].n}" title="ธุรกิจ A ระดับ ${NET_RANKS[p.net.rank||0].n}">`:''}
-function badges(p){return rankPin(p)+(p.warn>0?`<span class="bdg" title="โดนใบเตือน: เงินเดือนลด 50% อีก ${p.warn} เดือน"><img class="icw" src="img/ic-warn.webp" alt=""></span>`:'')+(p.badge1?'<span class="bdg" title="ชนะ Lv.1: รายได้จากทรัพย์สินมากกว่ารายจ่ายรวม">🏆</span>':'')+(p.badge2?'<span class="bdg" title="ชนะ Lv.2: ธุรกิจ A ระดับไดมอนด์">💎</span>':'')}
+function badges(p){return rankPin(p)+(p.offnet>0?`<span class="bdg offn" title="หลุดบรรยากาศ: ห้ามเปิดกองธุรกิจ A อีก ${p.offnet} เทิร์น">(หลุดบรรยากาศ ${p.offnet})</span>`:'')+(p.warn>0?`<span class="bdg" title="โดนใบเตือน: เงินเดือนลด 50% อีก ${p.warn} เดือน"><img class="icw" src="img/ic-warn.webp" alt=""></span>`:'')+(p.badge1?'<span class="bdg" title="ชนะ Lv.1: รายได้จากทรัพย์สินมากกว่ารายจ่ายรวม">🏆</span>':'')+(p.badge2?'<span class="bdg" title="ชนะ Lv.2: ธุรกิจ A ระดับไดมอนด์">💎</span>':'')}
 function standings(){return [...S.players].map(q=>[q,fin(q)]).sort((a,b)=>((b[0].badge2?2:0)+(b[0].badge1?1:0))-((a[0].badge2?2:0)+(a[0].badge1?1:0))||b[1].passive/Math.max(1,b[1].expenses)-a[1].passive/Math.max(1,a[1].expenses))}
 function standingsHtml(){return `<table class="ft"><tr class="th"><td>#</td><td>ผู้เล่น</td><td class="r">ทรัพย์สิน / รายจ่าย</td></tr>${standings().map(([q,f],i)=>`<tr><td>${i+1}</td><td><span class="tok pic" style="display:inline-block;${tokStyle(q)}"></span> ${esc(q.name)} ${badges(q)}<div class="fsub">${esc(S.jobs[q.job].n)}${q.badge1?` · Lv.1 รอบ ${q.badge1}`:''}${q.badge2?` · Lv.2 รอบ ${q.badge2}`:''}</div></td><td class="r num"><span class="pos">${B(f.passive)}</span> / <span class="neg">${B(f.expenses)}</span></td></tr>`).join('')}</table>`}
 function endGame(why){if(PAR()&&!parMaster()&&S.winner==null)return;if(S.phase!=='done')log(cryReveal());S.winner=S.winner??(standings()[0][0].id);S.phase='done';if(ON.play&&PAR())onPush();else save();render();lbAward(); /* โหมดพร้อมกัน: save() ช่วงผู้เล่นเล่นส่งแค่ข้อมูลตัวเอง จึงส่งสถานะทั้งเกมตรงๆ */
@@ -2726,7 +2742,7 @@ function botWants(p,cost,cf){
   return cf>0&&cf>L*LOAN_R*2&&f.flow>0&&p.loan+L<p.salary*6;
 }
 function botRoad(p,into){const f=fin(p);if(into)return p.cash>150000&&f.flow>15000&&Math.random()<.7?'go':'stay';return p.cash<80000||Math.random()<.35?'go':'stay'}
-function botPile(p){const f=fin(p),r=Math.random();if(p.net.on&&r<.25)return 'net';if(!p.net.on&&r<.08)return 'net';if(p.skills.length<4&&p.cash>f.expenses*1.5&&r<.3)return 'learn';if(r<.75)return 'opp';return 'life'}
+function botPile(p){const f=fin(p),r=Math.random();if(offNet(p)){if(r<.75)return 'opp';return 'life'}if(p.net.on&&r<.25)return 'net';if(!p.net.on&&r<.08)return 'net';if(p.skills.length<4&&p.cash>f.expenses*1.5&&r<.3)return 'learn';if(r<.75)return 'opp';return 'life'}
 async function botInvest(p){
   if(p.st.t<=2&&!p.hired&&p.cash>HIRE_COST+fin(p).expenses*1.5)await hireHelp(p);
   const f=fin(p),res=f.expenses;
@@ -2824,7 +2840,7 @@ function render(){
       <button class="pile life deck" style="--bk:url(img/back-life.webp)" title="ดำเนินชีวิต" aria-label="จั่วการ์ดดำเนินชีวิต" ${act?'':'disabled'} onclick="canAct()&&previewPile('life')"><img class="pimg" src="img/back-life.webp" alt=""><span class="ptag" style="--tc:#2f8f86">ดำเนินชีวิต</span></button>
       <button class="pile learn deck" style="--bk:url(img/back-learn.webp)" title="เรียนรู้" aria-label="จั่วการ์ดเรียนรู้" ${act?'':'disabled'} onclick="canAct()&&previewPile('learn')"><img class="pimg" src="img/back-learn.webp" alt=""><span class="ptag" style="--tc:#4b8b55">เรียนรู้</span></button>
       <button class="pile opp deck" style="--bk:url(img/back-opp.webp)" title="โอกาสชีวิต" aria-label="จั่วการ์ดโอกาสชีวิต" ${act?'':'disabled'} onclick="canAct()&&previewPile('opp')"><img class="pimg" src="img/back-opp.webp" alt=""><span class="ptag" style="--tc:#c48f1f">โอกาส</span></button>
-      <button class="pile netp deck" style="--bk:url(img/back-net.webp)" title="ธุรกิจ A" aria-label="จั่วการ์ดธุรกิจ A" ${act?'':'disabled'} onclick="canAct()&&previewPile('net')"><img class="pimg" src="img/back-net.webp" alt=""><span class="ptag" style="--tc:#d0553f">ธุรกิจเครือข่าย</span></button></div>
+      <button class="pile netp deck" style="--bk:url(img/back-net.webp)" title="${offNet(p)?`หลุดบรรยากาศ: เปิดไม่ได้อีก ${p.offnet} เทิร์น`:'ธุรกิจ A'}" aria-label="จั่วการ์ดธุรกิจ A" ${act&&!offNet(p)?'':'disabled'} onclick="canAct()&&previewPile('net')"><img class="pimg" src="img/back-net.webp" alt=""><span class="ptag" style="--tc:#d0553f">ธุรกิจเครือข่าย</span></button></div>
       <div class="btnrow">${skillPanelBtn(p,act)}</div>`;
   else if(S.phase==='free')ctr+=`<div class="prompt">เทรดหุ้น ปิดหนี้ หรือซื้อขายก่อนจบเทิร์น</div><div class="btnrow">${skillPanelBtn(p,act)}<button class="sm" ${act?'':'disabled'} onclick="tradeUI()">ซื้อขายกับผู้เล่น</button></div>`;
   else ctr+=`<div class="prompt">…</div>`;
@@ -2849,7 +2865,7 @@ function render(){
       mini+=`<div class="mc ${kk===k?'me':''}" style="grid-row:${r};grid-column:${c};background:${bg}" onclick="cellInfo('${kk}')" title="${esc(b.n)}">${pr?`<i class="mo" style="background:${P(pr.o).color}"></i>`:''}${here.map(x=>`<b class="md ${x.id===p.id?'cur':''}" style="background:${x.color}"></b>`).join('')}</div>`}
     act2+=skillPanelBtn(p,act);
     /* แผนที่ย่อ: กองการ์ด (ภาพหลังการ์ด) ติดใต้แผนที่ → ปุ่มทำตา → ข้อมูลผู้เล่นแบบย่อ (ใช้บรรทัดร่วมกัน) */
-    const piles=S.phase==='card'&&!p.bot&&onMine()&&S.winner==null?`<div class="mpiles"><div class="mpl">🃏 จั่วการ์ด ${(S.picks||0)+1}/${picksMax()}</div><div class="mpg">${[['life','ชีวิต'],['learn','เรียนรู้'],['opp','โอกาส'],['net','ธุรกิจ A']].map(([kk,l])=>`<button class="mcard ${kk==='net'?'netp':kk}" ${act?'':'disabled'} onclick="canAct()&&previewPile('${kk}')" aria-label="จั่วกอง${l}"><img src="img/back-${kk}.webp" alt=""><span>${l}</span></button>`).join('')}</div></div>`:'';
+    const piles=S.phase==='card'&&!p.bot&&onMine()&&S.winner==null?`<div class="mpiles"><div class="mpl">🃏 จั่วการ์ด ${(S.picks||0)+1}/${picksMax()}</div><div class="mpg">${[['life','ชีวิต'],['learn','เรียนรู้'],['opp','โอกาส'],['net','ธุรกิจ A']].map(([kk,l])=>`<button class="mcard ${kk==='net'?'netp':kk}" ${act&&!(kk==='net'&&offNet(p))?'':'disabled'} onclick="canAct()&&previewPile('${kk}')" aria-label="จั่วกอง${l}"><img src="img/back-${kk}.webp" alt=""><span>${l}</span></button>`).join('')}</div></div>`:'';
     $('#minimap').innerHTML=`<div class="minib" aria-label="แผนที่ย่อ">${mini}<div class="mcity"></div></div>${piles}<div class="mbar" style="--zc:${full||zc}">
       <div class="mrow mact">${act2}</div>
       <div class="mrow mwho"><span class="tok pic" style="${tokStyle(p)}"></span><b>${esc(p.name)}${badges(p)}</b><span class="muted">${esc(S.jobs[p.job].n)}</span></div>
@@ -3549,7 +3565,7 @@ function onTag(){let t=$('#roomTag');if(!ON.code){if(t)t.remove();return}
   if(!t){t=document.createElement('span');t.id='roomTag';t.className='roomtag';t.setAttribute('role','button');t.title='ดูข้อมูลห้อง';t.onclick=onRoomInfo;const h=document.querySelector('header .logo')?.parentElement||document.querySelector('header');h.appendChild(t)}
   t.textContent='ห้อง '+ON.code+' ⓘ'}
 /* เวอร์ชันของไฟล์เกม (เปลี่ยนทุกครั้งที่แก้ระบบออนไลน์) · ส่งไปกับสถานะออนไลน์ เพื่อดูว่าใครยังเปิดเวอร์ชันเก่า */
-const BUILD='2026-11-18.16';
+const BUILD='2026-11-18.17';
 /* ป้ายเลขห้อง → ข้อมูลห้อง: เจ้าของห้อง · เครื่องที่คุมรอบ · สถานะผู้เล่นแต่ละคน */
 function onRoomInfo(){const r=ON.room;if(!r||!ON.code)return;
   const seatName=u=>{const q=S&&S.players&&S.players.find(x=>x.uid===u);if(q)return q.name;const s=Object.values(r.seats||{}).find(x=>x&&x.uid===u);return s?(s.name||'ผู้เล่น'):'—'};
@@ -3755,7 +3771,7 @@ function parBanner(){let el=$('#rbanner');if(!el){el=document.createElement('div
 /* Passive เทียบรายจ่าย (นับตอนจบเทิร์น) ได้รางวัลขั้นสูงสุดขั้นเดียว · ชนะ Lv.1 แล้วได้โบนัส Lv.1 แทน ไม่ได้ขั้น Passive ซ้อน · 25% ⏳+1 · 50% ⏳+1 📚+1 · 75% ❤+1 ⏳+1 📚+1 */
 const PT_TIERS=[[.75,{h:1,t:1,k:1}],[.5,{t:1,k:1}],[.25,{t:1}]];
 const stTxt=b=>[b.h?'❤ +'+b.h:'',b.t?'⏳ +'+b.t:'',b.k?'📚 +'+b.k:''].filter(Boolean).join(' ');
-function turnPassiveTime(p){if(!p||S.winner!=null)return;turnLv1Bonus(p);turnNetBonus(p);if(p.badge1)return;const f=fin(p),pr=f.expenses>0?f.passive/f.expenses:0,tr=PT_TIERS.find(([x])=>pr>=x);if(!tr)return;
+function turnPassiveTime(p){if(!p||S.winner!=null)return;offnetTick(p);turnLv1Bonus(p);turnNetBonus(p);if(p.badge1)return;const f=fin(p),pr=f.expenses>0?f.passive/f.expenses:0,tr=PT_TIERS.find(([x])=>pr>=x);if(!tr)return;
   const b=tr[1],sx=ledAdj(p,{...b},'💰',`รายได้จากทรัพย์สิน ${Math.floor(pr*100)}% ของรายจ่าย (ขั้น ${tr[0]*100}%)`);if(!sx)return;log(`💰 ${esc(p.name)} รายได้จากทรัพย์สิน ${Math.floor(pr*100)}% ของรายจ่าย ได้โบนัสทุกเทิร์น${sx}`);}
 /* ชนะ Lv.1 แล้ว: ทุกครั้งที่จบเทิร์น ❤ +1 ⏳ +2 📚 +1 (เพิ่มจากโบนัส Passive) */
 function turnLv1Bonus(p){if(!p.badge1)return;const sx=ledAdj(p,{h:1,t:2,k:1},'🏆','ชนะ Lv.1 แล้ว (แทนโบนัสขั้น Passive)');if(!sx)return;log(`🏆 ${esc(p.name)} ชนะ Lv.1 แล้ว ได้โบนัสทุกเทิร์น${sx}`);}
