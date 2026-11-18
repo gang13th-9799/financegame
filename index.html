@@ -1113,6 +1113,12 @@ body.fs #gameView:not(.mapmin){grid-template-columns:minmax(288px,1.2fr) minmax(
 .gbc i.on.h{background:#e0566b}.gbc i.on.t{background:#e0a92e}.gbc i.on.k{background:#4f86d9}
 .gbc i.gn{background:#3f9a52}.gbc i.gm{background:#a9dbb2}
 .gbv{white-space:nowrap;font-size:12.5px}
+.achbtn{float:right;font-size:13px;padding:4px 10px;min-height:0}
+.achn{font-size:12px;background:#fff3d6;border:1px solid #e6c97a;border-radius:999px;padding:0 6px;white-space:nowrap}
+.achg{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:6px}
+.achc{display:grid;grid-template-columns:34px 1fr;gap:8px;align-items:center;padding:8px 10px;border:1px dashed #d8ccb0;border-radius:12px;background:#faf6ec;opacity:.85}
+.achc.on{opacity:1;border-style:solid;background:#fffdf6}.achc.on.m1{border-color:#c98b57}.achc.on.m2{border-color:#a7b1bd}.achc.on.m3{border-color:#e0b43b;box-shadow:0 0 0 2px #fbeab3 inset}
+.aci{font-size:24px;text-align:center}.acn{display:flex;flex-direction:column;line-height:1.3}.acn small{color:var(--muted);font-size:12px}
 .cdesc{margin:0 0 10px;padding:8px 12px;border-left:3px solid #d9c38f;background:#fffaf0;border-radius:8px;color:#5b4f3a;font-size:14px;line-height:1.45}
 .tsl{display:flex;flex-direction:column;gap:6px}
 .tsr{display:grid;grid-template-columns:28px 1fr auto;gap:8px;align-items:center;padding:8px 10px;border:1px solid #eadfc4;border-radius:12px;background:#fffdf6}
@@ -2196,7 +2202,7 @@ async function resolveSquare(p){
   else if(sq.t==='charity'){
     const f=fin(p),amt=rnd100((f.salary+f.act+f.passive)*.1);
     const ok=await buyFlow(p,amt,{verb:'บริจาค',no:'ไม่บริจาค',bot:p.cash-amt>f.expenses*.5,title:'บริจาคการกุศล',body:`<p>บริจาค 10% ของรายรับรวม (${B(f.salary+f.act+f.passive)}) แล้วเลือกทอยลูกเต๋า 1 หรือ 2 ลูกได้ใน ${CHARITY_TURNS} เทิร์นถัดไป ปกติทอยได้ลูกเดียว</p>`});
-    if(ok){p.charity=CHARITY_TURNS;log(`💝 ${esc(p.name)} บริจาค ${B(amt)} ได้สิทธิ์ทอย 2 ลูก ${CHARITY_TURNS} เทิร์น`)}
+    if(ok){p.charity=CHARITY_TURNS;axOf(p).don=(axOf(p).don||0)+amt;log(`💝 ${esc(p.name)} บริจาค ${B(amt)} ได้สิทธิ์ทอย 2 ลูก ${CHARITY_TURNS} เทิร์น`)}
   }
   else if(sq.t==='jobless'){await joblessHit(p)  }
 }
@@ -2271,7 +2277,7 @@ async function joblessHit(p){
       ruleNote(p,'🟨 โดนใบเตือน',`หยุดช่องตกงานช่วงรอบที่ 1–5 จึงยังไม่ตกงาน แต่เงินเดือนลด 50% เหลือ ${B(p.salary-cut)} ในวันเงินเดือน 2 ครั้งถัดไป`);
       await choose({actor:p,pose:'sad',title:'🟨 โดนใบเตือน!',body:`<div class="ycard"><img src="img/ic-warn.webp" alt=""></div><p>ยังอยู่ในช่วงทดลองงาน (รอบที่ 1–5) หัวหน้าเลยให้แค่ <b>ใบเตือน</b> ไม่ไล่ออก</p><p>ติดสถานะ <b>โดนใบเตือน</b>: วันเงินเดือน 2 ครั้งถัดไปได้เงินเดือนแค่ <b>50%</b> (${B(p.salary-cut)} จาก ${B(p.salary)}) ส่วนรายได้อื่นได้ตามปกติ</p><p class="muted">ตั้งแต่รอบที่ 6 ถ้าหยุดช่องตกงานจะตกงานจริง</p>`,opts:[{v:'ok',l:'รับทราบ',c:'pri'}],bot:'ok'});
       return}
-    const sx=adj(p,{h:-2},true);p.jobless=2;
+    const sx=adj(p,{h:-2},true);p.jobless=2;axOf(p).job=1;
     log(`⚠ ${esc(p.name)} ตกงาน! ติดสถานะตกงาน 2 เดือน${sx}`);
     await choose({actor:p,pose:'sad',title:'ตกงาน!',body:`<p>ติดสถานะ <b>ตกงาน</b>: ผ่านหรือหยุดช่องเงินเดือน 2 ครั้งถัดไป จะได้เฉพาะ Passive income (ไม่ได้เงินเดือนและรายได้ Active) แล้วหักรายจ่ายรวม ถ้าเงินสดไม่พอ เลือกกู้ หรือขายทรัพย์สินในราคา 50%</p><p>หัวใจ −2</p>`,opts:[{v:'ok',l:'รับทราบ',c:'pri'}],bot:'ok'});
 }
@@ -2480,6 +2486,7 @@ async function oppCard(p,c,src){
     const warn=c.ty==='scam'&&knowsScam(p)?`<p class="neg"><b>⚠ ทักษะรู้ทันกลโกงเตือน:</b> ผลตอบแทนสูงผิดปกติ นี่คือแชร์ลูกโซ่ ไม่นับเป็นรายได้จากทรัพย์สิน และพร้อมล่มทุกเดือน</p>`:'';
     const tyN=c.ty==='scam'?'การลงทุน':OPP_TY[c.ty];
     const ok=await buyFlow(p,cost,{kind:'opp',pre:c._pre||null,needT:c.nt||0,needH:c.nh||0,needK:c.nk||0,cf:c.ty==='scam'?(knowsScam(p)?-1:c.cf):c.cf+(c.act||0),title:c.t,body:`${chips([chip(OPPICO[c.ty]||'💼',tyN,'','tag'),c.ty==='scam'?chip('📈',`+${B(c.cf)}`,'อ้าง/เดือน','gain'):'',c.ty!=='scam'&&(c.cf||!c.act)?chip('📈',`+${B(dealCf(p,c))}`,'Passive/เดือน','gain'):'',c.act?chip('💼',`+${B(c.act)}`,'Active/เดือน','gain2'):''].filter(Boolean))}${src?`<p class="muted">${src}</p>`:''}${cap?chips([chip('🏙️','−20%','เมืองหลวง','gain')]):''}${warn}`});
+    if(!ok&&c.ty==='scam')axOf(p).scam=(axOf(p).scam||0)+1;
     if(ok){p.deals.push({id:NOW()+Math.random(),t:c.t,ty:c.ty,cost,cf:c.cf,act:c.act||0});log(`✨ ${esc(p.name)} ลงทุน ${esc(c.t)} ${B(cost)}${c.cf?` · Passive +${B(c.cf)}`:''}${c.act?` · Active +${B(c.act)}`:''}`)}
   }else if(c.ty==='ipo'){
     const pr=Math.round(S.prices.GROW*.6*10)/10;
@@ -2538,7 +2545,7 @@ async function trade(s,dir,lots){
     if(q<LOT(a)*lots)body+=`<p class="muted">มีอยู่ ${hd.q.toLocaleString()} ${unit} จึงขายได้เท่านี้</p>`;
     const r=await choose({title:`ขาย ${a.n}`,body,opts:[{v:'ok',l:`ยืนยันขาย ${B(get)}`,c:'pri'},{v:'no',l:'ยกเลิก'}]});
     if(r==='no')return;
-    hd.q-=q;hd.c-=cost;if(!hd.q)delete p.stocks[s];p.cash+=get;
+    hd.q-=q;hd.c-=cost;if(!hd.q)delete p.stocks[s];p.cash+=get;if(a.k==='cry')axOf(p).cry=(axOf(p).cry||0)+pl;
     log(`${esc(p.name)} ขาย ${a.n} ${q.toLocaleString()} ${unit} @ ${prS} ได้ ${B(get)} (${pl>=0?'กำไร':'ขาดทุน'} ${B(Math.abs(pl))})`);
   }
   render();save();checkWin();
@@ -2661,7 +2668,7 @@ const SQIMG={o0:['sq-start',70.2],o12:['sq-pay-o12',62.0],o24:['sq-pay-o24',67.2
 function tileBase(k){if(!TILE_BASE_ON||(k[0]!=='o'&&!SQIMG[k])||k in PROPIMG)return '';const q=SQIMG[k];return `<img class="zimg pimgc tbase${q?' sqimg':''}" style="${tileSty(k,q?q[1]:TILE_ROAD.c,TILE_ROAD.r)}" src="img/${q?q[0]:'tile-grass'}.webp" alt="">`}
 function toggleMap(){MAPMIN=!MAPMIN;try{localStorage.setItem('ff-mapmin',MAPMIN?'1':'0')}catch(e){}render()}
 function render(){
-  if(!S)return;
+  if(!S)return;axPoll();
   $('#roundLbl').textContent=`รอบที่ ${S.round}`;
   const p=cp(),bd=$('#board');let h='';
   for(const k in SQ_MAP){const b=SQ(k),[r,c]=cellPos(k),pr=S.props[k],i=+k.slice(1),corner=i%(RING_LEN[k[0]]/4)===0;
@@ -2918,7 +2925,7 @@ async function tradeDlg(s){
     if(p.cash<total){const L=Math.ceil((total-p.cash)/1000)*1000;p.loan+=L;p.cash+=L;log(`🏦 ${esc(p.name)} กู้ ${B(L)} เพื่อซื้อ${a.n}`)}
     p.cash-=total;addHold(p,s,t.q,total);log(`${esc(p.name)} ซื้อ ${a.n} ${t.q.toLocaleString()} ${unit} @ ${fmtP(a,pr)} รวม ${B(total)} (ค่าธรรมเนียม ${B(fee)})`);toast(`ซื้อ ${SN(a)} ${t.q.toLocaleString()} ${unit} แล้ว`)}
   else{if(!hd2||!hd2.q)return;const q=Math.min(t.q,hd2.q),v=pr*q,fee=commission(p,v),get=v-fee,cost=hd2.c/hd2.q*q,pl=get-cost;
-    hd2.q=QR(hd2.q-q);hd2.c-=cost;if(hd2.q<=0)delete p.stocks[s];p.cash+=get;
+    hd2.q=QR(hd2.q-q);hd2.c-=cost;if(hd2.q<=0)delete p.stocks[s];p.cash+=get;if(a.k==='cry')axOf(p).cry=(axOf(p).cry||0)+pl;
     log(`${esc(p.name)} ขาย ${a.n} ${q.toLocaleString()} ${unit} @ ${fmtP(a,pr)} ได้ ${B(get)} (${pl>=0?'กำไร':'ขาดทุน'} ${B(Math.abs(pl))})`);toast(`ขาย ${SN(a)} ได้ ${B(get)}`)}
   render();save();checkWin();
 }
@@ -3243,33 +3250,70 @@ function lbCalc(p){const st=standings(),rank=st.findIndex(x=>x[0]===p),f=fin(p),
 async function lbAward(code=ON.code,G=S,late=false){if(ON.spec)return;
   if(!code||!ON.user||!G||G.winner==null||(!late&&!ON.play))return;const me=G.players.find(q=>q.uid===ON.user.uid);if(!me)return;
   const gk=(code+'_'+(G.gid||'old')).replace(/[.#$\[\]\/]/g,'');if(ON.lbDone===gk)return;ON.lbDone=gk;
-  const keep=S;S=G;let c;try{c=lbCalc(me)}finally{S=keep}
+  const keep=S;S=G;let c,ae=null;try{c=lbCalc(me)}finally{S=keep}
   const lateTxt=late?`<p class="muted">เกมห้อง ${esc(code)} จบระหว่างที่คุณไม่อยู่ ระบบเก็บคะแนนให้ย้อนหลัง</p>`:'';
   const tbl=`<table class="ft">${c.rows.map(([l,v])=>`<tr><td>${l}</td><td class="r num ${v<0?'neg':'pos'}">${v>0?'+':''}${v}</td></tr>`).join('')}${c.mult!==1?`<tr><td>ตัวคูณผู้เล่นที่เป็นคน ${c.hum} คน</td><td class="r num">×${c.mult}</td></tr>`:''}<tr class="th"><td><b>รวม</b></td><td class="r num pos"><b>+${c.pts}</b></td></tr></table>`;
-  if(ON.user.anon){ON.lbAnn=({t:`⭐ เกมนี้ได้ ${c.pts} คะแนน`,b:lateTxt+tbl+'<p class="neg">บัญชีแขกไม่เก็บคะแนนสะสมและไม่ติดอันดับ · ผูกบัญชี Google ที่หน้าแรกเพื่อเริ่มสะสมคะแนน</p>'});return}
+  if(ON.user.anon){ON.lbAnn=({t:`⭐ เกมนี้ได้ ${c.pts} คะแนน`,b:lateTxt+tbl+'<p class="neg">บัญชีแขกไม่เก็บคะแนนสะสม เหรียญภารกิจลับ และไม่ติดอันดับ · ผูกบัญชี Google ที่หน้าแรกเพื่อเริ่มสะสมคะแนน</p>'});return}
   const mk=lbMonth();let dup=false,after=null;
   try{const x=await ON.be.tx(`lb/${ON.user.uid}`,cur=>{cur=cur||{};const g=cur.g||{};if(g[gk]){dup=true;return undefined}dup=false;
-      const o={...cur,n:ON.name,pts:(cur.pts||0)+c.pts,games:(cur.games||0)+1,wins:(cur.wins||0)+(c.win?1:0),best:Math.max(cur.best||0,c.pts),t:NOW()};
+      {const kp=S;S=G;try{ae=achEval(me,c,cur)}finally{S=kp}}
+      const o={...cur,ac:ae.ac,ach:{...(cur.ach||{}),...Object.fromEntries(ae.got.map(i=>[i,NOW()]))},n:ON.name,pts:(cur.pts||0)+c.pts,games:(cur.games||0)+1,wins:(cur.wins||0)+(c.win?1:0),best:Math.max(cur.best||0,c.pts),t:NOW()};
       if(cur.mk!==mk){o.mk=mk;o.mp=0;o.mg=0;o.mw=0}o.mp+=c.pts;o.mg+=1;o.mw+=c.win?1:0;
       const keys=Object.keys(g).slice(-29);o.g=Object.fromEntries(keys.map(k=>[k,g[k]]));o.g[gk]=c.pts;after=o;return o});
     if(dup)return;if(x&&x.err)throw x.err;if(x&&!x.ok)throw new Error('ไม่ได้บันทึก');LB_CACHE=null;setTimeout(lbRender,0);
-    ON.lbAnn=({t:`⭐ คะแนนสะสม +${c.pts}${late?' (ย้อนหลัง)':''}`,b:lateTxt+tbl+(after?`<p>คะแนนเดือนนี้ <b class="num">${after.mp}</b> · สะสมทั้งหมด <b class="num">${after.pts}</b> คะแนน (${after.games} เกม)</p>`:'')});
-    if(!late&&S===G){log(`⭐ ${esc(me.name)} ได้คะแนนสะสม +${c.pts}`);render()}}
+    ON.lbAnn=({t:`⭐ คะแนนสะสม +${c.pts}${late?' (ย้อนหลัง)':''}${ae&&ae.got.length?` · 🎖 เหรียญใหม่ ${ae.got.length}`:''}`,b:lateTxt+(ae&&ae.got.length?`<h4 style="margin:0 0 6px">🎉 ปลดล็อกภารกิจลับ!</h4>${achHTML(after&&after.ach,ae.got)}<h4 style="margin:10px 0 4px">คะแนนเกมนี้</h4>`:'')+tbl+(after?`<p>คะแนนเดือนนี้ <b class="num">${after.mp}</b> · สะสมทั้งหมด <b class="num">${after.pts}</b> คะแนน (${after.games} เกม)</p>`:'')});
+    if(!late&&S===G){log(`⭐ ${esc(me.name)} ได้คะแนนสะสม +${c.pts}`);if(ae)for(const i of ae.got){const a=ACH.find(z=>z.id===i);log(`🎖 ${esc(me.name)} ปลดล็อกเหรียญ ${a.i} ${esc(a.n)}`)}render()}}
   catch(e){ON.lbDone=null;toast('⚠ บันทึกคะแนนสะสมไม่สำเร็จ: '+(e.code||e.message||e))}}
 /* เก็บคะแนนย้อนหลัง: เกมจบตอนเราไม่อยู่ → ถอดสถานะสุดท้ายของห้องแล้วคิดคะแนนแบบเดียวกัน (ออกจากเกมกลางคัน = ไม่ได้) */
 async function lbLate(code,r){try{if(!r||!r.st||!r.st.z||(r.left&&r.left[ON.user.uid]))return;const G=JSON.parse(await zDec(r.st.z));if(G&&G.winner!=null)await lbAward(code,G,true)}catch(e){}}
+/* ===== ภารกิจลับ (เหรียญรางวัล) · เก็บใน lb/{uid}.ach {id:เวลา} + ตัวนับข้ามเกม lb/{uid}.ac · ตรวจตอนจบเกมออนไลน์พร้อมคะแนนสะสม (บัญชีแขกไม่เก็บ)
+   ข้อมูลต่อเกม p.ax: prop ซื้ออสังหา · loan เคยกู้ · job ตกงานจริง · scam ปฏิเสธแชร์ลูกโซ่ · bal ค่าพลังเต็ม 10 ครบ · cry กำไรคริปโตที่ขายแล้ว · don ยอดบริจาค */
+const ACH=[
+ {id:'first',m:1,i:'🏆',n:'ชนะครั้งแรก',d:'ชนะ Lv.1 ครั้งแรก',hint:'ลองทำให้ Passive มากกว่ารายจ่าย'},
+ {id:'noscam',m:1,i:'🕵️',n:'ไม่หลงกล',d:'ปฏิเสธการ์ดแชร์ลูกโซ่ "แชร์ออมทรัพย์ทันใจ" ครบ 3 ครั้ง (นับรวมทุกเกม)',hint:'ผลตอบแทนสูงเกินจริง… อย่าเพิ่งเชื่อ'},
+ {id:'bal',m:1,i:'⚖️',n:'สมดุลชีวิต',d:'มี ❤ ⏳ 📚 เต็ม 10 พร้อมกันทั้งสามค่า',hint:'ใจ เวลา ความรู้ ต้องไปพร้อมกัน'},
+ {id:'charity',m:1,i:'💝',n:'ใจบุญ',d:'บริจาครวม ฿100,000 ในเกมเดียว',hint:'การให้ก็เป็นความมั่งคั่งอย่างหนึ่ง'},
+ {id:'noprop',m:2,i:'🏚️',n:'ไม่ง้อที่ดิน',d:'ชนะเกมโดยไม่ซื้ออสังหาเลย',hint:'รวยได้โดยไม่ต้องมีบ้านเช่าสักหลัง?'},
+ {id:'noloan',m:2,i:'🚫',n:'ปลอดหนี้',d:'ชนะเกมโดยไม่เคยกู้ธนาคารเลยทั้งเกม',hint:'ลองชนะโดยไม่พึ่งธนาคาร'},
+ {id:'comeback',m:2,i:'🌱',n:'ล้มแล้วลุก',d:'ชนะเกมที่เคยตกงาน',hint:'ตกงานไม่ใช่จุดจบ'},
+ {id:'fast',m:2,i:'⚡',n:'ชนะสายฟ้าแลบ',d:'ชนะ Lv.1 ภายใน 15 รอบ',hint:'เร็วกว่าคนอื่นมาก'},
+ {id:'div',m:2,i:'📈',n:'สายปันผล',d:'ชนะเกมโดยปันผลหุ้นเป็นครึ่งหนึ่งของ Passive ขึ้นไป',hint:'ให้หุ้นทำงานแทนคุณ'},
+ {id:'real',m:2,i:'🤝',n:'ชนะคนจริง',d:'ชนะห้องออนไลน์ที่มีคนจริงอย่างน้อย 3 คน',hint:'ชวนเพื่อนมาแข่ง'},
+ {id:'wins10',m:3,i:'👑',n:'นักสะสมชัยชนะ',d:'ชนะครบ 10 เกม',hint:'ชนะซ้ำแล้วซ้ำอีก'},
+ {id:'million',m:3,i:'💰',n:'เงินไหลล้าน',d:'ชนะเกมโดยมี Passive ฿1,000,000 ต่อเดือน',hint:'Passive หลักล้าน'},
+ {id:'diamond',m:3,i:'💎',n:'ไดมอนด์',d:'ถึงระดับไดมอนด์ธุรกิจ A (ชนะ Lv.2)',hint:'ขึ้นไปให้สุดในธุรกิจ A'},
+ {id:'whale',m:3,i:'🐋',n:'วาฬคริปโต',d:'กำไรจากคริปโตรวม ฿1,000,000 ในเกมเดียว (ขายแล้ว + ที่ถืออยู่ตอนจบ)',hint:'เหรียญเล็กๆ อาจพาไปไกล'},
+ {id:'alljobs',m:3,i:'🎭',n:'ครบทุกอาชีพ',d:'ชนะเกมด้วยอาชีพครบทั้ง 8 อาชีพ (นับรวมทุกเกม)',hint:'ลองชนะในทุกบทบาท'}];
+const ACH_M=['','🥉 ทองแดง','🥈 เงิน','🥇 ทอง'];
+function axOf(p){return p.ax||(p.ax={})}
+/* เรียกทุก render: จับสถานะที่ไม่ต้องดักทุกจุด (ถืออสังหา เคยมีหนี้ ค่าพลังเต็ม) */
+function axPoll(){if(!S||!S.players||S.winner!=null)return;for(const p of S.players){if(!p||p.bot&&!p.uid)continue;const x=axOf(p);
+  if(!x.loan&&p.loan>0)x.loan=1;if(!x.bal&&p.st.h>=10&&p.st.t>=10&&p.st.k>=10)x.bal=1;
+  if(!x.prop&&(p.deals.some(d=>d.ty==='re')||Object.values(S.props).some(r=>r.o===p.id)))x.prop=1}}
+/* ตรวจเหรียญจากสถานะจบเกม (S ถูกสลับเป็นเกมนั้นแล้ว) · rec = ข้อมูล lb เดิม · คืน {ids ใหม่, ac ใหม่} */
+function achEval(me,c,rec){const x=me.ax||{},have=rec.ach||{},ac={scam:0,jobs:{},...(rec.ac||{})},f=fin(me),win=c.win,got=[];
+  ac.scam=(ac.scam||0)+(x.scam||0);ac.jobs={...(ac.jobs||{})};const ji=jobIdx(me);if(win&&ji>=0)ac.jobs[ji]=1;
+  let cry=x.cry||0;for(const a of ASSETS)if(a.k==='cry'){const hd=me.stocks[a.s];if(hd&&hd.q)cry+=hd.q*S.prices[a.s]-hd.c}
+  const ok={first:!!me.badge1,noscam:ac.scam>=3,bal:!!x.bal,charity:(x.don||0)>=100000,noprop:win&&!x.prop,noloan:win&&!x.loan,comeback:win&&!!x.job,
+    fast:!!me.badge1&&me.badge1<=15,div:win&&f.passive>0&&f.div>=f.passive*.5,real:win&&c.hum>=3,wins10:((rec.wins||0)+(win?1:0))>=10,
+    million:win&&f.passive>=1e6,diamond:!!me.badge2,whale:cry>=1e6,alljobs:Object.keys(ac.jobs).length>=8};
+  for(const a of ACH)if(ok[a.id]&&!have[a.id])got.push(a.id);return {got,ac}}
+function achHTML(ach,only){return `<div class="achg">${ACH.filter(a=>!only||only.includes(a.id)).map(a=>{const on=ach&&ach[a.id];
+  return `<div class="achc m${a.m} ${on?'on':''}"><span class="aci">${on?a.i:'❓'}</span><span class="acn"><b>${on?esc(a.n):'ภารกิจลับ'}</b><small>${ACH_M[a.m]}</small><small>${on?esc(a.d):'คำใบ้: '+esc(a.hint)}</small></span></div>`}).join('')}</div>`}
+async function achShow(){let d={};try{d=await lbLoad()}catch(e){}const r=ON.user&&d[ON.user.uid]||{},n=Object.keys(r.ach||{}).length;
+  ask({npc:'happy',title:`🎖 เหรียญภารกิจลับ (${n}/${ACH.length})`,body:(ON.user&&ON.user.anon?'<p class="neg">บัญชีแขกไม่เก็บเหรียญ · ผูกบัญชี Google ที่หน้าแรกเพื่อเริ่มสะสม</p>':'<p class="muted">ปลดล็อกได้ตอนจบเกมออนไลน์ (เล่นกับบอทก็นับ) · ภารกิจที่ยังไม่ได้ซ่อนชื่อไว้ เหลือแค่คำใบ้</p>')+achHTML(r.ach)})}
 let LB_CACHE=null,LB_TAB='m';
 async function lbLoad(){if(LB_CACHE&&NOW()-LB_CACHE.t<60000)return LB_CACHE.d;const d=await ON.be.get('lb')||{};LB_CACHE={t:NOW(),d};return d}
 async function lbRender(){const el=$('#lbBox');if(!el)return;
   let d;try{d=await lbLoad()}catch(e){el.innerHTML=`<p class="muted">โหลดอันดับไม่ได้ (${esc(e.code||e.message||String(e))})</p>`;return}
   const mk=lbMonth(),m=LB_TAB==='m';
-  const rows=Object.entries(d).map(([u,x])=>({u,n:x.n||'ผู้เล่น',p:m?(x.mk===mk?x.mp||0:0):x.pts||0,g:m?(x.mk===mk?x.mg||0:0):x.games||0,w:m?(x.mk===mk?x.mw||0:0):x.wins||0})).filter(r=>r.g>0).sort((a,b)=>b.p-a.p||b.w-a.w||a.g-b.g);
+  const rows=Object.entries(d).map(([u,x])=>({u,a:Object.keys(x.ach||{}).length,n:x.n||'ผู้เล่น',p:m?(x.mk===mk?x.mp||0:0):x.pts||0,g:m?(x.mk===mk?x.mg||0:0):x.games||0,w:m?(x.mk===mk?x.mw||0:0):x.wins||0})).filter(r=>r.g>0).sort((a,b)=>b.p-a.p||b.w-a.w||a.g-b.g);
   const meU=ON.user&&ON.user.uid,mi=rows.findIndex(r=>r.u===meU),medal=i=>['🥇','🥈','🥉'][i]||(i+1);
-  const tr=(r,i)=>`<tr class="${r.u===meU?'lbme':''}"><td class="lbn">${medal(i)}</td><td>${esc(r.n)}${r.u===meU?' (คุณ)':''}</td><td class="r num"><b>${r.p.toLocaleString()}</b></td><td class="r muted">${r.g}</td><td class="r muted">${r.w}</td></tr>`;
+  const tr=(r,i)=>`<tr class="${r.u===meU?'lbme':''}"><td class="lbn">${medal(i)}</td><td>${esc(r.n)}${r.u===meU?' (คุณ)':''}${r.a?` <span class="achn" title="เหรียญภารกิจลับ">🎖${r.a}</span>`:''}</td><td class="r num"><b>${r.p.toLocaleString()}</b></td><td class="r muted">${r.g}</td><td class="r muted">${r.w}</td></tr>`;
   el.innerHTML=`<div class="subtabs" style="position:static">${[['m','📅 เดือนนี้'],['a','🏛 ตลอดกาล']].map(([k,l])=>`<button class="${LB_TAB===k?'on':''}" onclick="LB_TAB='${k}';lbRender()">${l}</button>`).join('')}</div>
    ${rows.length?`<table class="ft lbt"><tr class="th"><td>#</td><td>ผู้เล่น</td><td class="r">คะแนน</td><td class="r">เกม</td><td class="r">ชนะ</td></tr>${rows.slice(0,20).map(tr).join('')}${mi>=20?`<tr><td colspan="5" class="muted" style="text-align:center">⋯</td></tr>${tr(rows[mi],mi)}`:''}</table>`:`<p class="muted">ยังไม่มีคะแนน${m?'เดือนนี้':''}</p>`}
 `}
-function lbCard(){setTimeout(lbRender,0);return `<div class="ol-card lbcard"><h3>🏅 อันดับคะแนนสะสม</h3><div id="lbBox"><p class="muted">กำลังโหลด…</p></div>
+function lbCard(){setTimeout(lbRender,0);return `<div class="ol-card lbcard"><h3>🏅 อันดับคะแนนสะสม <button class="achbtn" onclick="achShow()">🎖 เหรียญของฉัน</button></h3><div id="lbBox"><p class="muted">กำลังโหลด…</p></div>
 </div>`}
 
 /* ===================== ADMIN (เบต้า: รหัสอย่างเดียว — รหัสอยู่ในโค้ดสาธารณะ ใครดูโค้ดก็เห็น · อนาคตควรผูกบัญชี admin ในกฎ Firebase) =====================
@@ -3377,7 +3421,7 @@ function onTag(){let t=$('#roomTag');if(!ON.code){if(t)t.remove();return}
   if(!t){t=document.createElement('span');t.id='roomTag';t.className='roomtag';t.setAttribute('role','button');t.title='ดูข้อมูลห้อง';t.onclick=onRoomInfo;const h=document.querySelector('header .logo')?.parentElement||document.querySelector('header');h.appendChild(t)}
   t.textContent='ห้อง '+ON.code+' ⓘ'}
 /* เวอร์ชันของไฟล์เกม (เปลี่ยนทุกครั้งที่แก้ระบบออนไลน์) · ส่งไปกับสถานะออนไลน์ เพื่อดูว่าใครยังเปิดเวอร์ชันเก่า */
-const BUILD='2026-11-17.5';
+const BUILD='2026-11-18.1';
 /* ป้ายเลขห้อง → ข้อมูลห้อง: เจ้าของห้อง · เครื่องที่คุมรอบ · สถานะผู้เล่นแต่ละคน */
 function onRoomInfo(){const r=ON.room;if(!r||!ON.code)return;
   const seatName=u=>{const q=S&&S.players&&S.players.find(x=>x.uid===u);if(q)return q.name;const s=Object.values(r.seats||{}).find(x=>x&&x.uid===u);return s?(s.name||'ผู้เล่น'):'—'};
