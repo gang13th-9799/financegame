@@ -1489,7 +1489,8 @@ async function netCard(p){
       opts:[{v:'y',l:`สมัคร ${B(NET_FEE)}`,c:'pri',dis:p.cash<NET_FEE},{v:'n',l:'ไม่สนใจ'}],bot:p.cash>NET_FEE*20&&Math.random()<.4?'y':'n'});
     if(v==='y')netJoin(p,NET_FEE);return;
   }
-  const [id,t,leg,pv,cost,cat,A,Pv,nT,nH,nK,dsc='']=draw('netc');const tdx=t+' '+dsc;const n=p.net;const NEED={needT:nT,needH:nH,needK:nK};
+  const _c=draw('netc');if(_c[5]==='DL'){await dlCard(p,_c);return}
+  const [id,t,leg,pv,cost,cat,A,Pv,nT,nH,nK,dsc='']=_c;const tdx=t+' '+dsc;const n=p.net;const NEED={needT:nT,needH:nH,needK:nK};
   const info=`<div class="kv">${leg?`<b>เป้าหมาย</b><span>สายงาน ${leg} (ตอนนี้ ${n.legs[leg].toLocaleString()} PV)</span>`:''}${(()=>{const mm=leg&&tdx.match(/ได้\s*([\d,]+)\s*PV/i);if(mm){const g=Math.round(+mm[1].replace(/,/g,'')*(1+skV(p,'net')/100));return `<b>ผลลัพธ์</b><span class="num pos">สายงาน ${leg} ขึ้นเป็น ${g.toLocaleString()} PV${n.legs[leg]>=g?' (ตอนนี้สูงกว่าแล้ว ไม่เพิ่ม)':` (+${(g-n.legs[leg]).toLocaleString()})`}</span>`}return pv?`<b>PV</b><span class="num">+${pv.toLocaleString()}${leg?` เข้าสายงาน ${leg}`:' (ยอดส่วนตัว)'}</span>`:''})()}${cost?`<b>ค่าใช้จ่าย</b><span class="num neg">${B(cost)}</span>`:''}${A?`<b>Active</b><span class="num pos">+${B(A)}${cat==='ชีวิต'?' ต่อเดือน':' ครั้งเดียว'}</span>`:''}${Pv?`<b>Passive</b><span class="num pos">+${B(Pv)} ต่อเดือน</span>`:''}</div>${cat==='สร้างธุรกิจ'&&skV(p,'net')?`<p class="pos">ทักษะผู้นำเครือข่าย: PV และ Passive +${skV(p,'net')}%</p>`:''}<p class="muted">หมวด ${cat} · การ์ด ${id}</p>`;
   const ok1=(o)=>({v:'ok',l:'รับทราบ',c:'pri',...o});
   // life: salary / unemployment / expenses / side income
@@ -1659,7 +1660,7 @@ function applyDB(){
   DBCOLS.learn.cols[1][3]=[...Object.keys(SKILLDB),'know','scam_course','mentor'];
   DB.net=DB.net.filter(r=>!String(r.cat).startsWith('คุณสมบัติ'));
   for(const r of DB.net)if(r.nt===undefined||r.nt===''){Object.assign(r,netNeedDef(r))}
-  NETDB=DB.net.map(r=>[r.id,r.t,r.leg||'',+r.pv,+r.cost,r.cat,+r.A,+r.P,+r.nt||0,+r.nh||0,+r.nk||0,r.d||'']);buildCDesc();
+  NETDB=DB.net.map(r=>[r.id,r.t,r.leg||'',+r.pv,+r.cost,r.cat,+r.A,+r.P,+r.nt||0,+r.nh||0,+r.nk||0,r.d||'']);NETDB.push(...NET_DL);buildCDesc();/* การ์ด DL ลด PV ต่อท้าย (ไม่อยู่ใน DB) */
   buildQ();
 }
 function lifeApply(p,c){
@@ -1716,6 +1717,29 @@ function draw(k){const DEF={life:LIFE,learn:LEARN,opp:OPP,news:NEWS,netc:NETDB}[
 
 /* ===================== FINANCE ===================== */
 let NETDB=[];
+/* ===== การ์ดลด PV: DL เลิก / DL ท้อ (4 ใบ ≈5% ของกอง) · [id,t,leg,kind(1=เลิก 2=ท้อ),..,cat 'DL',..,คำบรรยาย]
+   สุ่มสายงานที่มี PV · DL เลิก ลด ฿15,000–30,000 PV · DL ท้อ ลด 5,000–15,000 PV (ไม่เกิน PV ที่สายนั้นมี)
+   ป้องกันได้: หัก ❤ 1–3 (ต้องเหลืออย่างน้อย 1) และ 📚 1–5 ตามจำนวน PV ที่จะเสีย */
+const NET_DL=[
+ ['dl-q1','DL เลิกทำธุรกิจ','',1,0,'DL',0,0,0,0,0,'ดาวน์ไลน์ในสายงานประกาศเลิกทำธุรกิจ กลับไปทำงานประจำเต็มตัว ลูกค้าที่เคยสั่งซื้อผ่านเขาหยุดสั่งตามไปด้วย'],
+ ['dl-q2','DL เลิก ย้ายไปทำธุรกิจอื่น','',1,0,'DL',0,0,0,0,0,'ดาวน์ไลน์ถูกชวนไปทำธุรกิจอื่นที่สัญญาว่ารวยเร็วกว่า เลยเลิกทำและพาลูกค้าบางส่วนตามไปด้วย'],
+ ['dl-d1','DL ท้อ หยุดนัดลูกค้า','',2,0,'DL',0,0,0,0,0,'ดาวน์ไลน์ท้อใจหลังโดนปฏิเสธติดกันหลายครั้ง หยุดนัดลูกค้าและไม่เข้าประชุมทีม ยอดสั่งซื้อเดือนนี้หายไปส่วนหนึ่ง'],
+ ['dl-d2','DL ท้อ คนรอบตัวไม่สนับสนุน','',2,0,'DL',0,0,0,0,0,'ครอบครัวและเพื่อนของดาวน์ไลน์ไม่เห็นด้วยกับธุรกิจ เขาเริ่มลังเลและทำน้อยลง ยอดในสายงานลดลงชัดเจน'],
+];
+async function dlCard(p,c){const [id,t,,kind,,,,,,,,d]=c,n=p.net;
+  const legs=LEGS.filter(l=>n.legs[l]>0);
+  if(!legs.length){log(`📉 ${esc(p.name)} เปิดการ์ด ${esc(t)} แต่ยังไม่มีสายงานที่มี PV ไม่มีผล`);await choose({actor:p,kind:'netc',title:`📉 ${esc(t)}`,body:`<p>${esc(d)}</p><p class="muted">คุณยังไม่มีสายงานที่มี PV การ์ดนี้จึงไม่มีผล</p>`,opts:[{v:'ok',l:'รับทราบ',c:'pri'}],bot:'ok'});return}
+  const leg=legs[Math.floor(Math.random()*legs.length)];
+  const [lo,hi]=kind===1?[15,30]:[5,15],loss=Math.min(n.legs[leg],(lo+Math.floor(Math.random()*(hi-lo+1)))*1000);
+  const f=Math.min(1,Math.max(0,(loss-5000)/25000)),nh=1+Math.min(2,Math.floor(f*3)),nk=1+Math.min(4,Math.floor(f*5));
+  const can=p.st.h>nh&&p.st.k>=nk;/* ❤ ต้องเหลือ ≥1 · 📚 ต้องมีพอหัก */
+  const body=`<p>${esc(d)}</p><div class="kv"><b>สายงาน</b><span>${leg} (ตอนนี้ ${n.legs[leg].toLocaleString()} PV)</span><b>จะเสีย</b><span class="num neg">−${loss.toLocaleString()} PV</span></div>
+   <p><b>ประคองสายงานไว้ได้</b> ถ้าลงไปช่วยดูแลและโค้ชดาวน์ไลน์: ใช้ ❤ ${nh} และ 📚 ${nk}</p>
+   <p class="muted" style="font-size:12px">ตอนนี้คุณมี ❤ ${p.st.h} · 📚 ${p.st.k}${can?'':` — ${p.st.h<=nh?`❤ ต้องเหลืออย่างน้อย 1 หลังใช้ (ต้องมี ${nh+1} ขึ้นไป)`:''}${p.st.h<=nh&&p.st.k<nk?' · ':''}${p.st.k<nk?`📚 ไม่พอ (ต้องใช้ ${nk})`:''}`}</p>`;
+  const v=await choose({actor:p,kind:'netc',title:`📉 ${esc(t)}`,body,opts:[{v:'save',l:`ประคองสายงาน (❤−${nh} 📚−${nk})`,c:'pri',dis:!can},{v:'lose',l:`ปล่อยไป (−${loss.toLocaleString()} PV)`}],bot:can?'save':'lose'});
+  if(v==='save'&&can){const sx=adj(p,{h:-nh,k:-nk},true);log(`🛡️ ${esc(p.name)} ประคองสาย ${leg} ไว้ได้ (${esc(t)})${sx}`);ruleNote(p,'ประคองสายงานไว้ได้',`ใช้ ❤ ${nh} และ 📚 ${nk} ดูแลและโค้ชดาวน์ไลน์ สาย ${leg} ไม่เสีย PV`);return}
+  n.legs[leg]-=loss;log(`📉 ${esc(p.name)} ${esc(t)} · สาย ${leg} −${loss.toLocaleString()} PV เหลือ ${n.legs[leg].toLocaleString()}`);
+  ruleNote(p,`สาย ${leg} −${loss.toLocaleString()} PV`,`${esc(t)}: ${can?'เลือกไม่ประคองสายงาน':`ค่าพลังไม่พอประคอง (ต้องมี ❤ มากกว่า ${nh} และ 📚 อย่างน้อย ${nk})`}`)}
 /* ===== ธุรกิจ A: driven by the user's card database (NETDB: id,title,leg,PV,cost,category,active,passive) ===== */
 const NET_FEE=900, LEGS=['A','B','C','D','E','F'], QPV=150000;
 const NET_RANKS=[
@@ -3525,7 +3549,7 @@ function onTag(){let t=$('#roomTag');if(!ON.code){if(t)t.remove();return}
   if(!t){t=document.createElement('span');t.id='roomTag';t.className='roomtag';t.setAttribute('role','button');t.title='ดูข้อมูลห้อง';t.onclick=onRoomInfo;const h=document.querySelector('header .logo')?.parentElement||document.querySelector('header');h.appendChild(t)}
   t.textContent='ห้อง '+ON.code+' ⓘ'}
 /* เวอร์ชันของไฟล์เกม (เปลี่ยนทุกครั้งที่แก้ระบบออนไลน์) · ส่งไปกับสถานะออนไลน์ เพื่อดูว่าใครยังเปิดเวอร์ชันเก่า */
-const BUILD='2026-11-18.14';
+const BUILD='2026-11-18.15';
 /* ป้ายเลขห้อง → ข้อมูลห้อง: เจ้าของห้อง · เครื่องที่คุมรอบ · สถานะผู้เล่นแต่ละคน */
 function onRoomInfo(){const r=ON.room;if(!r||!ON.code)return;
   const seatName=u=>{const q=S&&S.players&&S.players.find(x=>x.uid===u);if(q)return q.name;const s=Object.values(r.seats||{}).find(x=>x&&x.uid===u);return s?(s.name||'ผู้เล่น'):'—'};
