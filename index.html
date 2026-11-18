@@ -1119,6 +1119,10 @@ body.fs #gameView:not(.mapmin){grid-template-columns:minmax(288px,1.2fr) minmax(
 .achc{display:grid;grid-template-columns:34px 1fr;gap:8px;align-items:center;padding:8px 10px;border:1px dashed #d8ccb0;border-radius:12px;background:#faf6ec;opacity:.85}
 .achc.on{opacity:1;border-style:solid;background:#fffdf6}.achc.on.m1{border-color:#c98b57}.achc.on.m2{border-color:#a7b1bd}.achc.on.m3{border-color:#e0b43b;box-shadow:0 0 0 2px #fbeab3 inset}
 .aci{font-size:24px;text-align:center}.acn{display:flex;flex-direction:column;line-height:1.3}.acn small{color:var(--muted);font-size:12px}
+.sqthumb{margin-left:auto;height:64px;width:auto;max-width:110px;object-fit:contain;flex:none;filter:drop-shadow(0 3px 5px rgba(60,50,20,.25))}
+.ovsq{position:absolute;left:0;right:0;margin:0 auto;z-index:29;display:flex;align-items:flex-end;justify-content:center;pointer-events:none}
+.ovsq img{max-width:100%;max-height:100%;object-fit:contain;filter:drop-shadow(0 6px 10px rgba(60,50,20,.25));animation:sqIn .35s ease-out}
+@keyframes sqIn{from{opacity:0;transform:translateY(10px) scale(.94)}to{opacity:1;transform:none}}
 .cdesc{margin:0 0 10px;padding:8px 12px;border-left:3px solid #d9c38f;background:#fffaf0;border-radius:8px;color:#5b4f3a;font-size:14px;line-height:1.45}
 .tsl{display:flex;flex-direction:column;gap:6px}
 .tsr{display:grid;grid-template-columns:28px 1fr auto;gap:8px;align-items:center;padding:8px 10px;border:1px solid #eadfc4;border-radius:12px;background:#fffdf6}
@@ -1281,7 +1285,7 @@ body:has(#setupView .setup.onl) header{position:relative;z-index:5}
 
 <div class="setov" id="setov" hidden></div>
 <div id="fx"></div>
-<div class="rnotes" id="rnotes" aria-live="polite"></div><div class="ov" id="ov"><div class="mwrap" id="mwrap"><div class="ovfig" id="ovfig"></div><div class="modal" id="modal"></div></div></div>
+<div class="rnotes" id="rnotes" aria-live="polite"></div><div class="ov" id="ov"><div class="mwrap" id="mwrap"><div class="ovfig" id="ovfig"></div><div class="ovsq" id="ovsq"></div><div class="modal" id="modal"></div></div></div>
 <div class="toast" id="toast"></div>
 
 <script>
@@ -1812,7 +1816,18 @@ function bankrupt(p){
 }
 
 /* ===================== MODAL ===================== */
-function ask({actor=null,kind='',title,body='',opts=[{v:'ok',l:'ตกลง',c:'pri'}],bot,onShow,handoff,pose,npc,noflip}){
+/* ภาพช่องที่ผู้เล่นตกอยู่ โชว์เหนือป๊อปอัป (แนวนอน: ที่ว่างเหนือกล่อง · แนวตั้ง: ระหว่างตัวละครสองตัว) · LANDK = ช่องที่กำลัง resolve */
+let LANDK=null;
+const sqPic=k=>!k?'':k in PROPIMG?`img/prop-${k}.webp`:SQIMG[k]?`img/${SQIMG[k][0]}.webp`:'';
+function sqFit(){const ov=$('#ov'),box=$('#ovsq'),im=box&&box.querySelector('img');if(!im||!ov.classList.contains('on'))return;
+  const land=innerWidth>innerHeight,mw=$('#mwrap').getBoundingClientRect(),md=$('#modal').getBoundingClientRect();box.style.cssText='';
+  const th=$('#modal .sqthumb');if(th)th.remove();const thumb=()=>{box.hidden=true;const mh=$('#modal .mh');if(mh)mh.insertAdjacentHTML('beforeend',`<img class="sqthumb" src="${im.getAttribute('src')}" alt="">`)};
+  if(!land&&ov.classList.contains('withfig')){const fh=parseFloat(getComputedStyle(ov).getPropertyValue('--fh'))||120,bw=fh*.86,w=mw.width-bw*2-8;
+    if(w<60){thumb();return}box.hidden=false;box.style.cssText=`top:0;height:${Math.round(fh*.92)}px;width:${Math.round(w)}px`;return}
+  const avail=md.top-10;if(avail<70){thumb();return}box.hidden=false;const hh=Math.round(Math.min(avail,300));
+  box.style.cssText=`top:${Math.round(md.top-mw.top-hh-6)}px;height:${hh}px;width:${Math.round(Math.min(md.width,hh*1.6))}px`}
+addEventListener('resize',()=>{if($('#ov').classList.contains('withsq'))sqFit()});
+function ask({actor=null,kind='',title,body='',opts=[{v:'ok',l:'ตกลง',c:'pri'}],bot,onShow,handoff,pose,npc,noflip,sq}){
   return new Promise(res=>{
     const lastOk=()=>([...opts].reverse().find(o=>!o.dis)||opts[opts.length-1]).v;
     if(S&&S.autoPilot&&!(actor&&actor.bot)){res({v:lastOk(),form:{}});return}
@@ -1826,10 +1841,11 @@ function ask({actor=null,kind='',title,body='',opts=[{v:'ok',l:'ตกลง',c:
     const bust=(side,src,name,flip)=>`<div class="bust ${side} ${spk===side?'spk':''}"><img class="${flip?'flip':''}" src="${src}" alt=""><span class="bn">${name}</span></div>`;
     const pzz=(plr||nk)?`<div class="duo">${plr?bust('L',`img/c${jobIdx(plr)}-${pose||'think'}.webp`,esc(plr.name),true):''}${nk?bust('R',`img/npc-${nk}.webp`,'เจ้าหน้าที่ธนาคาร',false):''}</div>`:'';
     if(pzz)m.classList.add('haspose');$('#ovfig').innerHTML=pzz;$('#ov').classList.toggle('withfig',!!pzz);
+    const sp=sqPic(sq||(LANDK&&!['life','learn','opp','netc','news','newsin','newsfx','win'].includes(kind)?LANDK:''));$('#ovsq').innerHTML=sp?`<img src="${sp}" alt="">`:'';$('#ovsq').hidden=!sp;$('#ov').classList.toggle('withsq',!!sp);
     m.innerHTML=`<div class="mh"><div class="mht">${kindName?`<div class="kind">${kindName}${actor?' · '+esc(actor.name):''}</div>`:''}<h2>${title}</h2></div></div>
       <div class="mb">${cardDescHTML(kind,title)}${body}${handoff&&!isBot?`<div class="handoff">ส่งเครื่องให้ <b>${esc(handoff)}</b> ตัดสินใจ</div>`:''}</div>
       <div class="mf">${isBot?`<span class="muted">${esc(actor.name)} (บอท) กำลังตัดสินใจ…</span>`:opts.map((o,i)=>`<button data-i="${i}" class="${o.c||''}" ${o.dis?'disabled':''}>${o.l}</button>`).join('')}</div>`;
-    $('#ov').classList.add('on');
+    $('#ov').classList.add('on');if(sp){sqFit();requestAnimationFrame(sqFit);const ii=$('#ovsq img');if(ii)ii.onload=sqFit}
     if(onShow)onShow(m);
     const done=(v)=>{MODAL_CANCEL=null;const form={};m.querySelectorAll('[data-f]').forEach(el=>form[el.dataset.f]=el.value);$('#ov').classList.remove('on');MODAL=false;res({v,form})};
     if(isBot){setTimeout(()=>{const b=opts.find(o=>o.v===bot&&!o.dis)||opts[opts.length-1];m.querySelector('.mf').innerHTML=`<span class="muted">${esc(actor.name)} เลือก: <b>${b.l}</b></span>`;setTimeout(()=>done(b.v),S.speed*.8)},S.speed)}
@@ -2170,7 +2186,8 @@ async function buyFlow(p,cost,o){
   if(discNote)p.nextDisc=0;
   p.cash-=cost;return true;
 }
-async function resolveSquare(p){
+async function resolveSquare(p){const pv=LANDK;LANDK=p.ring+p.pos;try{return await resolveSquare0(p)}finally{LANDK=pv}}
+async function resolveSquare0(p){
   const key=p.ring+p.pos,sq=SQ(key);
   if(sq.t==='prop'){
     const d=sq,pr=S.props[key];
@@ -2657,7 +2674,7 @@ function cellBody(k){const q=SQ(k),pr=S.props[k];
   const here=S.players.filter(x=>x.ring+x.pos===k);if(here.length)body+=`<p class="muted">อยู่ที่ช่องนี้: ${here.map(x=>esc(x.name)).join(', ')}</p>`;
   return body;
 }
-function cellInfo(k){if(MODAL)return;ask({title:esc(SQ(k).n),body:cellBody(k)})}
+function cellInfo(k){if(MODAL)return;ask({title:esc(SQ(k).n),body:cellBody(k),sq:k})}
 let MAPMIN=false;try{MAPMIN=localStorage.getItem('ff-mapmin')==='1'}catch(e){}
 /* ภาพประจำช่องที่ดิน (img/prop-<รหัสช่อง>.webp) — ใส่รหัสช่องที่มีภาพแล้ว */
 const PROPIMG={o10:50.2,o22:49.7,o34:47.1,o46:47.1,o1:46.6,o3:50.3,o4:45.8,o7:39.7,o9:46.6,o13:44.4,o15:47.4,o16:47.2,o19:47.2,o21:64.5,o25:49.2,o27:50.6,o28:45.8,o31:46.5,o33:48.6,o37:48.2,o39:47.0,o40:49.4,o43:53.6,o45:47.4};/* ค่า = จุดกึ่งกลางพื้นข้าวหลามตัดของภาพ (% จากบน) ใช้วางภาพ isometric ให้ตรงกลางช่อง */
@@ -3421,7 +3438,7 @@ function onTag(){let t=$('#roomTag');if(!ON.code){if(t)t.remove();return}
   if(!t){t=document.createElement('span');t.id='roomTag';t.className='roomtag';t.setAttribute('role','button');t.title='ดูข้อมูลห้อง';t.onclick=onRoomInfo;const h=document.querySelector('header .logo')?.parentElement||document.querySelector('header');h.appendChild(t)}
   t.textContent='ห้อง '+ON.code+' ⓘ'}
 /* เวอร์ชันของไฟล์เกม (เปลี่ยนทุกครั้งที่แก้ระบบออนไลน์) · ส่งไปกับสถานะออนไลน์ เพื่อดูว่าใครยังเปิดเวอร์ชันเก่า */
-const BUILD='2026-11-18.1';
+const BUILD='2026-11-18.2';
 /* ป้ายเลขห้อง → ข้อมูลห้อง: เจ้าของห้อง · เครื่องที่คุมรอบ · สถานะผู้เล่นแต่ละคน */
 function onRoomInfo(){const r=ON.room;if(!r||!ON.code)return;
   const seatName=u=>{const q=S&&S.players&&S.players.find(x=>x.uid===u);if(q)return q.name;const s=Object.values(r.seats||{}).find(x=>x&&x.uid===u);return s?(s.name||'ผู้เล่น'):'—'};
