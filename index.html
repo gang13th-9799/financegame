@@ -2098,10 +2098,13 @@ function delist(){for(const p of S.players)if(p.stocks.GROW&&p.stocks.GROW.q){lo
 
 async function payday(p){
   delete p._sick;
-  const f=fin(p),c0=p.cash,s0={...p.st},L0=p.loan,extra=[],why={h:[],t:[],k:[]};let net,note='',jl=false;
+  const f=fin(p),c0=p.cash,s0={...p.st},L0=p.loan,extra=[],why={h:[],t:[],k:[]};let net,note='',jl=false,dz=false;
   if(p.jobless>0){p.jobless--;jl=true;net=f.passive-f.expenses;note=` (ตกงาน: ได้เฉพาะ Passive ${B(f.passive)} − รายจ่ายรวม ${B(f.expenses)}${p.jobless?` · ตกงานอีก ${p.jobless} เดือน`:' · ได้งานคืนแล้ว'})`}
-  else{net=f.salary+f.act+f.passive-f.expenses;if(p.warn>0){p.warn--;note=` (🟨 ใบเตือน: เงินเดือนลด 50% ได้ ${B(f.salary)} จาก ${B(p.salary)}${p.warn?` · เหลืออีก ${p.warn} เดือน`:' · ครบกำหนด เงินเดือนกลับเต็มแล้ว'})`}}
-  if(jl&&net<0&&p.cash< -net){log(`⚠ ${esc(p.name)} ตกงาน วันเงินเดือนต้องจ่ายส่วนต่าง ${B(-net)}`);await forcedPay(p,-net,`ตกงาน: Passive ไม่พอรายจ่าย ขาด ${B(-net)}`)}else p.cash+=net;
+  else{net=f.salary+f.act+f.passive-f.expenses;if(p.warn>0){p.warn--;note=` (🟨 ใบเตือน: เงินเดือนลด 50% ได้ ${B(f.salary)} จาก ${B(p.salary)}${p.warn?` · เหลืออีก ${p.warn} เดือน`:' · ครบกำหนด เงินเดือนกลับเต็มแล้ว'})`}
+    /* ช่วงภัยพิบัติ: ทุกคนไม่ได้รายได้ Active (เงินเดือน + รายได้เสริม) ได้เฉพาะ Passive − รายจ่าย */
+    if(disOn()){const T=DIS[S.dis.k];dz=true;net=f.passive-f.expenses;note=` (${T.ico} ${T.n}: ไม่ได้รายได้ Active — เงินเดือน ${B(f.salary)} + รายได้เสริม ${B(f.act)} · ได้เฉพาะ Passive ${B(f.passive)} − รายจ่ายรวม ${B(f.expenses)})`;
+      ruleNote(p,`${T.ico} ${T.n}: วันเงินเดือนไม่ได้รายได้ Active`,`ช่วงภัยพิบัติทุกคนไม่ได้เงินเดือนและรายได้เสริม (Active) ได้เฉพาะ Passive ${B(f.passive)} − รายจ่าย ${B(f.expenses)} = ${net>=0?'+':'−'}${B(Math.abs(net))} · เหลืออีก ${S.dis.left} รอบ`)}}
+  if((jl||dz)&&net<0&&p.cash< -net){const w=jl?'ตกงาน':DIS[S.dis.k].n;log(`⚠ ${esc(p.name)} ${w} วันเงินเดือนต้องจ่ายส่วนต่าง ${B(-net)}`);await forcedPay(p,-net,`${w}: Passive ไม่พอรายจ่าย ขาด ${B(-net)}`)}else p.cash+=net;
   for(const d of [...p.deals])if(d.ty==='scam'){
     if(Math.random()<.5){p.deals=p.deals.filter(x=>x!==d);log(`💥 ${esc(d.t)} ของ ${esc(p.name)} ปิดตัวหนี! เงินลงทุน ${B(d.cost)} สูญทั้งหมด`);extra.push([`💥 ${esc(d.t)} ปิดตัวหนี`,0])}
     else{p.cash+=d.cf;log(`${esc(p.name)} ได้ผลตอบแทนแชร์ ${B(d.cf)}`);extra.push([`ผลตอบแทนแชร์ ${esc(d.t)}`,d.cf])}
@@ -2109,7 +2112,7 @@ async function payday(p){
   const cR=p.cash,sR={...p.st};netPayday(p);if(p.cash!==cR)extra.push(['โบนัสเลื่อนระดับธุรกิจ A',p.cash-cR]);
   for(const k of ['h','t'])if(p.st[k]!==sR[k])why[k].push(`เลื่อนระดับธุรกิจ A ${p.st[k]-sR[k]>0?'+':''}${p.st[k]-sR[k]}`);
   const r3=()=>1+Math.floor(Math.random()*3);
-  const st=[];if(f.flow<0)st.push('รายรับไม่พอรายจ่าย');if(p.loan>p.salary*3)st.push('หนี้ธนาคารสูง');if(p.st.t<=2)st.push('งานล้นมือ เวลาไม่พอ');if(p.jobless>0||note)st.push('ตกงาน');
+  const st=[];if(f.flow<0)st.push('รายรับไม่พอรายจ่าย');if(p.loan>p.salary*3)st.push('หนี้ธนาคารสูง');if(p.st.t<=2)st.push('งานล้นมือ เวลาไม่พอ');if(dz)st.push(`${DIS[S.dis.k].n} ไม่มีรายได้ Active`);else if(p.jobless>0||note)st.push('ตกงาน');
   const rh=Math.floor(Math.random()*3),rt=r3(),rk=Math.floor(Math.random()*2),dh=rh-st.length;
   why.h.push(`สุ่ม +${rh}`);st.forEach(x=>why.h.push(`เครียด: ${x} −1`));why.t.push(`สุ่ม +${rt}`);why.k.push(rk?`ความรู้ลดลงตามเวลา −${rk}`:'ไม่ลด');
   if(p.kids)why.t.push(`ดูแลลูก ${p.kids} คน −${p.kids}`);let sx=adj(p,{h:dh,t:rt-(p.kids||0),k:-rk},true);if(st.length)sx+=` · ความเครียด: ${st.join(', ')}`;
@@ -2120,9 +2123,9 @@ async function payday(p){
   settle(p);
   if(!p.bot&&!S.autoPilot){if(net>0){fxCoins(12);fxFloat(`💰 +${B(net)}`,'gold')}else fxFloat(`💸 −${B(-net)}`,'down');await sleep(RM?0:700)}
   if(!p.bot){
-    const inc=jl?f.passive:f.salary+f.act+f.passive;
+    const inc=jl||dz?f.passive:f.salary+f.act+f.passive;
     const short=w=>w.replace(/^สุ่ม /,'🎲').replace(/^เครียด: .* −1$/,'😣−1').replace(/^ดูแลลูก \d+ คน /,'👶').replace(/^Passive \d+% ของรายจ่าย /,'📈').replace(/^เลื่อนระดับธุรกิจ A /,'🤝').replace(/^ความรู้ลดลงตามเวลา /,'⌛').replace(/^ไม่ลด$/,'').replace(/^🚑 หัวใจหมด → ฟื้นเป็น 3$/,'🚑→3').replace(/^🚑 พักฟื้น /,'🚑');
-    let t=chips([chip('💼',jl?'<s>'+B(f.salary)+'</s>':B(f.salary),jl?'ตกงาน':'เงินเดือน',jl?'cost':'gain2'),f.act||jl?chip('⚡',jl?'<s>'+B(f.act)+'</s>':`+${B(f.act)}`,'Active',jl?'cost':'gain2'):'',chip('📈',`+${B(f.passive)}`,'Passive','gain'),chip('🧾',`−${B(f.expenses)}`,'รายจ่าย','cost')].filter(Boolean),'ledger');
+    let t=chips([chip('💼',jl||dz?'<s>'+B(f.salary)+'</s>':B(f.salary),jl?'ตกงาน':dz?DIS[S.dis.k].n:'เงินเดือน',jl||dz?'cost':'gain2'),f.act||jl||dz?chip('⚡',jl||dz?'<s>'+B(f.act)+'</s>':`+${B(f.act)}`,'Active',jl||dz?'cost':'gain2'):'',chip('📈',`+${B(f.passive)}`,'Passive','gain'),chip('🧾',`−${B(f.expenses)}`,'รายจ่าย','cost')].filter(Boolean),'ledger');
     t+=`<div class="paynet ${net>=0?'up':'down'}"><span>= ${net>=0?'+':'−'}${B(Math.abs(net))}</span></div>`;
     const ex=extra.map(([l,v])=>{const t=l.replace(/<[^>]+>/g,'');const ic=t.startsWith('🚑')?'🚑':v>0?'🎁':v<0?'💸':'💥';return chip(ic,v?`${v>0?'+':'−'}${B(Math.abs(v))}`:'—',t.replace(/^🚑 /,''),v>0?'gain':'cost',t)});if(p.loan>L0)ex.push(chip('🏦',`+${B(p.loan-L0)}`,'กู้เพิ่ม','cost'));t+=chips(ex);
     t+=`<div class="cashflow">💵 ${B(c0)} <b>→</b> <b class="${p.cash>=c0?'pos':'neg'}">${B(p.cash)}</b></div>`;
@@ -2456,6 +2459,7 @@ async function disCard(p,c){
    <div class="mnl">${T.rep?`<div class="ln"><span>🏚️ ค่าซ่อมอสังหาฯ</span><span class="num neg">${+(T.rep*sev*100).toFixed(1)}% ของมูลค่า/รอบ (สุ่ม ±50%)</span></div>`:''}
    ${T.all?`<div class="ln"><span>💸 ทุกคนจ่าย</span><span class="num neg">≈${B(T.all*sev)}/รอบ</span></div>`:''}
    ${T.hp?`<div class="ln"><span>🏥 ค่าดูแลสุขภาพทุกคน</span><span class="num neg">${T.hp*sev*100}% เงินเดือน/รอบ (ขั้นต่ำ ${B(1000)})</span></div>`:''}
+   <div class="ln"><span>💼 วันเงินเดือน ทุกคน</span><span class="num neg">ไม่ได้รายได้ Active (เงินเดือน + รายได้เสริม) ได้แค่ Passive − รายจ่าย</span></div>
    ${T.heart?`<div class="ln"><span>❤ ทุกคน</span><span class="num neg">−${T.heart}/รอบ</span></div>`:''}
    <div class="ln"><span>🟢 ธุรกิจได้ประโยชน์ (${goodS})</span><span class="num pos">+${Math.round(T.biz*sev*100)}% ของรายได้/รอบ</span></div>
    ${T.bad.length?`<div class="ln"><span>🔴 ธุรกิจเสียหาย (${badS})</span><span class="num neg">−${Math.round(T.bizB*sev*100)}% ของรายได้/รอบ</span></div>`:''}</div>
@@ -3521,7 +3525,7 @@ function onTag(){let t=$('#roomTag');if(!ON.code){if(t)t.remove();return}
   if(!t){t=document.createElement('span');t.id='roomTag';t.className='roomtag';t.setAttribute('role','button');t.title='ดูข้อมูลห้อง';t.onclick=onRoomInfo;const h=document.querySelector('header .logo')?.parentElement||document.querySelector('header');h.appendChild(t)}
   t.textContent='ห้อง '+ON.code+' ⓘ'}
 /* เวอร์ชันของไฟล์เกม (เปลี่ยนทุกครั้งที่แก้ระบบออนไลน์) · ส่งไปกับสถานะออนไลน์ เพื่อดูว่าใครยังเปิดเวอร์ชันเก่า */
-const BUILD='2026-11-18.13';
+const BUILD='2026-11-18.14';
 /* ป้ายเลขห้อง → ข้อมูลห้อง: เจ้าของห้อง · เครื่องที่คุมรอบ · สถานะผู้เล่นแต่ละคน */
 function onRoomInfo(){const r=ON.room;if(!r||!ON.code)return;
   const seatName=u=>{const q=S&&S.players&&S.players.find(x=>x.uid===u);if(q)return q.name;const s=Object.values(r.seats||{}).find(x=>x&&x.uid===u);return s?(s.name||'ผู้เล่น'):'—'};
