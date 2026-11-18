@@ -1232,7 +1232,8 @@ body:has(#setupView .setup.onl) header{position:relative;z-index:5}
 .board.v3d.iso{--band:minmax(0,1fr);background:none!important;grid-template-columns:minmax(0,1fr) var(--band) repeat(9,minmax(0,1fr)) var(--band) minmax(0,1fr)!important;grid-template-rows:minmax(0,1fr) var(--band) repeat(9,minmax(0,1fr)) var(--band) minmax(0,1fr)!important}
 .landring{display:none}
 .tbase{display:none}
-.board.v3d.iso .cell:has(.sqimg) .ico,.board.v3d.iso .cell:has(.sqimg) .cimg{height:30cqmin!important;font-size:22cqmin!important;opacity:.9}
+.cell:has(.sqimg) .ico,.cell:has(.sqimg) .cimg{display:none!important}
+.board.v3d.iso .cell>.cimg,.board.v3d.iso .cell>.ico,.board.v3d.iso .cell>.zimg:not(.pimgc){display:none!important}
 /* isometric: ลำดับวาดตามความลึก (ช่องหน้าทับช่องหลัง) — ช่องที่ยืนอยู่ห้ามลอยทับภาพสูงของช่องหน้า */
 .board.v3d.iso .cell,.board.v3d.iso .cell.here{z-index:calc(10 + var(--d,0))!important}.gapt{display:none}.board.v3d.iso .gapt{display:block;position:relative;container-type:size;z-index:1}.board.v3d.iso .gapt .pimgc{position:absolute;left:50%;top:50%;width:calc(var(--cw,62px) * 1.414);max-width:none;transform-origin:50% var(--b);transform:translate(-50%,calc(-1 * var(--b))) translateZ(calc(var(--d,0) * .04px)) rotate(-45deg) scaleY(var(--s)) scaleX(var(--m,1));pointer-events:none}
 .board.v3d.iso .cell .ico{position:absolute;left:50%;top:50%;z-index:3;transform-origin:50% 100%;transform:translate(-50%,-100%) rotateZ(calc(-1 * var(--ang,45deg))) rotateX(calc(-1 * var(--tilt)))}.board.v3d.iso .cell .zimg.tbase{display:block}
@@ -3446,7 +3447,7 @@ function onTag(){let t=$('#roomTag');if(!ON.code){if(t)t.remove();return}
   if(!t){t=document.createElement('span');t.id='roomTag';t.className='roomtag';t.setAttribute('role','button');t.title='ดูข้อมูลห้อง';t.onclick=onRoomInfo;const h=document.querySelector('header .logo')?.parentElement||document.querySelector('header');h.appendChild(t)}
   t.textContent='ห้อง '+ON.code+' ⓘ'}
 /* เวอร์ชันของไฟล์เกม (เปลี่ยนทุกครั้งที่แก้ระบบออนไลน์) · ส่งไปกับสถานะออนไลน์ เพื่อดูว่าใครยังเปิดเวอร์ชันเก่า */
-const BUILD='2026-11-18.6';
+const BUILD='2026-11-18.7';
 /* ป้ายเลขห้อง → ข้อมูลห้อง: เจ้าของห้อง · เครื่องที่คุมรอบ · สถานะผู้เล่นแต่ละคน */
 function onRoomInfo(){const r=ON.room;if(!r||!ON.code)return;
   const seatName=u=>{const q=S&&S.players&&S.players.find(x=>x.uid===u);if(q)return q.name;const s=Object.values(r.seats||{}).find(x=>x&&x.uid===u);return s?(s.name||'ผู้เล่น'):'—'};
