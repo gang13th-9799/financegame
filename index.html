@@ -1650,7 +1650,7 @@ for(const k in DEFAULT_DB)if(!DB[k])DB[k]=JSON.parse(JSON.stringify(DEFAULT_DB[k
 function saveDB(){try{localStorage.setItem('ffdb-v1',JSON.stringify(DB))}catch(e){toast('บันทึกในเครื่องนี้ไม่ได้ ใช้ได้เฉพาะครั้งนี้')}applyDB();if(S)S.decks={}}
 function applyDB(){
   JOBS=DB.jobs.map(r=>({n:r.n,kc:+r.kc||Math.max(2000,Math.round(+r.sal*.07/100)*100),h:+r.h,t:+r.t,k:+r.k,sal:+r.sal,cash:+r.cash,e:{tax:+r.tax,home:+r.home,car:+r.car,card:+r.card,living:+r.living}}));
-  LIFE=DB.life.map(r=>({...r,neg:(+r.cash<0||+r.cpct<0||+r.mexp>0||+r.h<0)&&!(+r.cash>0)&&!+r.opt&&!r.sp}));
+  LIFE=DB.life.map(r=>({...r,neg:(+r.cash<0||+r.cpct<0||+r.mexp>0||+r.h<0)&&!(+r.cash>0)&&!+r.opt&&!r.sp}));LIFE.push(...LIFE_DIS);/* การ์ดภัยพิบัติต่อท้าย (ไม่อยู่ใน DB) */
   for(const r of DB.learn)if(r.nt===undefined||r.nt==='')Object.assign(r,learnNeedDef(r));
   LEARN=DB.learn.map(r=>{const n={cost:+r.cost,nt:+r.nt||0,nh:+r.nh||0,nk:+r.nk||0,kg:+r.kg||0,t:r.t};return r.ty==='scam_course'?{...n,scamc:1}:r.ty==='mentor'?{...n,mentor:1}:r.ty==='know'?{...n,know:1}:{...n,k:r.ty}});
   for(const r of DB.opp)if(r.nt===undefined||r.nt==='')Object.assign(r,oppNeedDef(r));
@@ -1997,7 +1997,10 @@ async function previewPile(k){if(!canAct()||S.phase!=='card')return;const img=k=
   if(v==='go'&&canAct()&&S.phase==='card')pickPile(k)}
 async function pickPile(k){
   const p=cp();if(S.phase!=='card')return;S.phase='busy';render();
-  if(k==='life')await lifeCard(p,draw('life'));
+  if(k==='life'){let c=draw('life');
+    /* ภัยพิบัติห้ามซ้อน: ถ้ายังมีภัยพิบัติอยู่ ใบที่เปิดได้ไปไว้ใต้กอง แล้วเปิดใบใหม่อัตโนมัติ (ไม่แสดงให้ผู้เล่นเห็น) */
+    for(let i=0;i<8&&c&&c.dis&&disOn();i++){const ix=LIFE.indexOf(c);if(ix>=0&&S.decks.life)S.decks.life.unshift(ix);c=draw('life')}
+    if(c&&c.dis)await disCard(p,c);else await lifeCard(p,c)}
   else if(k==='learn')await learnCard(p);
   else if(k==='net')await netCard(p);
   else{let c=draw('opp');for(let i=0;i<6&&c&&c.ty==='netinv'&&!p.net.on;i++)c=draw('opp');await oppCard(p,c)} /* ยังไม่สมัครธุรกิจ A: ไม่ได้การ์ดคนรู้จักสนใจธุรกิจ A (เลิกการ์ดชวนสมัคร) */
@@ -2088,7 +2091,7 @@ function endRound(){
     if(a.s==='GROW'&&np<=.6){delist();np=5}
     S.prices[a.s]=np;S.hist[a.s].push(np);if(S.hist[a.s].length>20)S.hist[a.s].shift();
   }
-  syncDiv();log(`📈 จบรอบ ราคาตลาดขยับแล้ว เริ่มรอบที่ ${S.round}`);
+  syncDiv();log(`📈 จบรอบ ราคาตลาดขยับแล้ว เริ่มรอบที่ ${S.round}`);disRound();
   npcDraw();
 }
 function delist(){for(const p of S.players)if(p.stocks.GROW&&p.stocks.GROW.q){log(`💥 Tesla ล้มละลาย หุ้นของ ${esc(p.name)} ${p.stocks.GROW.q} หุ้นกลายเป็นศูนย์`);delete p.stocks.GROW}log('Tesla ปรับโครงสร้าง กลับเข้าตลาดที่ ฿5')}
@@ -2395,6 +2398,77 @@ async function mnewsCard(p,c){
   await choose({actor:p,kind:'news',title:c.t,body,opts:[{v:'ok',l:'รับทราบ',c:'pri'}],bot:'ok'});
 }
 
+/* ===================== ภัยพิบัติ (กองชีวิต) =====================
+   สุ่มความรุนแรง sev 1–3 (เล็ก 50% · ปานกลาง 35% · รุนแรง 15%) และจำนวนรอบ · ผลต่อเนื่องคิดทุกจบรอบ (ทุกคนเล่นครบ 1 เทิร์น)
+   อสังหาฯ = ที่ดินบนกระดานที่ถือ (ราคา × (1+ระดับอัปเกรด)) + การ์ดอสังหาฯ (ty re) · ธุรกิจตามหมวดจับจากชื่อ
+   ห้ามซ้อน: เปิดได้ใบใหม่ระหว่างที่ยังมีภัยพิบัติ → ใบนั้นไปใต้กองชีวิต แล้วเปิดใบถัดไปอัตโนมัติ (pickPile) */
+const DIS_SEC={food:/อาหาร|ซีฟู้ด|กาแฟ|ของชำ|ตลาดนัด|โรงสี|ของฝาก/,build:/ก่อสร้าง|รับเหมา|วัสดุ|ช่าง/,trans:/ขนส่ง|รถบรรทุก|ท่าเรือ|เรือนำเที่ยว|ปั๊มน้ำมัน|คาร์แคร์|โกดัง/,pharma:/คลินิก|ยา|โรงพยาบาล|สุขภาพ/,it:/ออนไลน์|มือถือ|ฟรีแลนซ์|ไอที|โคเวิร์กกิ้ง|ดิจิทัล/};
+const DIS_STK={food:['KO','SOY','CORN','WHEAT','COFFEE'],build:['COPPER','ALU'],trans:['GROW'],pharma:[],it:['TTEC','NVDA','MSFT','GOOGL','AMZN','META','AVGO']};
+const DIS_SN={food:'อาหาร',build:'ก่อสร้าง',trans:'ขนส่ง',pharma:'ยา/สุขภาพ',it:'ไอที'};
+const DIS={
+ quake:{ico:'🏚️',n:'แผ่นดินไหว',dur:[1,2],rep:.02,good:['food','build'],bad:[],stkG:4,stkB:0,biz:.2,bizB:0,all:0,hp:0,heart:0,
+  d:'อาคารเสียหาย ผู้ถือครองอสังหาฯ ต้องจ่ายค่าซ่อมทุกรอบ · ธุรกิจร้านอาหารและก่อสร้างได้งานเพิ่ม'},
+ flood:{ico:'🌊',n:'น้ำท่วม',dur:[2,4],rep:.015,good:['food','build'],bad:['trans'],stkG:3,stkB:4,biz:.15,bizB:.25,all:1000,hp:0,heart:0,
+  d:'น้ำท่วมอสังหาฯ ต้องจ่ายค่าซ่อมทุกรอบ · ขนส่งติดขัด · ทุกคนเสียค่าใช้จ่ายรับมือน้ำท่วม · อาหารและก่อสร้างได้ประโยชน์'},
+ plague:{ico:'🦠',n:'โรคระบาด',dur:[2,5],rep:0,good:['pharma','trans','food','it'],bad:[],stkG:3,stkB:0,biz:.15,bizB:0,all:0,hp:.02,heart:1,
+  d:'ทุกคนต้องจ่ายค่าดูแลสุขภาพและ ❤ −1 ทุกรอบ · ยา ขนส่ง อาหาร และไอทีได้ประโยชน์'},
+};
+const LIFE_DIS=[{t:'ภัยพิบัติ: แผ่นดินไหว',dis:'quake',sp:'dis'},{t:'ภัยพิบัติ: น้ำท่วม',dis:'flood',sp:'dis'},{t:'ภัยพิบัติ: โรคระบาด',dis:'plague',sp:'dis'}];
+const r100=n=>Math.round(n/100)*100;
+const SEVN=['','เล็ก','ปานกลาง','รุนแรง'];
+const disOn=()=>!!(S&&S.dis&&S.dis.left>0);
+const disRI=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
+function disSecOf(n){return Object.keys(DIS_SEC).filter(k=>DIS_SEC[k].test(n||''))}
+/* อสังหาฯ ของผู้เล่น: [{n,v}] */
+function disRE(p){const o=[];for(const k in S.props){const pr=S.props[k];if(pr.o!==p.id)continue;const q=SQ(k);o.push({n:q.n,v:q.down*(1+(pr.l||0))})}for(const d of p.deals||[])if(d.ty==='re')o.push({n:d.t,v:d.cost});return o}
+/* ธุรกิจที่เข้าหมวด: [{n,cf,sec[]}] — ที่ดินบนกระดาน (ค่าเช่า/เดือน) + การ์ดธุรกิจ (Passive+Active) */
+function disBiz(p){const o=[];for(const k in S.props){const pr=S.props[k];if(pr.o!==p.id)continue;const q=SQ(k),sec=disSecOf(q.n);if(sec.length)o.push({n:q.n,cf:propCf(k),sec})}for(const d of p.deals||[]){const sec=disSecOf(d.t);if(sec.length)o.push({n:d.t,cf:(+d.cf||0)+(+d.act||0),sec})}return o}
+/* ผลต่อผู้เล่น 1 รอบ: {rep,biz,all,hp,heart,lines[]} (ยังไม่หักเงิน) */
+function disTick(p,D){const T=DIS[D.k],sv=D.sev,L=[];let rep=0,biz=0,all=0,hp=0;
+  if(T.rep)for(const r of disRE(p)){const c=r100(r.v*T.rep*sv*(.5+Math.random()));if(c>0){rep+=c;L.push(`ซ่อม ${r.n} −${B(c)}`)}}
+  for(const b of disBiz(p)){let pct=0;if(b.sec.some(x=>T.good.includes(x)))pct+=T.biz*sv;if(b.sec.some(x=>T.bad.includes(x)))pct-=T.bizB*sv;const v=r100(b.cf*pct);if(v){biz+=v;L.push(`${b.n} ${v>0?'+':'−'}${B(Math.abs(v))}`)}}
+  if(T.all){all=r100(T.all*sv*(.5+Math.random()));L.push(`ค่ารับมือ${T.n} −${B(all)}`)}
+  if(T.hp){hp=Math.max(1000,r100(p.salary*T.hp*sv));L.push(`ค่าดูแลสุขภาพ −${B(hp)}`)}
+  return {rep,biz,all,hp,heart:T.heart,lines:L}}
+function disApply(p,D,tag){const T=DIS[D.k],r=disTick(p,D),net=r.biz-r.rep-r.all-r.hp;
+  if(r.biz>0)p.cash+=r.biz;const cost=r.rep+r.all+r.hp+(r.biz<0?-r.biz:0);if(cost>0)pay(p,cost);
+  let sx='';if(r.heart)sx=adj(p,{h:-r.heart},true);
+  if(net||sx){ledg(p,T.ico,`${T.n}${tag?` (${tag})`:''}`,{c:net,h:-(r.heart||0)});log(`${T.ico} ${esc(p.name)} ${T.n}${tag?` ${tag}`:''}: ${r.lines.join(' · ')||'ไม่กระทบ'}${sx}`);
+    ruleNote(p,`${T.ico} ${T.n} ${SEVN[D.sev]}${tag?` · ${tag}`:''}`,`${r.lines.join(' · ')}${sx} · รวม ${net>=0?'+':'−'}${B(Math.abs(net))} · เหลืออีก ${D.left} รอบ`)}
+  return net}
+/* จบรอบ: คิดผลต่อเนื่องให้ทุกคน แล้วนับถอยหลัง */
+function disRound(){if(!disOn())return;const D=S.dis,T=DIS[D.k];D.left--;
+  for(const q of S.players)disApply(q,D,`รอบ ${D.n-D.left}/${D.n}`);
+  const e={};for(const g of T.good)for(const s of DIS_STK[g])e[s]=+(1*D.sev).toFixed(1);for(const b of T.bad)for(const s of DIS_STK[b])e[s]=-(1*D.sev);if(Object.keys(e).length)shockPrices(e);
+  if(D.left<=0){log(`${T.ico} ${T.n}สิ้นสุดแล้ว`);S.dis=null}}
+async function disCard(p,c){
+  const k=c.dis,T=DIS[k],w=Math.random(),sev=w<.5?1:w<.85?2:3,n=disRI(T.dur[0],T.dur[1]);
+  S.dis={k,sev,n,left:n,by:p.id};
+  /* ราคาหุ้น/สินค้าตามหมวด (ทันที) */
+  const e={};for(const g of T.good)for(const s of DIS_STK[g])e[s]=disRI(T.stkG,T.stkG*2)*sev/2;for(const b of T.bad)for(const s of DIS_STK[b])e[s]=-disRI(T.stkB,T.stkB*2)*sev/2;
+  for(const s in e)e[s]=Math.round(e[s]*10)/10;const ch=shockPrices(e);
+  const rows=S.players.map(q=>{const r=disTick(q,{k,sev});let dv=0;for(const x of ch){const h=q.stocks[x.s];if(h&&h.q)dv+=h.q*(x.np-x.old)}return {q,r,dv:Math.round(dv),est:r.biz-r.rep-r.all-r.hp}});
+  log(`${T.ico} ${esc(p.name)} เปิดการ์ดภัยพิบัติ: <b>${T.n}ระดับ${SEVN[sev]}</b> นาน ${n} รอบ · ${ch.map(x=>`${SN(x.a)} ${x.pct>0?'+':''}${x.pct}%`).join(' ')}`);
+  render();
+  const goodS=T.good.map(g=>DIS_SN[g]).join(' · '),badS=T.bad.map(g=>DIS_SN[g]).join(' · ');
+  const body=`${chips([chip(T.ico,T.n,`ระดับ${SEVN[sev]}`,'cost'),chip('⏱',`${n} รอบ`,'ผลต่อเนื่องทุกจบรอบ','use')])}
+   <p>${T.d}</p>
+   <div class="mnl">${T.rep?`<div class="ln"><span>🏚️ ค่าซ่อมอสังหาฯ</span><span class="num neg">${+(T.rep*sev*100).toFixed(1)}% ของมูลค่า/รอบ (สุ่ม ±50%)</span></div>`:''}
+   ${T.all?`<div class="ln"><span>💸 ทุกคนจ่าย</span><span class="num neg">≈${B(T.all*sev)}/รอบ</span></div>`:''}
+   ${T.hp?`<div class="ln"><span>🏥 ค่าดูแลสุขภาพทุกคน</span><span class="num neg">${T.hp*sev*100}% เงินเดือน/รอบ (ขั้นต่ำ ${B(1000)})</span></div>`:''}
+   ${T.heart?`<div class="ln"><span>❤ ทุกคน</span><span class="num neg">−${T.heart}/รอบ</span></div>`:''}
+   <div class="ln"><span>🟢 ธุรกิจได้ประโยชน์ (${goodS})</span><span class="num pos">+${Math.round(T.biz*sev*100)}% ของรายได้/รอบ</span></div>
+   ${T.bad.length?`<div class="ln"><span>🔴 ธุรกิจเสียหาย (${badS})</span><span class="num neg">−${Math.round(T.bizB*sev*100)}% ของรายได้/รอบ</span></div>`:''}</div>
+   <h4 style="margin:10px 0 4px;font-size:13px">ราคาหุ้น/สินค้าตามหมวด</h4>
+   <div class="mnl">${ch.map(x=>`<div class="ln"><span>${x.a.n}${SYMH(x.a)}</span><span class="num ${x.pct>0?'pos':'neg'}">${x.pct>0?'+':''}${x.pct}% → ${fmtP(x.a,x.np)}</span></div>`).join('')||'<p class="muted">—</p>'}</div>
+   ${T.good.includes('pharma')?'<p class="muted" style="font-size:12px">ในเกมยังไม่มีหุ้นกลุ่มยา ผลดีหมวดยาจึงได้เฉพาะธุรกิจ เช่น คลินิกเอกชน</p>':''}
+   <h4 style="margin:10px 0 4px;font-size:13px">ผลต่อผู้เล่นแต่ละคน (ประมาณ/รอบ)</h4>
+   <div class="mnl">${rows.map(x=>`<div class="ln"><span>${esc(x.q.name)}</span><span class="num ${x.est>0?'pos':x.est<0?'neg':'muted'}">${x.est?`${x.est>0?'+':'−'}${B(Math.abs(x.est))}/รอบ`:'ไม่กระทบ'}${x.dv?` · พอร์ต ${x.dv>0?'+':'−'}${B(Math.abs(x.dv))}`:''}${T.heart?` · ❤−${T.heart}`:''}</span></div>`).join('')}</div>
+   <p class="muted" style="font-size:12px">ภัยพิบัติเกิดได้ทีละ 1 อย่าง · ระหว่างนี้ถ้าเปิดได้การ์ดภัยพิบัติอีก ระบบจะสอดไว้ใต้กองแล้วเปิดใบใหม่ให้อัตโนมัติ</p>`;
+  await choose({actor:p,kind:'life',title:`${T.ico} ภัยพิบัติ: ${T.n}`,body,opts:[{v:'ok',l:'รับทราบ',c:'pri'}],bot:'ok'});
+  ruleNote(p,`${T.ico} ${T.n}ระดับ${SEVN[sev]} ${n} รอบ`,`ผลต่อเนื่องคิดทุกจบรอบ (ค่าซ่อม/ค่าใช้จ่าย/รายได้ธุรกิจตามหมวด)${T.heart?` · ❤ −${T.heart} ทุกรอบ`:''}`);
+}
+
 /* ===================== CARDS ===================== */
 const KIDMAX=4;
 function lifePreview(p,c){const R=[];
@@ -2695,7 +2769,7 @@ function tileBase(k){if(!TILE_BASE_ON||(k[0]!=='o'&&!SQIMG[k])||k in PROPIMG)ret
 function toggleMap(){MAPMIN=!MAPMIN;try{localStorage.setItem('ff-mapmin',MAPMIN?'1':'0')}catch(e){}render()}
 function render(){
   if(!S)return;axPoll();
-  $('#roundLbl').textContent=`รอบที่ ${S.round}`;
+  $('#roundLbl').textContent=`รอบที่ ${S.round}${disOn()?` · ${DIS[S.dis.k].ico} ${DIS[S.dis.k].n} เหลือ ${S.dis.left} รอบ`:''}`;
   const p=cp(),bd=$('#board');let h='';
   for(const k in SQ_MAP){const b=SQ(k),[r,c]=cellPos(k),pr=S.props[k],i=+k.slice(1),corner=i%(RING_LEN[k[0]]/4)===0;
     const now=NOW(),toks=S.players.filter(q=>q.ring+q.pos===k).map(q=>{const hp=FXT.hop&&FXT.hop.id===q.id&&now-FXT.hop.t<340;return `<span class="tok pic ${q.id===p.id&&(!hp||(V3.on&&!MAPMIN))?'cur':''} ${hp?'hop':''}" style="${tokStyle(q)};${hp?`animation-delay:-${now-FXT.hop.t}ms`:''}" title="${esc(q.name)}"></span>`}).join('');
@@ -3447,7 +3521,7 @@ function onTag(){let t=$('#roomTag');if(!ON.code){if(t)t.remove();return}
   if(!t){t=document.createElement('span');t.id='roomTag';t.className='roomtag';t.setAttribute('role','button');t.title='ดูข้อมูลห้อง';t.onclick=onRoomInfo;const h=document.querySelector('header .logo')?.parentElement||document.querySelector('header');h.appendChild(t)}
   t.textContent='ห้อง '+ON.code+' ⓘ'}
 /* เวอร์ชันของไฟล์เกม (เปลี่ยนทุกครั้งที่แก้ระบบออนไลน์) · ส่งไปกับสถานะออนไลน์ เพื่อดูว่าใครยังเปิดเวอร์ชันเก่า */
-const BUILD='2026-11-18.11';
+const BUILD='2026-11-18.12';
 /* ป้ายเลขห้อง → ข้อมูลห้อง: เจ้าของห้อง · เครื่องที่คุมรอบ · สถานะผู้เล่นแต่ละคน */
 function onRoomInfo(){const r=ON.room;if(!r||!ON.code)return;
   const seatName=u=>{const q=S&&S.players&&S.players.find(x=>x.uid===u);if(q)return q.name;const s=Object.values(r.seats||{}).find(x=>x&&x.uid===u);return s?(s.name||'ผู้เล่น'):'—'};
