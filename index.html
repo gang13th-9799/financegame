@@ -2861,14 +2861,14 @@ function renderNet(){
     <p>${esc(q.name)} ยังไม่ได้สมัคร ต้องเสียค่าสมัคร <b>${B(NET_FEE)}</b> เพื่อเปิดแท็บนี้</p>
     <ul class="rules"><li>สร้างสายงาน A–F ด้วยการ์ดจากกอง "ธุรกิจ A" ทำยอด PV ให้ถึงขั้นบันไดโบนัส 3–21%</li><li>รายได้ Passive มาจากการ์ดสร้างธุรกิจ และได้โบนัสพินเมื่อขึ้นระดับ</li><li>ระดับ: ${NET_RANKS.map(r=>r.n).join(' → ')}</li></ul>
     ${q.id===S.cur?`<button class="pri" ${mine&&q.cash>=NET_FEE?'':'disabled'} onclick="netAct('join')">สมัครธุรกิจ A ${B(NET_FEE)}</button>`:''}</div>`;
-  const n=q.net,gv=netGV(q),pct=netPct(gv),eff=netEff(q),nx=NET_RANKS[n.rank+1],mx=Math.max(QPV,...LEGS.map(l=>n.legs[l]));
+  const n=q.net,gv=netGV(q),pct=netPct(gv),eff=netEff(q),nx=NET_RANKS[n.rank+1];
   return `<div class="stmt">
    <div class="goal"><div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px"><span><b>ธุรกิจ A</b> · ${esc(q.name)}</span><span class="rkchip">${rankPin(q,'rpin lg')}ระดับ ${NET_RANKS[n.rank].n}</span></div>
     <div class="big num">${B(n.pas)} <span class="muted" style="font-size:14px;font-weight:500">Passive ต่อเดือน</span></div>
     <div class="muted" style="font-size:12px">ยอดกลุ่ม <b class="num">${gv.toLocaleString()} PV</b> · ขั้นโบนัส <b>${Math.round(eff*100)}%</b> · PV ส่วนตัว ${n.ppv.toLocaleString()}</div>
     ${nx?`<div class="muted" style="font-size:12px">ระดับถัดไป <b>${nx.n}</b>: ${nx.req}${n.s21?` · 21% ติดต่อกัน ${n.s21} เดือน`:''}${n.sq3?` · 3 สาย 21% ติดต่อกัน ${n.sq3} เดือน`:''}</div>`:'<div class="pos">ถึงระดับสูงสุด ไดมอนด์แล้ว</div>'}</div>
    <div class="box"><h3><span>สายงาน A–F</span><span class="muted" style="font-size:12px">ถึง 21% = ${QPV.toLocaleString()} PV</span></h3>
-    ${LEGS.map(l=>{const x=n.legs[l];return `<div class="ln"><span style="flex:1">สาย ${l} · <b class="num">${x.toLocaleString()}</b> PV ${x?`<span class="chip">${Math.round(netPct(x)*100)}%</span>`:'<span class="muted">ยังไม่เปิด</span>'}<span class="bar ${x>=QPV?'win':''}" style="display:block;margin-top:3px"><i style="width:${Math.min(100,x/mx*100)}%"></i></span></span></div>`}).join('')}
+    ${LEGS.map(l=>{const x=n.legs[l];return `<div class="ln"><span style="flex:1">สาย ${l} · <b class="num">${x.toLocaleString()}</b> PV ${x?`<span class="chip">${Math.round(netPct(x)*100)}%</span>`:'<span class="muted">ยังไม่เปิด</span>'}<span class="bar ${x>=QPV?'win':''}" style="display:block;margin-top:3px"><i style="width:${Math.min(100,x/QPV*100)}%"></i></span></span></div>`}).join('')}
     <p class="muted" style="font-size:12px">จั่วการ์ดกอง "ธุรกิจ A" เพื่อสร้างและขยายสายงาน</p></div>
    <div class="box"><h3><span>ขั้นบันไดโบนัส</span></h3>
     ${[...NET_BRACKETS].reverse().map(([t,r])=>`<div class="ln ${gv>=t?'':'muted'}"><span>${t.toLocaleString()} PV ขึ้นไป</span><span class="num">${Math.round(r*100)}%</span></div>`).join('')}
@@ -3446,7 +3446,7 @@ function onTag(){let t=$('#roomTag');if(!ON.code){if(t)t.remove();return}
   if(!t){t=document.createElement('span');t.id='roomTag';t.className='roomtag';t.setAttribute('role','button');t.title='ดูข้อมูลห้อง';t.onclick=onRoomInfo;const h=document.querySelector('header .logo')?.parentElement||document.querySelector('header');h.appendChild(t)}
   t.textContent='ห้อง '+ON.code+' ⓘ'}
 /* เวอร์ชันของไฟล์เกม (เปลี่ยนทุกครั้งที่แก้ระบบออนไลน์) · ส่งไปกับสถานะออนไลน์ เพื่อดูว่าใครยังเปิดเวอร์ชันเก่า */
-const BUILD='2026-11-18.5';
+const BUILD='2026-11-18.6';
 /* ป้ายเลขห้อง → ข้อมูลห้อง: เจ้าของห้อง · เครื่องที่คุมรอบ · สถานะผู้เล่นแต่ละคน */
 function onRoomInfo(){const r=ON.room;if(!r||!ON.code)return;
   const seatName=u=>{const q=S&&S.players&&S.players.find(x=>x.uid===u);if(q)return q.name;const s=Object.values(r.seats||{}).find(x=>x&&x.uid===u);return s?(s.name||'ผู้เล่น'):'—'};
