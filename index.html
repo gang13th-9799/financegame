@@ -1490,7 +1490,7 @@ async function netCard(p){
       opts:[{v:'y',l:`สมัคร ${B(NET_FEE)}`,c:'pri',dis:p.cash<NET_FEE},{v:'n',l:'ไม่สนใจ'}],bot:p.cash>NET_FEE*20&&Math.random()<.4?'y':'n'});
     if(v==='y')netJoin(p,NET_FEE);return;
   }
-  const _c=draw('netc');if(_c[5]==='DL'){await dlCard(p,_c);return}if(_c[5]==='OFF'){await offCard(p,_c);return}
+  const _c=draw('netc');if(_c[5]==='DL'){await dlCard(p,_c);return}if(_c[5]==='OFF'){await offCard(p,_c);return}if(_c[5]==='SCAMB'){await scamBCard(p,_c);return}
   const [id,t,leg,pv,cost,cat,A,Pv,nT,nH,nK,dsc='']=_c;const tdx=t+' '+dsc;const n=p.net;const NEED={needT:nT,needH:nH,needK:nK};
   const info=`<div class="kv">${leg?`<b>เป้าหมาย</b><span>สายงาน ${leg} (ตอนนี้ ${n.legs[leg].toLocaleString()} PV)</span>`:''}${(()=>{const mm=leg&&tdx.match(/ได้\s*([\d,]+)\s*PV/i);if(mm){const g=Math.round(+mm[1].replace(/,/g,'')*(1+skV(p,'net')/100));return `<b>ผลลัพธ์</b><span class="num pos">สายงาน ${leg} ขึ้นเป็น ${g.toLocaleString()} PV${n.legs[leg]>=g?' (ตอนนี้สูงกว่าแล้ว ไม่เพิ่ม)':` (+${(g-n.legs[leg]).toLocaleString()})`}</span>`}return pv?`<b>PV</b><span class="num">+${pv.toLocaleString()}${leg?` เข้าสายงาน ${leg}`:' (ยอดส่วนตัว)'}</span>`:''})()}${cost?`<b>ค่าใช้จ่าย</b><span class="num neg">${B(cost)}</span>`:''}${A?`<b>Active</b><span class="num pos">+${B(A)}${cat==='ชีวิต'?' ต่อเดือน':' ครั้งเดียว'}</span>`:''}${Pv?`<b>Passive</b><span class="num pos">+${B(Pv)} ต่อเดือน</span>`:''}</div>${cat==='สร้างธุรกิจ'&&skV(p,'net')?`<p class="pos">ทักษะผู้นำเครือข่าย: PV และ Passive +${skV(p,'net')}%</p>`:''}<p class="muted">หมวด ${cat} · การ์ด ${id}</p>`;
   const ok1=(o)=>({v:'ok',l:'รับทราบ',c:'pri',...o});
@@ -1726,6 +1726,7 @@ const NET_DL=[
  ['dl-q2','DL เลิก ย้ายไปทำธุรกิจอื่น','',1,0,'DL',0,0,0,0,0,'ดาวน์ไลน์ถูกชวนไปทำธุรกิจอื่นที่สัญญาว่ารวยเร็วกว่า เลยเลิกทำและพาลูกค้าบางส่วนตามไปด้วย'],
  ['dl-d1','DL ท้อ หยุดนัดลูกค้า','',2,0,'DL',0,0,0,0,0,'ดาวน์ไลน์ท้อใจหลังโดนปฏิเสธติดกันหลายครั้ง หยุดนัดลูกค้าและไม่เข้าประชุมทีม ยอดสั่งซื้อเดือนนี้หายไปส่วนหนึ่ง'],
  ['dl-off','หลุดบรรยากาศ','',3,0,'OFF',0,0,0,0,0,'งานประจำและเรื่องในบ้านรุมเข้ามาจนห่างหายจากทีม ไม่ได้เข้าประชุม ไม่ได้คุยกับอัพไลน์ ไฟในการทำธุรกิจเริ่มมอด กว่าจะกลับมาเข้าจังหวะต้องใช้เวลาสักพัก'],
+ ['scamb','เพื่อนชวนไปทำธุรกิจ B','',4,100000,'SCAMB',0,20000,0,0,0,'เพื่อนสนิทชวนไปทำธุรกิจ B บอกว่ารวยกว่า เร็วกว่าธุรกิจ A ไม่ต้องหาลูกค้า ไม่ต้องสร้างทีม แค่ลงทุน ฿100,000 ก็ได้ Passive ฿20,000 ทุกเทิร์น'],
  ['dl-d2','DL ท้อ คนรอบตัวไม่สนับสนุน','',2,0,'DL',0,0,0,0,0,'ครอบครัวและเพื่อนของดาวน์ไลน์ไม่เห็นด้วยกับธุรกิจ เขาเริ่มลังเลและทำน้อยลง ยอดในสายงานลดลงชัดเจน'],
 ];
 /* หลุดบรรยากาศ: ห้ามเปิดกองธุรกิจ A 2–5 เทิร์นของตัวเอง (p.offnet) · ป้องกัน: หัก ❤ 1–3 และ 📚 3–6 ตามจำนวนเทิร์น
@@ -1741,6 +1742,32 @@ async function offCard(p,c){const [,t,,,,,,,,,,d]=c,n=2+Math.floor(Math.random()
   if(v==='save'&&can){const sx=adj(p,{h:-nh,k:-nk},true);log(`🔥 ${esc(p.name)} ฝืนกลับเข้าทีมได้ ไม่หลุดบรรยากาศ${sx}`);ruleNote(p,'ไม่หลุดบรรยากาศ',`ใช้ ❤ ${nh} และ 📚 ${nk} กลับเข้าประชุมและคุยกับทีม ยังเปิดกองธุรกิจ A ได้`);return}
   p.offnet=Math.max(p.offnet||0,n);p._offnew=1;log(`🌫️ ${esc(p.name)} หลุดบรรยากาศ ห้ามเปิดกองธุรกิจ A ${n} เทิร์น`);
   ruleNote(p,`หลุดบรรยากาศ (${n})`,`ห้ามเปิดการ์ดกองธุรกิจ A ${n} เทิร์น${can?' (เลือกไม่ป้องกัน)':` · ค่าพลังไม่พอป้องกัน (ต้องมี ❤ มากกว่า ${nh} และ 📚 อย่างน้อย ${nk})`}`)}
+/* ===== การ์ดสแกม "ธุรกิจ B" (กองธุรกิจ A 1 ใบ) =====
+   ลงทุน ฿100,000 → ได้ ฿20,000 ทุกจบเทิร์นของตัวเอง (ไม่นับเทิร์นที่ลงทุน) เป็นเวลาสุ่ม 1–3 เทิร์น (ผู้เล่นไม่รู้)
+   ครบแล้ว → แจ้งจับฉ้อโกงประชาชน: ติดคุก 3 เทิร์น (ไม่ได้ทอย) + ยึดทรัพย์ทั้งหมด = เริ่มต้นใหม่ตามอาชีพ (เก็บลูกไว้)
+   p.scamB={left,paid,_new} · p.jail = เทิร์นที่ต้องหยุด (เช็กใน rollTurn) */
+async function scamBCard(p,c){const [,t,,,cost,,,cf,,,,d]=c;
+  if(p.scamB||p.jail){await choose({actor:p,kind:'netc',title:esc(t),body:`<p>${esc(d)}</p><p class="muted">คุณลงทุนในธุรกิจ B ไปแล้ว</p>`,opts:[{v:'ok',l:'รับทราบ',c:'pri'}],bot:'ok'});return}
+  const ok=await buyFlow(p,cost,{kind:'netc',verb:'ลงทุน',no:'ไม่สนใจ',cf,bot:p.cash>cost*1.5&&Math.random()<.35,title:`💸 ${esc(t)}`,body:`<p>${esc(d)}</p><div class="kv"><b>เงินลงทุน</b><span class="num">${B(cost)}</span><b>ผลตอบแทน</b><span class="num pos">+${B(cf)} ทุกเทิร์น</span></div>`});
+  if(!ok)return;p.scamB={left:1+Math.floor(Math.random()*3),paid:0,_new:1};log(`💸 ${esc(p.name)} ลงทุนธุรกิจ B ${B(cost)} ตามคำชวนของเพื่อน`)}
+function scamBTick(p){const z=p.scamB;if(!z)return;if(z._new){delete z._new;return}
+  p.cash+=20000;z.paid+=20000;z.left--;ledg(p,'💸','ผลตอบแทนธุรกิจ B',{c:20000});log(`💸 ${esc(p.name)} ได้ผลตอบแทนธุรกิจ B +${B(20000)}`);
+  if(z.left>0){ruleNote(p,'ผลตอบแทนธุรกิจ B',`ได้ +${B(20000)} (รวม ${B(z.paid)})`);return}
+  /* แจ้งจับ */
+  const paid=z.paid;delete p.scamB;scamArrest(p);
+  const b=`<p><b>ธุรกิจ B คือแชร์ลูกโซ่</b> เงิน "ผลตอบแทน" ${B(paid)} ที่ ${esc(p.name)} ได้รับ (เทิร์นละ ${B(20000)}) ไม่ได้มาจากกำไรจริง แต่เป็นเงินของสมาชิกรายใหม่ที่ถูกชวนเข้ามาต่อ ๆ กัน</p>
+   <p>เมื่อมีคนแจ้งความ ตำรวจจับกุมทุกคนในเครือข่ายข้อหา <b>ฉ้อโกงประชาชน</b></p>
+   <div class="kv"><b>สถานะ</b><span class="neg">ติดคุก หยุดเดิน 3 เทิร์น</span><b>ทรัพย์สิน</b><span class="neg">ถูกยึดทั้งหมด เริ่มต้นใหม่ตามอาชีพเดิม</span></div>
+   <p class="muted" style="font-size:12px">บทเรียน: ผลตอบแทนสูงเกินจริงโดยไม่ต้องขายสินค้าหรือบริการ คือสัญญาณของแชร์ลูกโซ่</p>`;
+  S.ann=S.ann||[];S.ann.push({k:'netc',t:`🚔 ${esc(p.name)} ถูกจับ! ธุรกิจ B เป็นแชร์ลูกโซ่`,b});
+  ruleNote(p,'🚔 ถูกจับข้อหาฉ้อโกงประชาชน','ธุรกิจ B คือแชร์ลูกโซ่ · ติดคุก 3 เทิร์น · ทรัพย์สินถูกยึดทั้งหมด เริ่มต้นใหม่')}
+function scamArrest(p){const j=S.jobs[p.job];
+  for(const k in S.props)if(S.props[k].o===p.id)delete S.props[k];
+  S.listings=(S.listings||[]).filter(l=>l.seller!==p.id);
+  Object.assign(p,{salary:j.sal,cash:j.cash,exp:{...j.e,extra:0},active:0,debt:{home:j.e.home*100,car:j.e.car*25,card:j.e.card*20},loan:0,dep:0,warn:0,jobless:0,charity:0,
+    deals:[],stocks:{},skills:[],charges:{},net:netNew(),ring:'o',pos:0,st:{h:j.h,t:j.t,k:j.k},offnet:0,jail:3});
+  delete p._offnew;
+  log(`🚔 ${esc(p.name)} ถูกจับข้อหาฉ้อโกงประชาชน (ธุรกิจ B แชร์ลูกโซ่) · ยึดทรัพย์ทั้งหมด · ติดคุก 3 เทิร์น`)}
 async function dlCard(p,c){const [id,t,,kind,,,,,,,,d]=c,n=p.net;
   const legs=LEGS.filter(l=>n.legs[l]>0);
   if(!legs.length){log(`📉 ${esc(p.name)} เปิดการ์ด ${esc(t)} แต่ยังไม่มีสายงานที่มี PV ไม่มีผล`);await choose({actor:p,kind:'netc',title:`📉 ${esc(t)}`,body:`<p>${esc(d)}</p><p class="muted">คุณยังไม่มีสายงานที่มี PV การ์ดนี้จึงไม่มีผล</p>`,opts:[{v:'ok',l:'รับทราบ',c:'pri'}],bot:'ok'});return}
@@ -2003,6 +2030,9 @@ const CHARITY_TURNS=3;
 async function rollTurn(n){
   if(!S||S.phase!=='roll'||S.winner!=null)return;
   const p=cp();S.phase='busy';if(!p.bot&&!S.autoPilot)p.acted=true;
+  if(p.jail>0){p.jail--;log(`🚔 ${esc(p.name)} ติดคุก หยุดเดินเทิร์นนี้${p.jail?` (เหลืออีก ${p.jail} เทิร์น)`:' · พ้นโทษแล้ว'}`);render();
+    await choose({actor:p,kind:'netc',title:'🚔 ติดคุก',body:`<p>หยุดเดินเทิร์นนี้${p.jail?` เหลืออีก ${p.jail} เทิร์น`:' · เทิร์นหน้าพ้นโทษ เดินได้ตามปกติ'}</p>`,opts:[{v:'ok',l:'รับทราบ',c:'pri'}],bot:'ok'});
+    S.phase='free';endTurn();return}
   n=(p.charity>0&&n===2)?2:1;if(p.charity>0)p.charity--;
   const d=S.forceRoll?[S.forceRoll]:n===2?[r6(),r6()]:[r6()];S.forceRoll=0;await diceAnim(d,p.bot);S.dice=d;render();await sleep(p.bot?120:200);
   const steps=d.reduce((a,b)=>a+b,0);
@@ -2175,7 +2205,7 @@ async function payday(p){
   }
 }
 function rankPin(p,c='rpin'){return p&&p.net&&p.net.on?`<img class="${c}" src="img/rank-${Math.min(7,p.net.rank||0)}.webp" alt="${NET_RANKS[p.net.rank||0].n}" title="ธุรกิจ A ระดับ ${NET_RANKS[p.net.rank||0].n}">`:''}
-function badges(p){return rankPin(p)+(p.offnet>0?`<span class="bdg offn" title="หลุดบรรยากาศ: ห้ามเปิดกองธุรกิจ A อีก ${p.offnet} เทิร์น">(หลุดบรรยากาศ ${p.offnet})</span>`:'')+(p.warn>0?`<span class="bdg" title="โดนใบเตือน: เงินเดือนลด 50% อีก ${p.warn} เดือน"><img class="icw" src="img/ic-warn.webp" alt=""></span>`:'')+(p.badge1?'<span class="bdg" title="ชนะ Lv.1: รายได้จากทรัพย์สินมากกว่ารายจ่ายรวม">🏆</span>':'')+(p.badge2?'<span class="bdg" title="ชนะ Lv.2: ธุรกิจ A ระดับไดมอนด์">💎</span>':'')}
+function badges(p){return rankPin(p)+(p.jail>0?`<span class="bdg offn" title="ติดคุก หยุดเดินอีก ${p.jail} เทิร์น">(ติดคุก ${p.jail})</span>`:'')+(p.offnet>0?`<span class="bdg offn" title="หลุดบรรยากาศ: ห้ามเปิดกองธุรกิจ A อีก ${p.offnet} เทิร์น">(หลุดบรรยากาศ ${p.offnet})</span>`:'')+(p.warn>0?`<span class="bdg" title="โดนใบเตือน: เงินเดือนลด 50% อีก ${p.warn} เดือน"><img class="icw" src="img/ic-warn.webp" alt=""></span>`:'')+(p.badge1?'<span class="bdg" title="ชนะ Lv.1: รายได้จากทรัพย์สินมากกว่ารายจ่ายรวม">🏆</span>':'')+(p.badge2?'<span class="bdg" title="ชนะ Lv.2: ธุรกิจ A ระดับไดมอนด์">💎</span>':'')}
 function standings(){return [...S.players].map(q=>[q,fin(q)]).sort((a,b)=>((b[0].badge2?2:0)+(b[0].badge1?1:0))-((a[0].badge2?2:0)+(a[0].badge1?1:0))||b[1].passive/Math.max(1,b[1].expenses)-a[1].passive/Math.max(1,a[1].expenses))}
 function standingsHtml(){return `<table class="ft"><tr class="th"><td>#</td><td>ผู้เล่น</td><td class="r">ทรัพย์สิน / รายจ่าย</td></tr>${standings().map(([q,f],i)=>`<tr><td>${i+1}</td><td><span class="tok pic" style="display:inline-block;${tokStyle(q)}"></span> ${esc(q.name)} ${badges(q)}<div class="fsub">${esc(S.jobs[q.job].n)}${q.badge1?` · Lv.1 รอบ ${q.badge1}`:''}${q.badge2?` · Lv.2 รอบ ${q.badge2}`:''}</div></td><td class="r num"><span class="pos">${B(f.passive)}</span> / <span class="neg">${B(f.expenses)}</span></td></tr>`).join('')}</table>`}
 function endGame(why){if(PAR()&&!parMaster()&&S.winner==null)return;if(S.phase!=='done')log(cryReveal());S.winner=S.winner??(standings()[0][0].id);S.phase='done';if(ON.play&&PAR())onPush();else save();render();lbAward(); /* โหมดพร้อมกัน: save() ช่วงผู้เล่นเล่นส่งแค่ข้อมูลตัวเอง จึงส่งสถานะทั้งเกมตรงๆ */
@@ -3565,7 +3595,7 @@ function onTag(){let t=$('#roomTag');if(!ON.code){if(t)t.remove();return}
   if(!t){t=document.createElement('span');t.id='roomTag';t.className='roomtag';t.setAttribute('role','button');t.title='ดูข้อมูลห้อง';t.onclick=onRoomInfo;const h=document.querySelector('header .logo')?.parentElement||document.querySelector('header');h.appendChild(t)}
   t.textContent='ห้อง '+ON.code+' ⓘ'}
 /* เวอร์ชันของไฟล์เกม (เปลี่ยนทุกครั้งที่แก้ระบบออนไลน์) · ส่งไปกับสถานะออนไลน์ เพื่อดูว่าใครยังเปิดเวอร์ชันเก่า */
-const BUILD='2026-11-18.17';
+const BUILD='2026-11-18.18';
 /* ป้ายเลขห้อง → ข้อมูลห้อง: เจ้าของห้อง · เครื่องที่คุมรอบ · สถานะผู้เล่นแต่ละคน */
 function onRoomInfo(){const r=ON.room;if(!r||!ON.code)return;
   const seatName=u=>{const q=S&&S.players&&S.players.find(x=>x.uid===u);if(q)return q.name;const s=Object.values(r.seats||{}).find(x=>x&&x.uid===u);return s?(s.name||'ผู้เล่น'):'—'};
@@ -3771,7 +3801,7 @@ function parBanner(){let el=$('#rbanner');if(!el){el=document.createElement('div
 /* Passive เทียบรายจ่าย (นับตอนจบเทิร์น) ได้รางวัลขั้นสูงสุดขั้นเดียว · ชนะ Lv.1 แล้วได้โบนัส Lv.1 แทน ไม่ได้ขั้น Passive ซ้อน · 25% ⏳+1 · 50% ⏳+1 📚+1 · 75% ❤+1 ⏳+1 📚+1 */
 const PT_TIERS=[[.75,{h:1,t:1,k:1}],[.5,{t:1,k:1}],[.25,{t:1}]];
 const stTxt=b=>[b.h?'❤ +'+b.h:'',b.t?'⏳ +'+b.t:'',b.k?'📚 +'+b.k:''].filter(Boolean).join(' ');
-function turnPassiveTime(p){if(!p||S.winner!=null)return;offnetTick(p);turnLv1Bonus(p);turnNetBonus(p);if(p.badge1)return;const f=fin(p),pr=f.expenses>0?f.passive/f.expenses:0,tr=PT_TIERS.find(([x])=>pr>=x);if(!tr)return;
+function turnPassiveTime(p){if(!p||S.winner!=null)return;offnetTick(p);scamBTick(p);turnLv1Bonus(p);turnNetBonus(p);if(p.badge1)return;const f=fin(p),pr=f.expenses>0?f.passive/f.expenses:0,tr=PT_TIERS.find(([x])=>pr>=x);if(!tr)return;
   const b=tr[1],sx=ledAdj(p,{...b},'💰',`รายได้จากทรัพย์สิน ${Math.floor(pr*100)}% ของรายจ่าย (ขั้น ${tr[0]*100}%)`);if(!sx)return;log(`💰 ${esc(p.name)} รายได้จากทรัพย์สิน ${Math.floor(pr*100)}% ของรายจ่าย ได้โบนัสทุกเทิร์น${sx}`);}
 /* ชนะ Lv.1 แล้ว: ทุกครั้งที่จบเทิร์น ❤ +1 ⏳ +2 📚 +1 (เพิ่มจากโบนัส Passive) */
 function turnLv1Bonus(p){if(!p.badge1)return;const sx=ledAdj(p,{h:1,t:2,k:1},'🏆','ชนะ Lv.1 แล้ว (แทนโบนัสขั้น Passive)');if(!sx)return;log(`🏆 ${esc(p.name)} ชนะ Lv.1 แล้ว ได้โบนัสทุกเทิร์น${sx}`);}
