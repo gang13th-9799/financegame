@@ -1490,7 +1490,7 @@ async function netCard(p){
       opts:[{v:'y',l:`สมัคร ${B(NET_FEE)}`,c:'pri',dis:p.cash<NET_FEE},{v:'n',l:'ไม่สนใจ'}],bot:p.cash>NET_FEE*20&&Math.random()<.4?'y':'n'});
     if(v==='y')netJoin(p,NET_FEE);return;
   }
-  const _c=draw('netc');if(_c[5]==='DL'){await dlCard(p,_c);return}if(_c[5]==='OFF'){await offCard(p,_c);return}if(_c[5]==='SCAMB'){await scamBCard(p,_c);return}
+  const _c=draw('netc');if(_c[5]==='DL'){await dlCard(p,_c);return}if(_c[5]==='OFF'){await offCard(p,_c);return}if(_c[5]==='SCAMB'){await scamBCard(p,_c);return}if(_c[5]==='SCAMC'){await scamCCard(p,_c);return}
   const [id,t,leg,pv,cost,cat,A,Pv,nT,nH,nK,dsc='']=_c;const tdx=t+' '+dsc;const n=p.net;const NEED={needT:nT,needH:nH,needK:nK};
   const info=`<div class="kv">${leg?`<b>เป้าหมาย</b><span>สายงาน ${leg} (ตอนนี้ ${n.legs[leg].toLocaleString()} PV)</span>`:''}${(()=>{const mm=leg&&tdx.match(/ได้\s*([\d,]+)\s*PV/i);if(mm){const g=Math.round(+mm[1].replace(/,/g,'')*(1+skV(p,'net')/100));return `<b>ผลลัพธ์</b><span class="num pos">สายงาน ${leg} ขึ้นเป็น ${g.toLocaleString()} PV${n.legs[leg]>=g?' (ตอนนี้สูงกว่าแล้ว ไม่เพิ่ม)':` (+${(g-n.legs[leg]).toLocaleString()})`}</span>`}return pv?`<b>PV</b><span class="num">+${pv.toLocaleString()}${leg?` เข้าสายงาน ${leg}`:' (ยอดส่วนตัว)'}</span>`:''})()}${cost?`<b>ค่าใช้จ่าย</b><span class="num neg">${B(cost)}</span>`:''}${A?`<b>Active</b><span class="num pos">+${B(A)}${cat==='ชีวิต'?' ต่อเดือน':' ครั้งเดียว'}</span>`:''}${Pv?`<b>Passive</b><span class="num pos">+${B(Pv)} ต่อเดือน</span>`:''}</div>${cat==='สร้างธุรกิจ'&&skV(p,'net')?`<p class="pos">ทักษะผู้นำเครือข่าย: PV และ Passive +${skV(p,'net')}%</p>`:''}<p class="muted">หมวด ${cat} · การ์ด ${id}</p>`;
   const ok1=(o)=>({v:'ok',l:'รับทราบ',c:'pri',...o});
@@ -1727,6 +1727,7 @@ const NET_DL=[
  ['dl-d1','DL ท้อ หยุดนัดลูกค้า','',2,0,'DL',0,0,0,0,0,'ดาวน์ไลน์ท้อใจหลังโดนปฏิเสธติดกันหลายครั้ง หยุดนัดลูกค้าและไม่เข้าประชุมทีม ยอดสั่งซื้อเดือนนี้หายไปส่วนหนึ่ง'],
  ['dl-off','หลุดบรรยากาศ','',3,0,'OFF',0,0,0,0,0,'งานประจำและเรื่องในบ้านรุมเข้ามาจนห่างหายจากทีม ไม่ได้เข้าประชุม ไม่ได้คุยกับอัพไลน์ ไฟในการทำธุรกิจเริ่มมอด กว่าจะกลับมาเข้าจังหวะต้องใช้เวลาสักพัก'],
  ['scamb','เพื่อนชวนไปทำธุรกิจ B','',4,100000,'SCAMB',0,20000,0,0,0,'เพื่อนสนิทชวนไปทำธุรกิจ B บอกว่ารวยกว่า เร็วกว่าธุรกิจ A ไม่ต้องหาลูกค้า ไม่ต้องสร้างทีม แค่ลงทุน ฿100,000 ก็ได้ Passive ฿20,000 ทุกเทิร์น'],
+ ['scamc','เพื่อนชวนลงทุนธุรกิจ C','',5,50000,'SCAMC',0,15000,0,0,0,'เพื่อนชวนลงทุนธุรกิจ C ระบบปันผลอัตโนมัติ ลงทุนแค่ ฿50,000 ได้ Passive ฿15,000 ทุกเทิร์น ยิ่งเพิ่มทุนยิ่งได้ผลตอบแทนมาก'],
  ['dl-d2','DL ท้อ คนรอบตัวไม่สนับสนุน','',2,0,'DL',0,0,0,0,0,'ครอบครัวและเพื่อนของดาวน์ไลน์ไม่เห็นด้วยกับธุรกิจ เขาเริ่มลังเลและทำน้อยลง ยอดในสายงานลดลงชัดเจน'],
 ];
 /* หลุดบรรยากาศ: ห้ามเปิดกองธุรกิจ A 2–5 เทิร์นของตัวเอง (p.offnet) · ป้องกัน: หัก ❤ 1–3 และ 📚 3–6 ตามจำนวนเทิร์น
@@ -1761,7 +1762,31 @@ function scamBTick(p){const z=p.scamB;if(!z)return;if(z._new){delete z._new;retu
    <p class="muted" style="font-size:12px">บทเรียน: ผลตอบแทนสูงเกินจริงโดยไม่ต้องขายสินค้าหรือบริการ คือสัญญาณของแชร์ลูกโซ่</p>`;
   S.ann=S.ann||[];S.ann.push({k:'netc',t:`🚔 ${esc(p.name)} ถูกจับ! ธุรกิจ B เป็นแชร์ลูกโซ่`,b});
   ruleNote(p,'🚔 ถูกจับข้อหาฉ้อโกงประชาชน','ธุรกิจ B คือแชร์ลูกโซ่ · ติดคุก 3 เทิร์น · ทรัพย์สินถูกยึดทั้งหมด เริ่มต้นใหม่')}
-function scamArrest(p){const j=S.jobs[p.job];
+/* ===== การ์ดสแกม "ธุรกิจ C" (กองธุรกิจ A 1 ใบ) =====
+   ลงทุน ฿50,000 → +฿15,000 ทุกจบเทิร์นของตัวเอง (ไม่นับเทิร์นที่ลงทุน) · ต้นเทิร์นถัดไปถามเพิ่มทุน ฿50,000 (ผลตอบแทน +฿15,000)
+   ไม่เพิ่มทุน → ธุรกิจ C ปิดตัวหนี เงินลงทุนสูญ แต่ไม่โดนจับ · เพิ่มทุนไปเรื่อย ๆ จนครบ 3–6 เทิร์น (สุ่ม ไม่บอก) → โดนจับ โทษเหมือนธุรกิจ B
+   p.scamC={left,inv,cf,paid,ask,_new} */
+const SCC_ADD=50000,SCC_CF=15000;
+async function scamCCard(p,c){const [,t,,,cost,,,cf,,,,d]=c;
+  if(p.scamC||p.jail){await choose({actor:p,kind:'netc',title:esc(t),body:`<p>${esc(d)}</p><p class="muted">คุณลงทุนในธุรกิจ C ไปแล้ว</p>`,opts:[{v:'ok',l:'รับทราบ',c:'pri'}],bot:'ok'});return}
+  const ok=await buyFlow(p,cost,{kind:'netc',verb:'ลงทุน',no:'ไม่สนใจ',cf,bot:p.cash>cost*1.5&&Math.random()<.35,title:`💸 ${esc(t)}`,body:`<p>${esc(d)}</p><div class="kv"><b>เงินลงทุน</b><span class="num">${B(cost)}</span><b>ผลตอบแทน</b><span class="num pos">+${B(cf)} ทุกเทิร์น</span></div>`});
+  if(!ok)return;p.scamC={left:3+Math.floor(Math.random()*4),inv:cost,cf,paid:0,_new:1};log(`💸 ${esc(p.name)} ลงทุนธุรกิจ C ${B(cost)} ตามคำชวนของเพื่อน`)}
+function scamCTick(p){const z=p.scamC;if(!z)return;if(z._new){delete z._new;return}
+  p.cash+=z.cf;z.paid+=z.cf;z.left--;ledg(p,'💸','ผลตอบแทนธุรกิจ C',{c:z.cf});log(`💸 ${esc(p.name)} ได้ผลตอบแทนธุรกิจ C +${B(z.cf)}`);
+  if(z.left>0){z.ask=1;ruleNote(p,'ผลตอบแทนธุรกิจ C',`ได้ +${B(z.cf)} (รวม ${B(z.paid)} · ลงทุนไป ${B(z.inv)})`);return}
+  const paid=z.paid,inv=z.inv;delete p.scamC;scamArrest(p,'C');
+  S.ann=S.ann||[];S.ann.push({k:'netc',t:`🚔 ${esc(p.name)} ถูกจับ! ธุรกิจ C เป็นแชร์ลูกโซ่`,b:`<p><b>ธุรกิจ C คือแชร์ลูกโซ่</b> ${esc(p.name)} ลงทุนเพิ่มตามที่ถูกชวนจนรวม ${B(inv)} ได้ "ผลตอบแทน" ${B(paid)} ซึ่งเป็นเงินของสมาชิกรายใหม่ ไม่ใช่กำไรจริง</p><p>เมื่อมีคนแจ้งความ ตำรวจจับกุมทุกคนในเครือข่ายข้อหา <b>ฉ้อโกงประชาชน</b></p><div class="kv"><b>สถานะ</b><span class="neg">ติดคุก หยุดเดิน 3 เทิร์น</span><b>ทรัพย์สิน</b><span class="neg">ถูกยึดทั้งหมด เริ่มต้นใหม่ตามอาชีพเดิม</span></div><p class="muted" style="font-size:12px">บทเรียน: ถ้าถูกเร่งให้เพิ่มเงินลงทุนเรื่อย ๆ เพื่อรักษาผลตอบแทน คือสัญญาณของแชร์ลูกโซ่ ยิ่งอยู่นานยิ่งเสียหายหนัก</p>`});
+  ruleNote(p,'🚔 ถูกจับข้อหาฉ้อโกงประชาชน','ธุรกิจ C คือแชร์ลูกโซ่ · ติดคุก 3 เทิร์น · ทรัพย์สินถูกยึดทั้งหมด เริ่มต้นใหม่')}
+/* ต้นเทิร์น: ถามเพิ่มทุนธุรกิจ C */
+async function scamCAsk(p){const z=p.scamC;if(!z||!z.ask)return;delete z.ask;
+  const ok=await buyFlow(p,SCC_ADD,{kind:'netc',verb:'เพิ่มทุน',no:'ไม่เพิ่ม',cf:SCC_CF,bot:p.cash>=SCC_ADD*1.2&&Math.random()<.6,title:'💸 ธุรกิจ C ขอให้เพิ่มเงินลงทุน',
+    body:`<p>เพื่อนบอกว่ารอบนี้ต้อง "เพิ่มทุน" เพื่อรักษาสิทธิ์รับผลตอบแทน ถ้าเพิ่มทุนจะได้ผลตอบแทนมากขึ้น</p><div class="kv"><b>ลงทุนไปแล้ว</b><span class="num">${B(z.inv)}</span><b>ได้ผลตอบแทนแล้ว</b><span class="num pos">${B(z.paid)}</span><b>เพิ่มทุน</b><span class="num">${B(SCC_ADD)}</span><b>ผลตอบแทนใหม่</b><span class="num pos">+${B(z.cf+SCC_CF)} ทุกเทิร์น</span></div><p class="muted" style="font-size:12px">ถ้าไม่เพิ่มทุน ธุรกิจ C จะตัดสิทธิ์คุณ</p>`});
+  if(ok){z.inv+=SCC_ADD;z.cf+=SCC_CF;log(`💸 ${esc(p.name)} เพิ่มทุนธุรกิจ C ${B(SCC_ADD)} (ลงทุนรวม ${B(z.inv)} · ผลตอบแทน ${B(z.cf)}/เทิร์น)`);return}
+  const inv=z.inv,paid=z.paid;delete p.scamC;
+  log(`💨 ${esc(p.name)} ไม่เพิ่มทุน ธุรกิจ C ปิดตัวหนี เงินลงทุน ${B(inv)} สูญ (ได้คืนมาแล้ว ${B(paid)})`);
+  await choose({actor:p,kind:'netc',title:'💨 ธุรกิจ C ปิดตัวหนี',body:`<p>หลังคุณปฏิเสธเพิ่มทุน ไม่กี่วันต่อมาธุรกิจ C ก็ปิดเว็บและติดต่อเพื่อนไม่ได้อีก มันคือ<b>แชร์ลูกโซ่</b></p><div class="kv"><b>ลงทุนไป</b><span class="num neg">${B(inv)}</span><b>ได้คืนมา</b><span class="num pos">${B(paid)}</span><b>สุทธิ</b><span class="num ${paid-inv>=0?'pos':'neg'}">${paid-inv>=0?'+':'−'}${B(Math.abs(paid-inv))}</span></div><p>โชคดีที่ถอนตัวทัน <b>คุณไม่โดนแจ้งจับ</b> คนที่เพิ่มทุนตามไปเรื่อย ๆ คือคนที่ติดร่างแห</p>`,opts:[{v:'ok',l:'รับทราบ',c:'pri'}],bot:'ok'});
+  ruleNote(p,'ธุรกิจ C ปิดตัวหนี',`ไม่เพิ่มทุน เงินลงทุน ${B(inv)} สูญ แต่ไม่โดนแจ้งจับ`)}
+function scamArrest(p){const j=S.jobs[p.job];delete p.scamB;delete p.scamC;
   for(const k in S.props)if(S.props[k].o===p.id)delete S.props[k];
   S.listings=(S.listings||[]).filter(l=>l.seller!==p.id);
   Object.assign(p,{salary:j.sal,cash:j.cash,exp:{...j.e,extra:0},active:0,debt:{home:j.e.home*100,car:j.e.car*25,card:j.e.card*20},loan:0,dep:0,warn:0,jobless:0,charity:0,
@@ -2033,6 +2058,7 @@ async function rollTurn(n){
   if(p.jail>0){p.jail--;log(`🚔 ${esc(p.name)} ติดคุก หยุดเดินเทิร์นนี้${p.jail?` (เหลืออีก ${p.jail} เทิร์น)`:' · พ้นโทษแล้ว'}`);render();
     await choose({actor:p,kind:'netc',title:'🚔 ติดคุก',body:`<p>หยุดเดินเทิร์นนี้${p.jail?` เหลืออีก ${p.jail} เทิร์น`:' · เทิร์นหน้าพ้นโทษ เดินได้ตามปกติ'}</p>`,opts:[{v:'ok',l:'รับทราบ',c:'pri'}],bot:'ok'});
     S.phase='free';endTurn();return}
+  if(p.scamC&&p.scamC.ask)await scamCAsk(p);
   n=(p.charity>0&&n===2)?2:1;if(p.charity>0)p.charity--;
   const d=S.forceRoll?[S.forceRoll]:n===2?[r6(),r6()]:[r6()];S.forceRoll=0;await diceAnim(d,p.bot);S.dice=d;render();await sleep(p.bot?120:200);
   const steps=d.reduce((a,b)=>a+b,0);
@@ -3595,7 +3621,7 @@ function onTag(){let t=$('#roomTag');if(!ON.code){if(t)t.remove();return}
   if(!t){t=document.createElement('span');t.id='roomTag';t.className='roomtag';t.setAttribute('role','button');t.title='ดูข้อมูลห้อง';t.onclick=onRoomInfo;const h=document.querySelector('header .logo')?.parentElement||document.querySelector('header');h.appendChild(t)}
   t.textContent='ห้อง '+ON.code+' ⓘ'}
 /* เวอร์ชันของไฟล์เกม (เปลี่ยนทุกครั้งที่แก้ระบบออนไลน์) · ส่งไปกับสถานะออนไลน์ เพื่อดูว่าใครยังเปิดเวอร์ชันเก่า */
-const BUILD='2026-11-18.19';
+const BUILD='2026-11-18.20';
 /* ป้ายเลขห้อง → ข้อมูลห้อง: เจ้าของห้อง · เครื่องที่คุมรอบ · สถานะผู้เล่นแต่ละคน */
 function onRoomInfo(){const r=ON.room;if(!r||!ON.code)return;
   const seatName=u=>{const q=S&&S.players&&S.players.find(x=>x.uid===u);if(q)return q.name;const s=Object.values(r.seats||{}).find(x=>x&&x.uid===u);return s?(s.name||'ผู้เล่น'):'—'};
@@ -3801,7 +3827,7 @@ function parBanner(){let el=$('#rbanner');if(!el){el=document.createElement('div
 /* Passive เทียบรายจ่าย (นับตอนจบเทิร์น) ได้รางวัลขั้นสูงสุดขั้นเดียว · ชนะ Lv.1 แล้วได้โบนัส Lv.1 แทน ไม่ได้ขั้น Passive ซ้อน · 25% ⏳+1 · 50% ⏳+1 📚+1 · 75% ❤+1 ⏳+1 📚+1 */
 const PT_TIERS=[[.75,{h:1,t:1,k:1}],[.5,{t:1,k:1}],[.25,{t:1}]];
 const stTxt=b=>[b.h?'❤ +'+b.h:'',b.t?'⏳ +'+b.t:'',b.k?'📚 +'+b.k:''].filter(Boolean).join(' ');
-function turnPassiveTime(p){if(!p||S.winner!=null)return;offnetTick(p);scamBTick(p);turnLv1Bonus(p);turnNetBonus(p);if(p.badge1)return;const f=fin(p),pr=f.expenses>0?f.passive/f.expenses:0,tr=PT_TIERS.find(([x])=>pr>=x);if(!tr)return;
+function turnPassiveTime(p){if(!p||S.winner!=null)return;offnetTick(p);scamBTick(p);scamCTick(p);turnLv1Bonus(p);turnNetBonus(p);if(p.badge1)return;const f=fin(p),pr=f.expenses>0?f.passive/f.expenses:0,tr=PT_TIERS.find(([x])=>pr>=x);if(!tr)return;
   const b=tr[1],sx=ledAdj(p,{...b},'💰',`รายได้จากทรัพย์สิน ${Math.floor(pr*100)}% ของรายจ่าย (ขั้น ${tr[0]*100}%)`);if(!sx)return;log(`💰 ${esc(p.name)} รายได้จากทรัพย์สิน ${Math.floor(pr*100)}% ของรายจ่าย ได้โบนัสทุกเทิร์น${sx}`);}
 /* ชนะ Lv.1 แล้ว: ทุกครั้งที่จบเทิร์น ❤ +1 ⏳ +2 📚 +1 (เพิ่มจากโบนัส Passive) */
 function turnLv1Bonus(p){if(!p.badge1)return;const sx=ledAdj(p,{h:1,t:2,k:1},'🏆','ชนะ Lv.1 แล้ว (แทนโบนัสขั้น Passive)');if(!sx)return;log(`🏆 ${esc(p.name)} ชนะ Lv.1 แล้ว ได้โบนัสทุกเทิร์น${sx}`);}
