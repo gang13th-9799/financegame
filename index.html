@@ -713,6 +713,7 @@ body.pseudofs header{position:sticky;top:0}
 .bwrap .board{transform-origin:0 0;will-change:transform}
 .bzreset{position:absolute;right:8px;top:8px;z-index:40;font-size:12px;padding:4px 10px;border-radius:999px;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.25)}
 .bzhint{position:absolute;left:50%;bottom:10px;transform:translateX(-50%);z-index:40;background:rgba(40,34,24,.75);color:#fff;font-size:12px;padding:4px 12px;border-radius:999px;pointer-events:none;transition:opacity .6s}
+.hcash{font-weight:700;white-space:nowrap}.hcash b{font-size:1.05em}
 .bzctl{position:absolute;right:10px;bottom:10px;z-index:41;display:flex;flex-direction:column;gap:6px}
 .bzctl button{width:40px;height:40px;min-height:0;padding:0;border-radius:12px;font-size:22px;line-height:1;font-weight:700;background:rgba(255,253,246,.92);border:1.5px solid #d9c9a3;box-shadow:0 2px 6px rgba(60,50,20,.2);color:#5b4a2a}
 .bzctl button.bzr{font-size:18px}
@@ -2011,7 +2012,7 @@ function totalCharges(p){return Object.values(p.charges||{}).reduce((a,b)=>a+b,0
 function canUseNow(eff){const ph=S.phase;return eff==='dice_pick'?ph==='roll':eff==='extra_pick'?(ph==='card'||ph==='roll'):eff==='shield_jobless'?false:['roll','card','free'].includes(ph)}
 function skillPanelBtn(p,act,cls=''){const n=totalCharges(p);return (n&&!p.bot?`<button class="sm ${cls}" ${act?'':'disabled'} onclick="openSkills()">🃏 สกิลการ์ด (${n})</button>`:'')+hireBtn(p,act,cls)}
 const HIRE_COST=10000;
-function hireBtn(p,act,cls=''){if(p.bot)return '';const done=p.hired,full=p.st.t>=10;return `<button class="sm ${cls}" ${act&&!done&&!full?'':'disabled'} onclick="canAct()&&hireHelp()" title="จ่าย ${B(HIRE_COST)} ได้ ⏳ +1 เทิร์นละครั้ง">🧹 จ้างคนช่วย ${done?'(ใช้แล้ว)':full?'(เวลาเต็ม)':`⏳+1 ${B(HIRE_COST)}`}</button>`}
+function hireBtn(p,act,cls=''){if(p.bot)return '';const done=p.hired,full=p.st.t>=10;return `<button class="sm ${cls}" ${act&&!done&&!full?'':'disabled'} onclick="canAct()&&hireHelp()" title="จ้างคนช่วย: จ่าย ${B(HIRE_COST)} ได้ ⏳ +1 เทิร์นละครั้ง${done?' (ใช้แล้ว)':full?' (เวลาเต็ม)':''}" aria-label="จ้างคนช่วย">🧹</button>`}
 async function hireHelp(p=cp()){if(p.hired||p.st.t>=10)return;
   const ok=await buyFlow(p,HIRE_COST,{kind:'life',verb:'จ้าง',no:'ไม่จ้าง',bot:true,title:'🧹 จ้างคนช่วยงาน',body:'<p>จ้างคนช่วยงานบ้านและธุระต่าง ๆ ได้เวลาคืนมา <b class="pos">⏳ +1</b></p><p class="muted">ใช้ได้เทิร์นละ 1 ครั้ง</p>'});
   if(ok){p.hired=true;const sx=adj(p,{t:1},true);log(`🧹 ${esc(p.name)} จ้างคนช่วยงาน ${B(HIRE_COST)}${sx}`)}render();save()}
@@ -2705,7 +2706,7 @@ function render(){
   const act=canAct();
   let ctr=`<div class="who"><span class="tok pic big" style="${tokStyle(p)}"></span>${esc(p.name)}${badges(p)}${p.afk?' <span class="jl afkc" style="font-size:.6em">💤 ติดสถานะ Bot</span>':p.bot?' <span class="muted" style="font-size:.7em">(บอท)</span>':''}</div>
     <div class="job">${S.jobs[p.job].n} · อยู่${RINGN[p.ring]} · เงินสด <span class="num">${B(p.cash)}</span>${p.jobless?` · <span class="jl">ตกงานอีก ${p.jobless} เดือน</span>`:''}</div>
-    <div class="meters">${meters(p)}</div>
+    <div class="meters">${meters(p)}<span class="mt hcash" title="เงินสด">💵 <b class="num ${p.cash<0?'neg':''}">${B(p.cash)}</b></span></div>
     <div class="trow">${!p.bot&&S.winner==null?`<div class="tline"><div class="timer num" id="timer"></div>${(S.phase==='card'||S.phase==='free')?`<button class="sm endbtn mini" ${act?'':'disabled'} onclick="canAct()&&confirmEndTurn()">✅ จบเทิร์น</button>`:''}</div>`:''}
     <div class="dice">${S.dice.map(v=>`<div class="die">${pips(v)}</div>`).join('')}</div></div>${p.charity>0?`<div class="prompt">💝 สิทธิ์ทอย 2 ลูกเหลือ ${p.charity} เทิร์น</div>`:''}`;
   if(S.winner!=null)ctr+=`<div class="prompt">🏁 จบเกม · อันดับ 1 ${esc(standings()[0][0].name)} ${badges(standings()[0][0])}</div><button class="sm" onclick="endGame()">ดูสรุปผล</button><button class="pri" onclick="showSetup()">เกมใหม่</button>`;
@@ -3443,7 +3444,7 @@ function onTag(){let t=$('#roomTag');if(!ON.code){if(t)t.remove();return}
   if(!t){t=document.createElement('span');t.id='roomTag';t.className='roomtag';t.setAttribute('role','button');t.title='ดูข้อมูลห้อง';t.onclick=onRoomInfo;const h=document.querySelector('header .logo')?.parentElement||document.querySelector('header');h.appendChild(t)}
   t.textContent='ห้อง '+ON.code+' ⓘ'}
 /* เวอร์ชันของไฟล์เกม (เปลี่ยนทุกครั้งที่แก้ระบบออนไลน์) · ส่งไปกับสถานะออนไลน์ เพื่อดูว่าใครยังเปิดเวอร์ชันเก่า */
-const BUILD='2026-11-18.3';
+const BUILD='2026-11-18.4';
 /* ป้ายเลขห้อง → ข้อมูลห้อง: เจ้าของห้อง · เครื่องที่คุมรอบ · สถานะผู้เล่นแต่ละคน */
 function onRoomInfo(){const r=ON.room;if(!r||!ON.code)return;
   const seatName=u=>{const q=S&&S.players&&S.players.find(x=>x.uid===u);if(q)return q.name;const s=Object.values(r.seats||{}).find(x=>x&&x.uid===u);return s?(s.name||'ผู้เล่น'):'—'};
