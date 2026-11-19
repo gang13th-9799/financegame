@@ -1264,6 +1264,7 @@ body:has(#setupView .setup.onl) header{position:relative;z-index:5}
 .ib::-webkit-details-marker{display:none}.ib::marker{content:''}
 details[open]>.ib{background:#f2e3bb;border-color:#b89a55}
 .lgd{display:flex;flex-direction:column;align-items:flex-end;margin:4px 6px 0}.lgd .legend{margin-top:4px;align-self:stretch}
+.tsum{list-style:none;cursor:pointer;display:inline-flex;align-items:center;gap:6px;font-size:12px;user-select:none}.tsum::-webkit-details-marker{display:none}details[open]>.tsum .ib{background:#f2e3bb;border-color:#b89a55}
 .tip{display:inline-block;vertical-align:middle}.tip[open]{display:block}.tip .tipb{margin-top:6px;background:#fffdf5;border:1.5px solid #e9d9a8;border-radius:10px;padding:8px 10px;box-shadow:0 6px 18px rgba(0,0,0,.15);font-size:12px;line-height:1.45;color:var(--ink);font-weight:400;white-space:normal}
 </style>
 </head>
@@ -2955,7 +2956,9 @@ function render(){
   document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.tab===TAB||(!!grp&&b.dataset.tab===grp)));
   const nm=(S.mk||[]).filter(x=>x.sold==null).length,nn=(S.nw||[]).length,tn=n=>n?` <span class="tabn">${n}</span>`:'';
   {const a=$('#t-bank'),b=$('#t-news');if(a)a.innerHTML=`ธนาคาร${tn(nm)}`;if(b)b.innerHTML=`ข่าวสาร${tn(nn)}`}
+  const _op=[...$('#panel').querySelectorAll('details[id][open]')].map(d=>d.id);
   $('#panel').innerHTML=(grp?`<div class="subtabs" role="tablist">${SUB_TABS[grp].map(([k,l])=>`<button class="${k===TAB?'on':''}" role="tab" onclick="TAB='${k}';render()">${l}${k==='npcm'?tn(nm):''}</button>`).join('')}</div>`:'')+(TAB==='pl'?renderPlayers():TAB==='sk'?renderSkills():TAB==='fin'?renderFin():TAB==='net'?renderNet():TAB==='netb'?renderScamTab('B'):TAB==='netc'?renderScamTab('C'):TAB==='npcm'?renderNpcMarket():TAB==='news'?renderNewsTab():TAB==='mkt'?renderMkt():TAB==='bank'?renderBank():TAB==='fund'?renderBank('fund'):`<div class="log">${S.log.map(l=>`<div>${l}</div>`).join('')}</div>`);
+  _op.forEach(id=>{const d=document.getElementById(id);if(d&&$('#panel').contains(d))d.open=true});
 }
 /* แท็บย่อย ธุรกิจ B / C (ไม่เฉลยว่าเป็นแชร์ลูกโซ่ จนกว่าจะโดนจับหรือปิดตัว) */
 function renderScamTab(k){const q=P(S.view),z=k==='B'?q.scamB:q.scamC;
@@ -3074,10 +3077,9 @@ function renderNet(){
     ${nx?`<div class="muted" style="font-size:12px">ระดับถัดไป <b>${nx.n}</b>: ${nx.req}${n.s21?` · 21% ติดต่อกัน ${n.s21} เดือน`:''}${n.sq3?` · 3 สาย 21% ติดต่อกัน ${n.sq3} เดือน`:''}</div>`:'<div class="pos">ถึงระดับสูงสุด ไดมอนด์แล้ว</div>'}</div>
    <div class="box"><h3><span>สายงาน A–F</span><span class="muted" style="font-size:12px">ถึง 21% = ${QPV.toLocaleString()} PV</span></h3>
     ${LEGS.map(l=>{const x=n.legs[l];return `<div class="ln"><span style="flex:1">สาย ${l} · <b class="num">${x.toLocaleString()}</b> PV ${x?`<span class="chip">${Math.round(netPct(x)*100)}%</span>`:'<span class="muted">ยังไม่เปิด</span>'}<span class="bar ${x>=QPV?'win':''}" style="display:block;margin-top:3px"><i style="width:${Math.min(100,x/QPV*100)}%"></i></span></span></div>`}).join('')}
-    <p class="muted" style="font-size:12px">จั่วการ์ดกอง "ธุรกิจ A" เพื่อสร้างและขยายสายงาน</p></div>
-   <div class="box"><h3><span>ขั้นบันไดโบนัส</span></h3>
-    ${[...NET_BRACKETS].reverse().map(([t,r])=>`<div class="ln ${gv>=t?'':'muted'}"><span>${t.toLocaleString()} PV ขึ้นไป</span><span class="num">${Math.round(r*100)}%</span></div>`).join('')}
-    <h3 style="margin-top:10px"><span>ระดับ (พิน)</span></h3>${NET_RANKS.map((r,i)=>`<div class="ln ${i<=n.rank?'':'muted'}"><span><img class="rpin" src="img/rank-${i}.webp" alt="" style="${i<=n.rank?'':'filter:grayscale(1);opacity:.45'}">${i<=n.rank?'✓ ':''}${r.n}</span><span style="font-size:12px;text-align:right">${r.req}${i?`<br><b class="pos">ทุกเทิร์น ${netTurnTxt(i)}</b>`:''}</span></div>`).join('')}<p class="muted" style="font-size:12px;margin:4px 0 0">โบนัสทุกเทิร์นนับเฉพาะระดับสูงสุดที่ถึง (ไม่รวมทุกระดับ)</p></div>
+    <p class="muted" style="font-size:12px">จั่วการ์ดกอง "ธุรกิจ A" เพื่อสร้างและขยายสายงาน</p>
+    <details class="tip" id="nbrk"><summary class="tsum muted" title="ดูขั้นบันไดโบนัส">ขั้นบันไดโบนัส <span class="ib">i</span></summary><div class="tipb">${[...NET_BRACKETS].reverse().map(([t,r])=>`<div class="ln ${gv>=t?'':'muted'}"><span>${t.toLocaleString()} PV ขึ้นไป</span><span class="num">${Math.round(r*100)}%</span></div>`).join('')}</div></details></div>
+   <div class="box"><h3><span>ระดับ (พิน)</span></h3>${NET_RANKS.map((r,i)=>`<div class="ln ${i<=n.rank?'':'muted'}"><span><img class="rpin" src="img/rank-${i}.webp" alt="" style="${i<=n.rank?'':'filter:grayscale(1);opacity:.45'}">${i<=n.rank?'✓ ':''}${r.n}</span><span style="font-size:12px;text-align:right">${r.req}${i?`<br><b class="pos">ทุกเทิร์น ${netTurnTxt(i)}</b>`:''}</span></div>`).join('')}<p class="muted" style="font-size:12px;margin:4px 0 0">โบนัสทุกเทิร์นนับเฉพาะระดับสูงสุดที่ถึง (ไม่รวมทุกระดับ)</p></div>
   </div>`;
 }
 function spark(arr){const w=64,h=20,mn=Math.min(...arr),mx=Math.max(...arr),sp=mx-mn||1;const pts=arr.map((v,i)=>`${(i/(Math.max(1,arr.length-1)))*w},${h-2-((v-mn)/sp)*(h-4)}`).join(' ');const up=arr[arr.length-1]>=arr[0];
@@ -3651,7 +3653,7 @@ function onTag(){let t=$('#roomTag');if(!ON.code){if(t)t.remove();return}
   if(!t){t=document.createElement('span');t.id='roomTag';t.className='roomtag';t.setAttribute('role','button');t.title='ดูข้อมูลห้อง';t.onclick=onRoomInfo;const h=document.querySelector('header .logo')?.parentElement||document.querySelector('header');h.appendChild(t)}
   t.textContent='ห้อง '+ON.code+' ⓘ'}
 /* เวอร์ชันของไฟล์เกม (เปลี่ยนทุกครั้งที่แก้ระบบออนไลน์) · ส่งไปกับสถานะออนไลน์ เพื่อดูว่าใครยังเปิดเวอร์ชันเก่า */
-const BUILD='2026-11-19.4';
+const BUILD='2026-11-19.5';
 /* ป้ายเลขห้อง → ข้อมูลห้อง: เจ้าของห้อง · เครื่องที่คุมรอบ · สถานะผู้เล่นแต่ละคน */
 function onRoomInfo(){const r=ON.room;if(!r||!ON.code)return;
   const seatName=u=>{const q=S&&S.players&&S.players.find(x=>x.uid===u);if(q)return q.name;const s=Object.values(r.seats||{}).find(x=>x&&x.uid===u);return s?(s.name||'ผู้เล่น'):'—'};
