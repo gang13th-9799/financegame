@@ -1259,6 +1259,12 @@ body:has(#setupView .setup.onl) header{position:relative;z-index:5}
 #board.board:not(.iso){grid-template-columns:repeat(13,minmax(0,1fr))!important;grid-template-rows:repeat(13,minmax(0,1fr))!important}
 .minib{grid-template-columns:repeat(13,1fr)!important;grid-template-rows:repeat(13,1fr)!important}
 .bdg.offn{font-size:.72em;font-weight:600;color:#8a5a00;background:#fff3d6;border:1px solid #f0d08a;border-radius:999px;padding:0 6px;white-space:nowrap;vertical-align:.1em}
+/* ไอคอน i เล็ก กดดูรายละเอียด (คำอธิบายสีแผนที่ · หมายเหตุ) */
+.ib{list-style:none;display:inline-grid;place-items:center;width:18px;height:18px;border-radius:50%;border:1.5px solid #c9b88f;color:#8a7650;background:#fffdf5;font:italic 700 11px/1 Georgia,serif;cursor:pointer;user-select:none;vertical-align:middle}
+.ib::-webkit-details-marker{display:none}.ib::marker{content:''}
+details[open]>.ib{background:#f2e3bb;border-color:#b89a55}
+.lgd{display:flex;flex-direction:column;align-items:flex-end;margin:4px 6px 0}.lgd .legend{margin-top:4px;align-self:stretch}
+.tip{display:inline-block;vertical-align:middle}.tip[open]{display:block}.tip .tipb{margin-top:6px;background:#fffdf5;border:1.5px solid #e9d9a8;border-radius:10px;padding:8px 10px;box-shadow:0 6px 18px rgba(0,0,0,.15);font-size:12px;line-height:1.45;color:var(--ink);font-weight:400;white-space:normal}
 </style>
 </head>
 <body>
@@ -1279,7 +1285,7 @@ body:has(#setupView .setup.onl) header{position:relative;z-index:5}
     <div class="mapbar"><span class="muted" id="mapcap">แผนที่</span><button class="sm" id="btnCam" onclick="toggleCam()"></button><button class="sm" id="btnV3" onclick="toggleV3()"></button><button class="sm" id="btnMap" onclick="toggleMap()">ย่อแผนที่</button></div>
     <div id="minimap" hidden></div>
     <div class="bwrap" id="bwrap"><div class="hud center" id="hud" hidden></div><div class="bzoom" id="bzoom"><div class="board" id="board"></div></div><button class="bzreset" id="bzreset" hidden onclick="boardZoom(1)">⟲ 100%</button><div class="bzctl" id="bzctl"><button onclick="boardZoom(BZ.s*1.25)" aria-label="ซูมเข้า" title="ซูมเข้า">＋</button><button onclick="boardZoom(BZ.s/1.25)" aria-label="ซูมออก" title="ซูมออก">－</button><button class="bzr" id="bzr" hidden onclick="boardZoom(1)" title="กลับขนาดปกติ">⟲</button></div><div class="bzhint" id="bzhint">ใช้ 2 นิ้วซูมกระดานได้</div></div>
-    <div class="legend" id="legend"></div>
+    <details class="lgd" id="lgdw"><summary class="ib" title="คำอธิบายสีบนแผนที่" aria-label="คำอธิบายสีบนแผนที่">i</summary><div class="legend" id="legend"></div></details>
   </section>
   <section>
     <div class="tabs" role="tablist">
@@ -2903,7 +2909,7 @@ function render(){
   else if(S.phase==='free')ctr+=`<div class="prompt">เทรดหุ้น ปิดหนี้ หรือซื้อขายก่อนจบเทิร์น</div><div class="btnrow">${skillPanelBtn(p,act)}<button class="sm" ${act?'':'disabled'} onclick="tradeUI()">ซื้อขายกับผู้เล่น</button></div>`;
   else ctr+=`<div class="prompt">…</div>`;
   $('#btnMap').textContent=MAPMIN?'ขยายแผนที่':'ย่อแผนที่';$('#mapcap').textContent=MAPMIN?'แผนที่ (ย่อ)':'แผนที่';
-  bd.style.display=MAPMIN?'none':'';$('#legend').style.display=MAPMIN?'none':'';$('#minimap').hidden=!MAPMIN;
+  bd.style.display=MAPMIN?'none':'';$('#lgdw').style.display=MAPMIN?'none':'';$('#minimap').hidden=!MAPMIN;
   $('#gameView').classList.toggle('mapmin',MAPMIN);
   if(MAPMIN){const k=p.ring+p.pos,q=SQ(k),pr=S.props[k],zc=ZONES[q.z||zoneOfCell(k)].c,full={pay:'#ffd338',jobless:'#46206a',charity:'#f5862a',road:'#9da3a8'}[q.t];
     let sum;if(q.t==='prop')sum=pr?`เจ้าของ ${esc(P(pr.o).name)} · ค่าผ่านทาง ${B(propFee(k))}`:`ดาวน์ ${B(q.down)} · ค่าเช่า +${B(q.cf)} · ว่าง`;else if(q.t==='pay'){sum=`คงเหลือต่อเดือน ${B(fin(p).flow)}`}else sum=SQ_SUB[q.t]||'';
@@ -2945,8 +2951,8 @@ function render(){
 function renderScamTab(k){const q=P(S.view),z=k==='B'?q.scamB:q.scamC;
   const info=k==='B'?{cost:100000,cf:20000,d:'เพื่อนชวนทำธุรกิจ B รวยกว่า เร็วกว่าธุรกิจ A ไม่ต้องหาลูกค้า ไม่ต้องสร้างทีม'}:{cost:50000,cf:15000,d:'เพื่อนชวนลงทุนธุรกิจ C ระบบปันผลอัตโนมัติ ยิ่งเพิ่มทุนยิ่งได้ผลตอบแทนมาก'};
   const others=S.players.filter(x=>x.id!==q.id&&(k==='B'?x.scamB:x.scamC)).map(x=>esc(x.name));
-  const st=z?`<div class="tiles"><div class="tile"><span>ลงทุนไปแล้ว</span><b class="num">${B(k==='B'?100000:z.inv)}</b></div><div class="tile"><span>ได้ผลตอบแทนแล้ว</span><b class="num pos">${B(z.paid)}</b></div><div class="tile wide"><span>ผลตอบแทน</span><b class="num pos">+${B(k==='B'?20000:z.cf)} <small>ทุกจบเทิร์น</small></b></div></div>
-     ${k==='C'?`<p class="muted" style="font-size:12px">ธุรกิจ C จะขอให้เพิ่มทุนครั้งละ ${B(SCC_ADD)} ทุกต้นเทิร์น (ผลตอบแทน +${B(SCC_CF)}) ถ้าไม่เพิ่มจะถูกตัดสิทธิ์</p>`:''}`
+  const st=z?`<div class="tiles"><div class="tile"><span>ลงทุนไปแล้ว</span><b class="num">${B(k==='B'?100000:z.inv)}</b></div><div class="tile"><span>ได้ผลตอบแทนแล้ว</span><b class="num pos">${B(z.paid)}</b></div><div class="tile wide"><span>ผลตอบแทน${k==='C'?` <details class="tip"><summary class="ib" title="เงื่อนไขธุรกิจ C" aria-label="เงื่อนไขธุรกิจ C">i</summary><div class="tipb">ธุรกิจ C จะขอให้เพิ่มทุนครั้งละ ${B(SCC_ADD)} ทุกต้นเทิร์น (ผลตอบแทน +${B(SCC_CF)}) ถ้าไม่เพิ่มจะถูกตัดสิทธิ์</div></details>`:''}</span><b class="num pos">+${B(k==='B'?20000:z.cf)} <small>ทุกจบเทิร์น</small></b></div></div>
+`
     :q.jail>0?`<p class="neg"><b>🚔 ติดคุกอีก ${q.jail} เทิร์น</b> หยุดเดินจนกว่าจะพ้นโทษ</p>`
     :`<p class="muted">${esc(q.name)} ยังไม่ได้ลงทุนในธุรกิจ ${k} · จะมีโอกาสเมื่อเปิดได้การ์ดชวนลงทุนในกองธุรกิจเครือข่าย</p>`;
   return `<div class="fin"><div class="goal"><div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px"><span><b>ธุรกิจ ${k}</b> · ${esc(q.name)}</span><span class="chip">${z?'กำลังลงทุน':'ยังไม่ได้ลงทุน'}</span></div>
@@ -3634,7 +3640,7 @@ function onTag(){let t=$('#roomTag');if(!ON.code){if(t)t.remove();return}
   if(!t){t=document.createElement('span');t.id='roomTag';t.className='roomtag';t.setAttribute('role','button');t.title='ดูข้อมูลห้อง';t.onclick=onRoomInfo;const h=document.querySelector('header .logo')?.parentElement||document.querySelector('header');h.appendChild(t)}
   t.textContent='ห้อง '+ON.code+' ⓘ'}
 /* เวอร์ชันของไฟล์เกม (เปลี่ยนทุกครั้งที่แก้ระบบออนไลน์) · ส่งไปกับสถานะออนไลน์ เพื่อดูว่าใครยังเปิดเวอร์ชันเก่า */
-const BUILD='2026-11-19.2';
+const BUILD='2026-11-19.3';
 /* ป้ายเลขห้อง → ข้อมูลห้อง: เจ้าของห้อง · เครื่องที่คุมรอบ · สถานะผู้เล่นแต่ละคน */
 function onRoomInfo(){const r=ON.room;if(!r||!ON.code)return;
   const seatName=u=>{const q=S&&S.players&&S.players.find(x=>x.uid===u);if(q)return q.name;const s=Object.values(r.seats||{}).find(x=>x&&x.uid===u);return s?(s.name||'ผู้เล่น'):'—'};
