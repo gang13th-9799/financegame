@@ -511,6 +511,7 @@ body[data-dis=plague]::before{background-image:url(img/dis-plague.webp)}
 
 .disbar{position:absolute;left:10px;bottom:10px;z-index:45;display:flex;align-items:center;gap:6px;max-width:calc(100% - 74px);padding:6px 14px;border-radius:999px;border:2px solid #fff;background:linear-gradient(90deg,#c0392b,#e8613c);color:#fff;font-weight:800;font-size:13px;line-height:1.25;box-shadow:0 4px 14px rgba(150,40,20,.4);cursor:pointer;animation:disPulse 1.6s ease-in-out infinite;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .disbar small{font-weight:600;opacity:.92}
+.disbar[hidden]{display:none!important}/* display:flex ทับ hidden → ภัยพิบัติจบแล้วแถบยังค้าง */
 @keyframes disPulse{0%,100%{box-shadow:0 4px 14px rgba(150,40,20,.4)}50%{box-shadow:0 0 0 5px rgba(232,97,60,.35),0 4px 14px rgba(150,40,20,.4)}}
 .fxb.dis>div{background:linear-gradient(90deg,#c0392b,#e8613c,#c0392b);color:#fff;font-size:22px}
 .fxb.disok>div{background:linear-gradient(90deg,#3f8f4f,#62b36f,#3f8f4f);color:#fff;font-size:20px}
@@ -3843,7 +3844,7 @@ function onTag(){let t=$('#roomTag');if(!ON.code){if(t)t.remove();return}
   if(!t){t=document.createElement('span');t.id='roomTag';t.className='roomtag';t.setAttribute('role','button');t.title='ดูข้อมูลห้อง';t.onclick=onRoomInfo;const h=document.querySelector('header .logo')?.parentElement||document.querySelector('header');h.appendChild(t)}
   t.textContent='ห้อง '+ON.code+' ⓘ'}
 /* เวอร์ชันของไฟล์เกม (เปลี่ยนทุกครั้งที่แก้ระบบออนไลน์) · ส่งไปกับสถานะออนไลน์ เพื่อดูว่าใครยังเปิดเวอร์ชันเก่า */
-const BUILD='2026-11-19.22';
+const BUILD='2026-11-19.23';
 /* ป้ายเลขห้อง → ข้อมูลห้อง: เจ้าของห้อง · เครื่องที่คุมรอบ · สถานะผู้เล่นแต่ละคน */
 function onRoomInfo(){const r=ON.room;if(!r||!ON.code)return;
   const seatName=u=>{const q=S&&S.players&&S.players.find(x=>x.uid===u);if(q)return q.name;const s=Object.values(r.seats||{}).find(x=>x&&x.uid===u);return s?(s.name||'ผู้เล่น'):'—'};
