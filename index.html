@@ -2305,7 +2305,8 @@ function msnReset(p){if(p.msn)Object.assign(p.msn,{w:0,L:p.loan||0,re:[],done:0,
 function msnA(p){return p&&p.msn&&ACH.find(a=>a.id===p.msn.id)}
 function msnIs(p,id){return !!(p&&p.msn&&p.msn.id===id&&!p.badge1)}
 function reKeys(p){return [...Object.keys(S.props).filter(k=>S.props[k].o===p.id).map(k=>'p:'+k),...(p.deals||[]).filter(d=>d.ty==='re').map(d=>'d:'+d.id)]}
-function profitN(p){return Object.entries(p.stocks||{}).filter(([sy,h])=>h&&h.q>0&&h.q*(S.prices[sy]||0)>h.c).length}
+const PF_MIN=200000;/* พอร์ตหลากหลาย: ตัวที่กำไร (มูลค่า > ทุน) และมูลค่า ≥ ฿200,000 */
+function profitN(p){return Object.entries(p.stocks||{}).filter(([sy,h])=>{const v=h&&h.q>0?h.q*(S.prices[sy]||0):0;return v>h.c&&v>=PF_MIN}).length}
 function msnScan(p){const m=p&&p.msn;if(!m||p.badge1)return;m.q=m.q||[];m.re=m.re||[];
   if(m.id==='noprop'){const ks=reKeys(p);for(const k of ks)if(!m.re.includes(k)){m.re.push(k);m.q.push({t:'re',k})}m.re=m.re.filter(k=>ks.includes(k))}
   if(m.id==='noloan'){if(p.loan>(m.L||0))m.q.push({t:'loan',a:p.loan-(m.L||0)});m.L=p.loan}
@@ -2320,7 +2321,7 @@ function msnStat(p,f){const m=p.msn;if(!m)return '';if(p.badge1)return '✅ ส�
     m.id==='div'?`ปันผล ${B(f.div)} / ต้องได้ ${B(Math.ceil(f.passive*.5))} (ครึ่งหนึ่งของ Passive)`:
     m.id==='debtfree'?(()=>{const r=[['home','บ้าน'],['car','รถ'],['card','บัตร']].filter(([k])=>p.debt[k]>0).map(([,n])=>n);if(p.loan>0)r.push('เงินกู้');return r.length?`ยังมีหนี้: ${r.join(' ')}`:'ไม่มีหนี้แล้ว'})():
     m.id==='landlord'?(m.done?'ทำได้แล้ว':`ถืออยู่ ${Object.values(S.props).filter(r=>r.o===p.id).length}/6 ช่อง`):
-    m.id==='portfolio'?(m.done?'ทำได้แล้ว':`ตัวที่กำไร ${profitN(p)}/5`):
+    m.id==='portfolio'?(m.done?'ทำได้แล้ว':`ตัวที่กำไรและมูลค่า ≥ ${B(PF_MIN)}: ${profitN(p)}/5`):
     m.id==='cash2m'?(m.done?'ทำได้แล้ว':`เงินสด ${B(p.cash)} / ${B(2e6)}`):'';
   const ban=['noprop','noloan'].includes(m.id);return `${ok?'✅':'⏳'} ${t}${ban?` · ใบเตือน ${m.w}/2`:''}`}
 let MSNBUSY=false;
@@ -3612,7 +3613,7 @@ const ACH=[
  {id:'escape',c:'g',m:2,i:'🏃',n:'ถอนตัวทัน',d:'ยกเลิกธุรกิจ B หรือ C ก่อนโดนแจ้งจับ',tip:'ยกเลิกได้ที่แท็บธุรกิจเครือข่าย › B / C'},
  {id:'family',c:'g',m:2,i:'👨‍👩‍👧‍👦',n:'ครอบครัวใหญ่',d:'ชนะโดยมีลูก ≥ 3 คน',tip:'ลูกเพิ่มรายจ่าย ต้องมี Passive รองรับ'},
  {id:'landlord',c:'g',m:2,i:'🏘️',n:'เจ้าที่ดิน',d:'ถือช่องอสังหาบนแผนที่ ≥ 6 ช่องพร้อมกัน',tip:'ซื้อช่องที่เดินตก ขายทีหลังได้'},
- {id:'portfolio',c:'g',m:2,i:'🧺',n:'พอร์ตหลากหลาย',d:'ถือหุ้น/คริปโต/กองทุนที่กำลังกำไร ≥ 5 ตัวพร้อมกัน',tip:'นับเฉพาะตัวที่ราคาสูงกว่าทุน ตัวที่ติดลบไม่นับ'},
+ {id:'portfolio',c:'g',m:2,i:'🧺',n:'พอร์ตหลากหลาย',d:'ถือหุ้น/คริปโต/กองทุนที่กำลังกำไร ≥ 5 ตัวพร้อมกัน',tip:'นับเฉพาะตัวที่ราคาสูงกว่าทุน มูลค่าแต่ละตัวต้องไม่ต่ำกว่า ฿200,000'},
  {id:'cash2m',c:'g',m:2,i:'💵',n:'กระเป๋าหนัก',d:'มีเงินสด ฿2,000,000 พร้อมกัน',tip:'สะสมกระแสเงินสดก่อนลงทุนก้อนใหญ่'},
  {id:'debtfree',c:'g',m:2,i:'🧾',n:'ปลดหนี้หมด',d:'ชนะโดยไม่มีหนี้บ้าน รถ บัตร และเงินกู้',tip:'ปิดหนี้ได้ที่งบการเงิน'},
  {id:'storm',c:'g',m:2,i:'🌪️',n:'ฝ่าวิกฤต',d:'ชนะเกมที่เกิดภัยพิบัติ ≥ 2 ครั้ง',tip:'ภัยพิบัติมาจากกองการ์ดชีวิต'},
@@ -3632,7 +3633,7 @@ function axPoll(){if(!S||!S.players||S.winner!=null)return;for(const p of S.play
   if(!x.loan&&p.loan>0)x.loan=1;if(!x.bal&&p.st.h>=10&&p.st.t>=10&&p.st.k>=10)x.bal=1;
   if(!x.prop&&(p.deals.some(d=>d.ty==='re')||Object.values(S.props).some(r=>r.o===p.id)))x.prop=1;
   const pc=Object.values(S.props).filter(r=>r.o===p.id).length;if(pc>(x.pmax||0))x.pmax=pc;
-  const sc=Object.entries(p.stocks||{}).filter(([sy,h])=>h&&h.q>0&&h.q*(S.prices[sy]||0)>h.c).length;/* นับเฉพาะตัวที่กำไร */if(sc>(x.smax||0))x.smax=sc;
+  const sc=profitN(p);/* นับเฉพาะตัวที่กำไร มูลค่า ≥ ฿200,000 */if(sc>(x.smax||0))x.smax=sc;
   if(p.cash>(x.cmax||0))x.cmax=Math.round(p.cash);
   if(p.net&&p.net.on){if(p.net.rank>(x.nr||0))x.nr=p.net.rank;if(!x.six&&LEGS.every(l=>p.net.legs[l]>0))x.six=1}}}
 /* ตรวจเหรียญจากสถานะจบเกม (S ถูกสลับเป็นเกมนั้นแล้ว) · rec = ข้อมูล lb เดิม · คืน {ids ใหม่, ac ใหม่} */
@@ -3773,7 +3774,7 @@ function onTag(){let t=$('#roomTag');if(!ON.code){if(t)t.remove();return}
   if(!t){t=document.createElement('span');t.id='roomTag';t.className='roomtag';t.setAttribute('role','button');t.title='ดูข้อมูลห้อง';t.onclick=onRoomInfo;const h=document.querySelector('header .logo')?.parentElement||document.querySelector('header');h.appendChild(t)}
   t.textContent='ห้อง '+ON.code+' ⓘ'}
 /* เวอร์ชันของไฟล์เกม (เปลี่ยนทุกครั้งที่แก้ระบบออนไลน์) · ส่งไปกับสถานะออนไลน์ เพื่อดูว่าใครยังเปิดเวอร์ชันเก่า */
-const BUILD='2026-11-19.11';
+const BUILD='2026-11-19.12';
 /* ป้ายเลขห้อง → ข้อมูลห้อง: เจ้าของห้อง · เครื่องที่คุมรอบ · สถานะผู้เล่นแต่ละคน */
 function onRoomInfo(){const r=ON.room;if(!r||!ON.code)return;
   const seatName=u=>{const q=S&&S.players&&S.players.find(x=>x.uid===u);if(q)return q.name;const s=Object.values(r.seats||{}).find(x=>x&&x.uid===u);return s?(s.name||'ผู้เล่น'):'—'};
