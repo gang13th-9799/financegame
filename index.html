@@ -3533,31 +3533,30 @@ async function lbLate(code,r){try{if(!r||!r.st||!r.st.z||(r.left&&r.left[ON.user
    ข้อมูลต่อเกม p.ax: prop ซื้ออสังหา · loan เคยกู้ · job ตกงานจริง · scam ปฏิเสธแชร์ลูกโซ่ · bal ค่าพลังเต็ม 10 ครบ · cry กำไรคริปโตที่ขายแล้ว · don ยอดบริจาค */
 /* c: 'g' = ทำจบได้ในเกมเดียว · 'm' = สะสมจากหลายเกม · d = เงื่อนไข · tip = ข้อมูลเบื้องต้น */
 const ACH=[
- {id:'first',c:'g',m:1,i:'🏆',n:'ชนะครั้งแรก',d:'ชนะ Lv.1 ครั้งแรก',tip:'ทำ Passive ให้ถึง 2 เท่าของรายจ่ายรวม'},
  {id:'bal',c:'g',m:1,i:'⚖️',n:'สมดุลชีวิต',d:'❤ ⏳ 📚 เต็ม 10 พร้อมกัน',tip:'พักผ่อน จ้างคนช่วย และเรียนรู้ควบคู่กัน'},
  {id:'charity',c:'g',m:1,i:'💝',n:'ใจบุญ',d:'บริจาครวม ฿100,000 ในเกมเดียว',tip:'บริจาคได้ที่ช่องการกุศล'},
- {id:'noprop',c:'g',m:2,i:'🏚️',n:'ไม่ง้อที่ดิน',d:'ชนะโดยไม่ซื้ออสังหาเลย',tip:'ใช้หุ้น ธุรกิจ หรือธุรกิจ A แทน'},
+ {id:'noprop',c:'g',m:2,i:'🏚️',n:'ไม่ง้อที่ดิน',d:'ชนะโดยไม่ซื้ออสังหาเลย',tip:'ใช้หุ้น กองทุน หรือธุรกิจแทน'},
  {id:'noloan',c:'g',m:2,i:'🚫',n:'ปลอดหนี้',d:'ชนะโดยไม่กู้ธนาคารเลย',tip:'เก็บเงินสดสำรอง อย่าซื้อเกินตัว'},
  {id:'comeback',c:'g',m:2,i:'🌱',n:'ล้มแล้วลุก',d:'ชนะเกมที่เคยตกงาน',tip:'ตกงานแล้วยังพลิกกลับมาชนะได้'},
- {id:'fast',c:'g',m:2,i:'⚡',n:'ชนะสายฟ้าแลบ',d:'ชนะ Lv.1 ภายใน 15 รอบ',tip:'ลงทุนสร้าง Passive ตั้งแต่ต้นเกม'},
  {id:'div',c:'g',m:2,i:'📈',n:'สายปันผล',d:'ชนะโดยปันผลหุ้น ≥ ครึ่งหนึ่งของ Passive',tip:'สะสมหุ้นปันผลดี'},
  {id:'real',c:'g',m:2,i:'🤝',n:'ชนะคนจริง',d:'ชนะห้องออนไลน์ที่มีคนจริง ≥ 3 คน',tip:'ชวนเพื่อนมาเล่นห้องเดียวกัน'},
  {id:'million',c:'g',m:3,i:'💰',n:'เงินไหลล้าน',d:'ชนะโดยมี Passive ฿1,000,000/เดือน',tip:'เล่นต่อหลังถึง Lv.1 เพื่อขยาย Passive'},
- {id:'diamond',c:'g',m:3,i:'💎',n:'ไดมอนด์',d:'ถึงไดมอนด์ธุรกิจ A (ชนะ Lv.2)',tip:'สายงานถึง 21% ครบ 6 สาย'},
  {id:'whale',c:'g',m:3,i:'🐋',n:'วาฬคริปโต',d:'กำไรคริปโตรวม ฿1,000,000 ในเกมเดียว',tip:'นับทั้งที่ขายแล้วและที่ถือตอนจบ'},
- {id:'platinum',c:'g',m:2,i:'🎖️',n:'แพลทินัม',d:'ถึงระดับแพลทินัมธุรกิจ A',tip:'ทำโบนัส 21% ติดต่อกัน 3 เดือน'},
- {id:'sixlegs',c:'g',m:2,i:'🕸️',n:'ครบหกสาย',d:'เปิดสายงานธุรกิจ A ครบ A–F',tip:'ใช้ทักษะโฟกัสสายงานช่วยเปิดสายที่ยังว่าง'},
  {id:'escape',c:'g',m:2,i:'🏃',n:'ถอนตัวทัน',d:'ยกเลิกธุรกิจ B หรือ C ก่อนโดนแจ้งจับ',tip:'ยกเลิกได้ที่แท็บธุรกิจเครือข่าย › B / C'},
  {id:'family',c:'g',m:2,i:'👨‍👩‍👧‍👦',n:'ครอบครัวใหญ่',d:'ชนะโดยมีลูก ≥ 3 คน',tip:'ลูกเพิ่มรายจ่าย ต้องมี Passive รองรับ'},
  {id:'landlord',c:'g',m:2,i:'🏘️',n:'เจ้าที่ดิน',d:'ถือช่องอสังหาบนแผนที่ ≥ 6 ช่องพร้อมกัน',tip:'ซื้อช่องที่เดินตก ขายทีหลังได้'},
- {id:'portfolio',c:'g',m:2,i:'🧺',n:'พอร์ตหลากหลาย',d:'ถือหุ้น/สินทรัพย์ ≥ 5 ตัวพร้อมกัน',tip:'กระจายความเสี่ยงในแท็บเทรด'},
+ {id:'portfolio',c:'g',m:2,i:'🧺',n:'พอร์ตหลากหลาย',d:'ถือหุ้น/คริปโต/กองทุนที่กำลังกำไร ≥ 5 ตัวพร้อมกัน',tip:'นับเฉพาะตัวที่ราคาสูงกว่าทุน ตัวที่ติดลบไม่นับ'},
  {id:'cash2m',c:'g',m:2,i:'💵',n:'กระเป๋าหนัก',d:'มีเงินสด ฿2,000,000 พร้อมกัน',tip:'สะสมกระแสเงินสดก่อนลงทุนก้อนใหญ่'},
  {id:'debtfree',c:'g',m:2,i:'🧾',n:'ปลดหนี้หมด',d:'ชนะโดยไม่มีหนี้บ้าน รถ บัตร และเงินกู้',tip:'ปิดหนี้ได้ที่งบการเงิน'},
  {id:'storm',c:'g',m:2,i:'🌪️',n:'ฝ่าวิกฤต',d:'ชนะเกมที่เกิดภัยพิบัติ ≥ 2 ครั้ง',tip:'ภัยพิบัติมาจากกองการ์ดชีวิต'},
- {id:'blitz',c:'g',m:3,i:'🚀',n:'ชนะติดจรวด',d:'ชนะ Lv.1 ภายใน 10 รอบ',tip:'ต้องได้ดีล Passive ดีตั้งแต่ไม่กี่รอบแรก'},
  {id:'noscam',c:'m',m:1,i:'🕵️',n:'ไม่หลงกล',d:'ปฏิเสธการ์ด "แชร์ออมทรัพย์ทันใจ" ครบ 3 ครั้ง',tip:'การ์ดผลตอบแทนสูงผิดปกติในกองโอกาส'},
  {id:'wins10',c:'m',m:3,i:'👑',n:'นักสะสมชัยชนะ',d:'ชนะครบ 10 เกม',tip:'นับทุกเกมออนไลน์ที่ชนะ'},
- {id:'alljobs',c:'m',m:3,i:'🎭',n:'ครบทุกอาชีพ',d:'ชนะด้วยอาชีพครบทั้ง 8 อาชีพ',tip:'แต่ละอาชีพนับครั้งเดียว'}];
+ {id:'alljobs',c:'m',m:3,i:'🎭',n:'ครบทุกอาชีพ',d:'ชนะด้วยอาชีพครบทั้ง 8 อาชีพ',tip:'แต่ละอาชีพนับครั้งเดียว'},
+ {id:'nj5',c:'m',m:1,i:'🤝',n:'นักธุรกิจตัวจริง',d:'สมัครธุรกิจ A ครบ 5 เกม',tip:'สมัครได้จากการ์ดกองธุรกิจเครือข่าย'},
+ {id:'six5',c:'m',m:2,i:'🕸️',n:'เครือข่ายกว้าง',d:'เปิดสายงานครบ A–F ครบ 5 เกม',tip:'ใช้ทักษะโฟกัสสายงานช่วยเปิดสายที่ยังว่าง'},
+ {id:'plat3',c:'m',m:2,i:'🎖️',n:'แพลทินัมซ้ำ',d:'ถึงระดับแพลทินัมขึ้นไปครบ 3 เกม',tip:'ทำโบนัส 21% ติดต่อกัน 3 เดือน'},
+ {id:'pv3m',c:'m',m:3,i:'📦',n:'ยอดขายสามล้าน',d:'ยอดกลุ่มตอนจบเกมรวมทุกเกม 3,000,000 PV',tip:'นับยอดกลุ่มธุรกิจ A ตอนจบของแต่ละเกม'},
+ {id:'dia3',c:'m',m:3,i:'💎',n:'เพชรสามเม็ด',d:'ถึงไดมอนด์ธุรกิจ A ครบ 3 เกม',tip:'สายงานถึง 21% ครบ 6 สาย'}];
 const ACH_C={g:'🎯 ทำจบได้ในเกมเดียว',m:'📅 สะสมจากหลายเกม'};
 const ACH_M=['','🥉 ทองแดง','🥈 เงิน','🥇 ทอง'];
 function axOf(p){return p.ax||(p.ax={})}
@@ -3566,30 +3565,34 @@ function axPoll(){if(!S||!S.players||S.winner!=null)return;for(const p of S.play
   if(!x.loan&&p.loan>0)x.loan=1;if(!x.bal&&p.st.h>=10&&p.st.t>=10&&p.st.k>=10)x.bal=1;
   if(!x.prop&&(p.deals.some(d=>d.ty==='re')||Object.values(S.props).some(r=>r.o===p.id)))x.prop=1;
   const pc=Object.values(S.props).filter(r=>r.o===p.id).length;if(pc>(x.pmax||0))x.pmax=pc;
-  const sc=Object.values(p.stocks||{}).filter(h=>h&&h.q>0).length;if(sc>(x.smax||0))x.smax=sc;
+  const sc=Object.entries(p.stocks||{}).filter(([sy,h])=>h&&h.q>0&&h.q*(S.prices[sy]||0)>h.c).length;/* นับเฉพาะตัวที่กำไร */if(sc>(x.smax||0))x.smax=sc;
   if(p.cash>(x.cmax||0))x.cmax=Math.round(p.cash);
   if(p.net&&p.net.on){if(p.net.rank>(x.nr||0))x.nr=p.net.rank;if(!x.six&&LEGS.every(l=>p.net.legs[l]>0))x.six=1}}}
 /* ตรวจเหรียญจากสถานะจบเกม (S ถูกสลับเป็นเกมนั้นแล้ว) · rec = ข้อมูล lb เดิม · คืน {ids ใหม่, ac ใหม่} */
 function achEval(me,c,rec){const x=me.ax||{},have=rec.ach||{},ac={scam:0,jobs:{},...(rec.ac||{})},f=fin(me),win=c.win,got=[];
-  ac.scam=(ac.scam||0)+(x.scam||0);ac.jobs={...(ac.jobs||{})};const ji=jobIdx(me);if(win&&ji>=0)ac.jobs[ji]=1;
+  ac.scam=(ac.scam||0)+(x.scam||0);
+  if(me.net&&me.net.on){const nr=Math.max(x.nr||0,me.net.rank||0);ac.nj=(ac.nj||0)+1;if(x.six||LEGS.every(l=>me.net.legs[l]>0))ac.n6=(ac.n6||0)+1;if(nr>=3)ac.np=(ac.np||0)+1;if(me.badge2||nr>=7)ac.nd=(ac.nd||0)+1;ac.pv=(ac.pv||0)+netGV(me)}ac.jobs={...(ac.jobs||{})};const ji=jobIdx(me);if(win&&ji>=0)ac.jobs[ji]=1;
   let cry=x.cry||0;for(const a of ASSETS)if(a.k==='cry'){const hd=me.stocks[a.s];if(hd&&hd.q)cry+=hd.q*S.prices[a.s]-hd.c}
   const ok={first:!!me.badge1,noscam:ac.scam>=3,bal:!!x.bal,charity:(x.don||0)>=100000,noprop:win&&!x.prop,noloan:win&&!x.loan,comeback:win&&!!x.job,
     fast:!!me.badge1&&me.badge1<=15,div:win&&f.passive>0&&f.div>=f.passive*.5,real:win&&c.hum>=3,wins10:((rec.wins||0)+(win?1:0))>=10,
     million:win&&f.passive>=1e6,diamond:!!me.badge2,whale:cry>=1e6,alljobs:Object.keys(ac.jobs).length>=8,
     platinum:(x.nr||0)>=3,sixlegs:!!x.six,escape:!!x.esc,family:win&&(me.kids||0)>=3,landlord:(x.pmax||0)>=6,portfolio:(x.smax||0)>=5,
-    cash2m:(x.cmax||0)>=2e6,debtfree:win&&!me.loan&&!(me.debt.home>0)&&!(me.debt.car>0)&&!(me.debt.card>0),storm:win&&(S.disN||0)>=2,blitz:!!me.badge1&&me.badge1<=10};
+    cash2m:(x.cmax||0)>=2e6,debtfree:win&&!me.loan&&!(me.debt.home>0)&&!(me.debt.car>0)&&!(me.debt.card>0),storm:win&&(S.disN||0)>=2,blitz:!!me.badge1&&me.badge1<=10,
+    nj5:(ac.nj||0)>=5,six5:(ac.n6||0)>=5,plat3:(ac.np||0)>=3,pv3m:(ac.pv||0)>=3e6,dia3:(ac.nd||0)>=3};
   for(const a of ACH)if(ok[a.id]&&!have[a.id])got.push(a.id);return {got,ac}}
-function achHTML(ach,only){const card=a=>{const on=ach&&ach[a.id];return `<div class="achc m${a.m} ${on?'on':''}"><span class="aci">${a.i}</span><span class="acn"><b>${on?'✓ ':''}${esc(a.n)} <small>${ACH_M[a.m]}</small></b><small class="acd">${esc(a.d)}</small><small>💡 ${esc(a.tip)}</small></span></div>`};
+/* ความคืบหน้าภารกิจสะสม: [ทำได้, เป้า] จาก lb/{uid}.ac */
+function achProg(id,ac,rec){if(!ac&&!rec)return null;ac=ac||{};const P={noscam:[ac.scam||0,3],wins10:[(rec&&rec.wins)||0,10],alljobs:[Object.keys(ac.jobs||{}).length,8],nj5:[ac.nj||0,5],six5:[ac.n6||0,5],plat3:[ac.np||0,3],pv3m:[ac.pv||0,3e6],dia3:[ac.nd||0,3]}[id];return P}
+function achHTML(ach,only,rec){const card=a=>{const on=ach&&ach[a.id],pg=!on&&a.c==='m'&&achProg(a.id,rec&&rec.ac,rec);return `<div class="achc m${a.m} ${on?'on':''}"><span class="aci">${a.i}</span><span class="acn"><b>${on?'✓ ':''}${esc(a.n)} <small>${ACH_M[a.m]}</small></b><small class="acd">${esc(a.d)}${pg?` <b class="num">(${Math.min(pg[0],pg[1]).toLocaleString()}/${pg[1].toLocaleString()})</b>`:''}</small><small>💡 ${esc(a.tip)}</small></span></div>`};
   const L=ACH.filter(a=>!only||only.includes(a.id));if(only)return `<div class="achg">${L.map(card).join('')}</div>`;
   return Object.keys(ACH_C).map(c=>{const g=L.filter(a=>a.c===c),n=g.filter(a=>ach&&ach[a.id]).length;return `<h4 class="achh">${ACH_C[c]} <span class="muted">${n}/${g.length}</span></h4><div class="achg">${g.sort((a,b)=>a.m-b.m).map(card).join('')}</div>`}).join('')}
-async function achShow(){let d={};try{d=await lbLoad()}catch(e){}const r=ON.user&&d[ON.user.uid]||{},n=Object.keys(r.ach||{}).length;
-  ask({npc:'happy',title:`🎖 ภารกิจ (${n}/${ACH.length})`,body:(ON.user&&ON.user.anon?'<p class="neg">บัญชีแขกไม่เก็บเหรียญ · ผูกบัญชี Google ที่หน้าแรกเพื่อเริ่มสะสม</p>':'<p class="muted">ปลดล็อกตอนจบเกมออนไลน์ (เล่นกับบอทก็นับ) · ✓ = ได้แล้ว</p>')+achHTML(r.ach)})}
+async function achShow(){let d={};try{d=await lbLoad()}catch(e){}const r=ON.user&&d[ON.user.uid]||{},n=Object.keys(r.ach||{}).filter(i=>ACH.some(z=>z.id===i)).length;
+  ask({npc:'happy',title:`🎖 ภารกิจ (${n}/${ACH.length})`,body:(ON.user&&ON.user.anon?'<p class="neg">บัญชีแขกไม่เก็บเหรียญ · ผูกบัญชี Google ที่หน้าแรกเพื่อเริ่มสะสม</p>':'<p class="muted">ปลดล็อกตอนจบเกมออนไลน์ (เล่นกับบอทก็นับ) · ✓ = ได้แล้ว</p>')+achHTML(r.ach,null,r)})}
 let LB_CACHE=null,LB_TAB='m';
 async function lbLoad(){if(LB_CACHE&&NOW()-LB_CACHE.t<60000)return LB_CACHE.d;const d=await ON.be.get('lb')||{};LB_CACHE={t:NOW(),d};return d}
 async function lbRender(){const el=$('#lbBox');if(!el)return;
   let d;try{d=await lbLoad()}catch(e){el.innerHTML=`<p class="muted">โหลดอันดับไม่ได้ (${esc(e.code||e.message||String(e))})</p>`;return}
   const mk=lbMonth(),m=LB_TAB==='m';
-  const rows=Object.entries(d).map(([u,x])=>({u,a:Object.keys(x.ach||{}).length,n:x.n||'ผู้เล่น',p:m?(x.mk===mk?x.mp||0:0):x.pts||0,g:m?(x.mk===mk?x.mg||0:0):x.games||0,w:m?(x.mk===mk?x.mw||0:0):x.wins||0})).filter(r=>r.g>0).sort((a,b)=>b.p-a.p||b.w-a.w||a.g-b.g);
+  const rows=Object.entries(d).map(([u,x])=>({u,a:Object.keys(x.ach||{}).filter(i=>ACH.some(z=>z.id===i)).length,n:x.n||'ผู้เล่น',p:m?(x.mk===mk?x.mp||0:0):x.pts||0,g:m?(x.mk===mk?x.mg||0:0):x.games||0,w:m?(x.mk===mk?x.mw||0:0):x.wins||0})).filter(r=>r.g>0).sort((a,b)=>b.p-a.p||b.w-a.w||a.g-b.g);
   const meU=ON.user&&ON.user.uid,mi=rows.findIndex(r=>r.u===meU),medal=i=>['🥇','🥈','🥉'][i]||(i+1);
   const tr=(r,i)=>`<tr class="${r.u===meU?'lbme':''}"><td class="lbn">${medal(i)}</td><td>${esc(r.n)}${r.u===meU?' (คุณ)':''}${r.a?` <span class="achn" title="เหรียญภารกิจ">🎖${r.a}</span>`:''}</td><td class="r num"><b>${r.p.toLocaleString()}</b></td><td class="r muted">${r.g}</td><td class="r muted">${r.w}</td></tr>`;
   el.innerHTML=`<div class="subtabs" style="position:static">${[['m','📅 เดือนนี้'],['a','🏛 ตลอดกาล']].map(([k,l])=>`<button class="${LB_TAB===k?'on':''}" onclick="LB_TAB='${k}';lbRender()">${l}</button>`).join('')}</div>
@@ -3703,7 +3706,7 @@ function onTag(){let t=$('#roomTag');if(!ON.code){if(t)t.remove();return}
   if(!t){t=document.createElement('span');t.id='roomTag';t.className='roomtag';t.setAttribute('role','button');t.title='ดูข้อมูลห้อง';t.onclick=onRoomInfo;const h=document.querySelector('header .logo')?.parentElement||document.querySelector('header');h.appendChild(t)}
   t.textContent='ห้อง '+ON.code+' ⓘ'}
 /* เวอร์ชันของไฟล์เกม (เปลี่ยนทุกครั้งที่แก้ระบบออนไลน์) · ส่งไปกับสถานะออนไลน์ เพื่อดูว่าใครยังเปิดเวอร์ชันเก่า */
-const BUILD='2026-11-19.8';
+const BUILD='2026-11-19.10';
 /* ป้ายเลขห้อง → ข้อมูลห้อง: เจ้าของห้อง · เครื่องที่คุมรอบ · สถานะผู้เล่นแต่ละคน */
 function onRoomInfo(){const r=ON.room;if(!r||!ON.code)return;
   const seatName=u=>{const q=S&&S.players&&S.players.find(x=>x.uid===u);if(q)return q.name;const s=Object.values(r.seats||{}).find(x=>x&&x.uid===u);return s?(s.name||'ผู้เล่น'):'—'};
