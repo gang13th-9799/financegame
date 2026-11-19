@@ -1266,6 +1266,7 @@ body:has(#setupView .setup.onl) header{position:relative;z-index:5}
 details[open]>.ib{background:#f2e3bb;border-color:#b89a55}
 .lgd{display:flex;flex-direction:column;align-items:flex-end;margin:4px 6px 0}.lgd .legend{margin-top:4px;align-self:stretch}
 .fcb{width:18px;height:18px;margin:0 8px 0 0;accent-color:#3f8a4a;flex:none;align-self:center}
+.msnt{border-color:#e6cf8f!important;background:#fffaf0!important}.msnt b{font-size:15px}
 .tsum{list-style:none;cursor:pointer;display:inline-flex;align-items:center;gap:6px;font-size:12px;user-select:none}.tsum::-webkit-details-marker{display:none}details[open]>.tsum .ib{background:#f2e3bb;border-color:#b89a55}
 .tip{display:inline-block;vertical-align:middle}.tip[open]{display:block}.tip .tipb{margin-top:6px;background:#fffdf5;border:1.5px solid #e9d9a8;border-radius:10px;padding:8px 10px;box-shadow:0 6px 18px rgba(0,0,0,.15);font-size:12px;line-height:1.45;color:var(--ink);font-weight:400;white-space:normal}
 </style>
@@ -1521,7 +1522,7 @@ async function netCard(p){
   }
   // สร้างธุรกิจ
   const invest=!leg&&Pv&&!pv&&/ลงทุน/.test(t);
-  const ok=await buyFlow(p,cost,{kind:'netc',verb:'ทำ',no:'ข้าม',...NEED,cf:Pv||A||1,title:esc(t),body:info});
+  const ok=await buyFlow(p,cost,{re:invest&&/คอนโด/.test(t),kind:'netc',verb:'ทำ',no:'ข้าม',...NEED,cf:Pv||A||1,title:esc(t),body:info});
   if(!ok)return;
   if(invest){p.deals.push({id:NOW()+Math.random(),t,ty:/คอนโด/.test(t)?'re':'fund',cost,cf:Pv});log(`✨ ${esc(p.name)} ลงทุน ${esc(t)}`);return}
   const nb=1+skV(p,'net')/100;
@@ -1836,7 +1837,7 @@ function scamArrest(p){const j=S.jobs[p.job];delete p.scamB;delete p.scamC;
   S.listings=(S.listings||[]).filter(l=>l.seller!==p.id);
   Object.assign(p,{salary:j.sal,cash:j.cash,exp:{...j.e,extra:0},active:0,debt:{home:j.e.home*100,car:j.e.car*25,card:j.e.card*20},loan:0,dep:0,warn:0,jobless:0,charity:0,
     deals:[],stocks:{},skills:[],charges:{},net:netNew(),ring:'o',pos:0,st:{h:j.h,t:j.t,k:j.k},offnet:0,jail:3});
-  delete p._offnew;
+  delete p._offnew;msnReset(p);
   log(`🚔 ${esc(p.name)} ถูกจับข้อหาฉ้อโกงประชาชน (ธุรกิจ B แชร์ลูกโซ่) · ยึดทรัพย์ทั้งหมด · ติดคุก 3 เทิร์น`)}
 async function dlCard(p,c){const [id,t,,kind,,,,,,,,d]=c,n=p.net;
   const legs=LEGS.filter(l=>n.legs[l]>0);
@@ -1954,10 +1955,10 @@ function statPanel(p){const col={h:'#e0607e',t:'#e0a030',k:'#4a8fd8'},hint={h:'�
 function meters(p){return ['h','t','k'].map(s=>`<span class="mt mt-${s}" title="${STN[s]} ${p.st[s]}/10"><b>${ii(STI[s])}</b><span class="mtb"><i style="width:${p.st[s]*10}%"></i></span><span class="num">${p.st[s]}</span></span>`).join('')}
 function titleAmt(t,a){const n=Math.round(a);return new RegExp('(^|[^\\d,])('+n.toLocaleString('en-US').replace(/,/g,',?')+')(?![\\d,])').test(String(t))}
 function payS(p,a){const x=rnd100(a*Math.max(1,p.salary/40000));pay(p,x);return `จ่าย ${B(x)}`}
-function bankrupt(p){
+function bankrupt(p,quiet){
   for(const k in S.props)if(S.props[k].o===p.id)delete S.props[k];
   p.bk=(p.bk||0)+1;p.deals=[];p.stocks={};p.loan=0;p.dep=0;p.warn=0;p.net=netNew();p.active=0;p.cash=S.jobs[p.job].cash;
-  log(`💀 <b>${esc(p.name)} ล้มละลาย</b> ทรัพย์สินถูกยึดทั้งหมด เริ่มใหม่จากอาชีพเดิม`);ruleNote(p,'ล้มละลาย','หนี้ธนาคารเกิน 12 เท่าของเงินเดือน (หรือ ฿400,000) ทรัพย์สินทั้งหมดถูกยึด และเริ่มใหม่ด้วยเงินสดตั้งต้นของอาชีพ');
+  if(!quiet)log(`💀 <b>${esc(p.name)} ล้มละลาย</b> ทรัพย์สินถูกยึดทั้งหมด เริ่มใหม่จากอาชีพเดิม`);if(!quiet)ruleNote(p,'ล้มละลาย','หนี้ธนาคารเกิน 12 เท่าของเงินเดือน (หรือ ฿400,000) ทรัพย์สินทั้งหมดถูกยึด และเริ่มใหม่ด้วยเงินสดตั้งต้นของอาชีพ');
 }
 
 /* ===================== MODAL ===================== */
@@ -1978,7 +1979,7 @@ function ask({actor=null,kind='',title,body='',opts=[{v:'ok',l:'ตกลง',c:
     if(S&&S.autoPilot&&!(actor&&actor.bot)){res({v:lastOk(),form:{}});return}
     if(actor&&actor.bot){const b=opts.find(o=>o.v===bot&&!o.dis)||opts[opts.length-1];setTimeout(()=>{if(opts.length>1){const st=x=>String(x).replace(/<[^>]*>/g,'');log(`🤖 ${esc(actor.name)}: ${esc(st(title))} → ${esc(st(b.l))}`)}render();res({v:b.v,form:{}})},S.speed*.35);return}
     MODAL=true;const m=$('#modal');m.className='modal'+(kind?' k-'+kind:'')+(['life','learn','opp','netc','news','newsin'].includes(kind)&&!RM&&!noflip?' cardflip':'');
-    const kindName={mkt:'ตลาดกลาง',netc:'การ์ดธุรกิจเครือข่าย',life:'การ์ดดำเนินชีวิต',learn:'การ์ดเรียนรู้',opp:'การ์ดโอกาสชีวิต',news:'ข่าวตลาด',newsin:'📢 ข่าวเข้า · ยังไม่มีผล รอจบรอบ',newsfx:'✅ ข่าวที่เปิดรอบที่แล้ว · มีผลตอนจบรอบ ราคาเปลี่ยนแล้ว',newsnpc:'⚡ NPC เปิดข่าวต้นรอบ · มีผลทันที',win:'จบเกม'}[kind]||'';
+    const kindName={msn:'🎯 ภารกิจผูกชนะ Lv.1',mkt:'ตลาดกลาง',netc:'การ์ดธุรกิจเครือข่าย',life:'การ์ดดำเนินชีวิต',learn:'การ์ดเรียนรู้',opp:'การ์ดโอกาสชีวิต',news:'ข่าวตลาด',newsin:'📢 ข่าวเข้า · ยังไม่มีผล รอจบรอบ',newsfx:'✅ ข่าวที่เปิดรอบที่แล้ว · มีผลตอนจบรอบ ราคาเปลี่ยนแล้ว',newsnpc:'⚡ NPC เปิดข่าวต้นรอบ · มีผลทันที',win:'จบเกม'}[kind]||'';
     const isBot=actor&&actor.bot;
     const plr=(actor&&!actor.bot&&jobIdx(actor)>=0)?actor:(!actor&&S&&S.players&&S.winner==null&&!$('#gameView').hidden&&!cp().bot&&jobIdx(cp())>=0&&kind!=='win'?cp():null);
     const nk=npc===false||(actor&&actor.bot)?null:(npc||(kind==='mkt'?'thumb':/^news/.test(kind||'')?'shock':'work'));
@@ -2065,13 +2066,15 @@ function newGame(speed){
   S={ob:48,jobs:S0jobs,listings:[],round:1,cur:0,phase:'roll',speed,props:{},prices:{},hist:{},decks:{},log:[],dice:[1],winner:null,freeComm:false,view:Math.max(0,seats.findIndex(x=>!x.bot)),
     players:seats.map((s,i)=>{const j=S0jobs[jobs[i]];return {id:i,uid:s.uid||null,name:s.n,bot:s.bot,color:COLORS[i],job:jobs[i],salary:j.sal,cash:j.cash,
       exp:{...j.e,extra:0},active:0,debt:{home:j.e.home*100,car:j.e.car*25,card:j.e.card*20},kids:0,kidCost:j.kc||rnd100(j.sal*.06),loan:0,dep:0,warn:0,deals:[],stocks:{},skills:[],
-      net:netNew(),ring:'o',pos:0,jobless:0,charity:0,st:{h:j.h,t:j.t,k:j.k}}})};
+      net:netNew(),ring:'o',pos:0,jobless:0,charity:0,st:{h:j.h,t:j.t,k:j.k},msn:msnNew()}})};
   S.turnEnd=NOW()+TURN_MS;
   for(const a of ASSETS){S.prices[a.s]=a.p;S.hist[a.s]=[a.p]}cryInit();
   log('เริ่มเกม! ทุกคนสุ่มได้อาชีพแล้ว');
   startView();save();
   const body=`<table class="mkt"><tr><th>ผู้เล่น</th><th>อาชีพ</th><th class="r">เงินเดือน</th><th class="r">รายจ่าย</th><th class="r">เงินเก็บ</th><th class="r">❤ ⏳ 📚</th></tr>${S.players.map(p=>{const f=fin(p);return `<tr><td><span class="tok pic" style="display:inline-block;${tokStyle(p)}"></span> ${esc(p.name)}</td><td>${pawnImg(p,'pawn sm')}${S.jobs[p.job].n}</td><td class="r num">${B(p.salary)}</td><td class="r num">${B(f.expenses)}</td><td class="r num">${B(p.cash)}</td><td class="r num">${p.st.h} ${p.st.t} ${p.st.k}</td></tr>`}).join('')}</table>
-    <p class="muted">เป้าหมายคือทำให้รายได้จากทรัพย์สินสูงกว่า "รายจ่าย" หัวใจ เวลา และความรู้เริ่มต้นต่างกันตามอาชีพ (เต็ม 10)</p>`;
+    <p class="muted">เป้าหมายคือทำให้รายได้จากทรัพย์สินสูงกว่า "รายจ่าย" หัวใจ เวลา และความรู้เริ่มต้นต่างกันตามอาชีพ (เต็ม 10)</p>
+    <h4 style="margin:10px 0 4px">🎯 ภารกิจผูกชนะ Lv.1 (สุ่มคนละ 1 ข้อ)</h4>${S.players.map(p=>{const a=msnA(p);return a?`<div class="ln"><span><b>${esc(p.name)}</b> · ${a.i} ${esc(a.n)}<br><small class="muted">${esc(a.d)}</small></span></div>`:''}).join('')}
+    <p class="muted" style="font-size:12px">ต้องทำภารกิจให้สำเร็จด้วยถึงจะชนะ Lv.1 · ข้อห้าม: ผิดเงื่อนไขได้ใบเตือน 2 ครั้ง ครั้งที่ 3 = ล้มละลาย</p>`;
   npcDraw();
   ask({npc:'happy',title:'สุ่มอาชีพเรียบร้อย',body,opts:[{v:'ok',l:'เริ่มเล่น',c:'pri'}]}).then(resume);
 }
@@ -2104,6 +2107,7 @@ async function rollTurn(n){
     await choose({actor:p,kind:'netc',title:'🚔 ติดคุก',body:`<p>หยุดเดินเทิร์นนี้${p.jail?` เหลืออีก ${p.jail} เทิร์น`:' · เทิร์นหน้าพ้นโทษ เดินได้ตามปกติ'}</p>`,opts:[{v:'ok',l:'รับทราบ',c:'pri'}],bot:'ok'});
     S.phase='free';endTurn();return}
   if(p.scamC&&p.scamC.ask)await scamCAsk(p);
+  await msnFlush(p);if(S.phase!=='busy')return;
   n=(p.charity>0&&n===2)?2:1;if(p.charity>0)p.charity--;
   const d=S.forceRoll?[S.forceRoll]:n===2?[r6(),r6()]:[r6()];S.forceRoll=0;await diceAnim(d,p.bot);S.dice=d;render();await sleep(p.bot?120:200);
   const steps=d.reduce((a,b)=>a+b,0);
@@ -2123,6 +2127,7 @@ async function rollTurn(n){
   if(CAM.active){await sleep(p.bot?250:550);camOff()}
   await walkEnd(p);
   await resolveSquare(p);
+  await msnFlush(p);
   if(checkWin())return;
   if(S.autoPilot){endTurn();return}
   S.phase='card';S.picks=0;render();save();
@@ -2145,6 +2150,7 @@ async function pickPile(k){
   else if(k==='learn')await learnCard(p);
   else if(k==='net')await netCard(p);
   else{let c=draw('opp');for(let i=0;i<6&&c&&c.ty==='netinv'&&!p.net.on;i++)c=draw('opp');await oppCard(p,c)} /* ยังไม่สมัครธุรกิจ A: ไม่ได้การ์ดคนรู้จักสนใจธุรกิจ A (เลิกการ์ดชวนสมัคร) */
+  await msnFlush(p);
   if(checkWin())return;
   if(S.autoPilot){endTurn();return}
   S.picks=(S.picks||0)+1;
@@ -2211,6 +2217,7 @@ function timeUp(){
 setInterval(()=>{
   afkAutoClose();
   if(S&&S.ann&&S.ann.length&&!MODAL&&S.winner==null)flushAnn();
+  if(S&&S.players&&!MODAL&&!MSNBUSY&&S.winner==null&&canAct()){const p=cp();msnScan(p);if(p.msn&&p.msn.q&&p.msn.q.length)msnFlush(p)}
   if(S&&TSQ.length&&!MODAL&&S.winner==null)tsFlush();
   if(ON.lbAnn&&!MODAL){const a=ON.lbAnn;ON.lbAnn=null;ask({npc:'happy',title:a.t,body:a.b})} /* คะแนนสะสมหลังจบเกม */
   if(!S||S.winner!=null||$('#gameView').hidden)return;const el=$('#timer');const p=cp();
@@ -2286,11 +2293,69 @@ function endGame(why){if(PAR()&&!parMaster()&&S.winner==null)return;if(S.phase!=
 function confirmEnd(){if(MODAL||!S||S.winner!=null)return;choose({title:'จบเกมและสรุปผล?',body:standingsHtml(),opts:[{v:'y',l:'จบเกม',c:'pri'},{v:'n',l:'เล่นต่อ'}]}).then(v=>{if(v==='y')endGame('จบเกมโดยผู้เล่น')})}
 function flushAnn(){if(!S||!S.ann||!S.ann.length||MODAL)return;const a=S.ann.shift();ask({kind:a.k||'win',npc:'happy',title:a.t,body:a.b,opts:[{v:'ok',l:'เล่นต่อ',c:'pri'}]})}
 /* เงื่อนไขชนะ Lv.1: Passive ≥ LV1_X เท่าของรายจ่ายรวม */
+/* ===== ภารกิจผูกชนะ Lv.1 · สุ่มตอนเริ่มเกมคนละ 1 ข้อจากภารกิจเหรียญเงินแบบทำจบในเกมเดียวที่คุมได้ =====
+   ข้อห้าม (noprop ซื้ออสังหา / noloan กู้ธนาคาร): ผิดแต่ละครั้ง = ใบเตือนภารกิจ · ครั้งที่ 3 = ล้มละลาย เริ่มใหม่ (ภารกิจเดิม ใบเตือนเริ่มนับใหม่)
+     noprop: ใบเตือนนับทุกครั้งที่ซื้อ มีปุ่มขายคืนรับทุน · ยังถืออสังหาอยู่ = ชนะ Lv.1 ไม่ได้
+     noloan: กู้ (รวมกู้อัตโนมัติ) แล้วกดคืนทันที = ไม่นับใบเตือน · ยังมีหนี้ธนาคาร = ชนะ Lv.1 ไม่ได้
+   ข้อต้องทำ: div/debtfree ตรวจตอนถึงเป้า · landlord/portfolio/cash2m ทำได้ครั้งเดียวก็ผ่าน (m.done)
+   p.msn={id,w,L,re,done,q,nag} · ตรวจใน msnScan (sync) แล้วแสดงใบเตือนใน msnFlush (หลังจั่วการ์ด/หยุดช่อง/ต้นเทิร์น/กดกู้) */
+const MSN_POOL=['noprop','noloan','div','landlord','portfolio','cash2m','debtfree'];
+function msnNew(){return {id:MSN_POOL[Math.floor(Math.random()*MSN_POOL.length)],w:0,L:0,re:[],done:0,q:[]}}
+function msnReset(p){if(p.msn)Object.assign(p.msn,{w:0,L:p.loan||0,re:[],done:0,q:[],nag:0})}
+function msnA(p){return p&&p.msn&&ACH.find(a=>a.id===p.msn.id)}
+function msnIs(p,id){return !!(p&&p.msn&&p.msn.id===id&&!p.badge1)}
+function reKeys(p){return [...Object.keys(S.props).filter(k=>S.props[k].o===p.id).map(k=>'p:'+k),...(p.deals||[]).filter(d=>d.ty==='re').map(d=>'d:'+d.id)]}
+function profitN(p){return Object.entries(p.stocks||{}).filter(([sy,h])=>h&&h.q>0&&h.q*(S.prices[sy]||0)>h.c).length}
+function msnScan(p){const m=p&&p.msn;if(!m||p.badge1)return;m.q=m.q||[];m.re=m.re||[];
+  if(m.id==='noprop'){const ks=reKeys(p);for(const k of ks)if(!m.re.includes(k)){m.re.push(k);m.q.push({t:'re',k})}m.re=m.re.filter(k=>ks.includes(k))}
+  if(m.id==='noloan'){if(p.loan>(m.L||0))m.q.push({t:'loan',a:p.loan-(m.L||0)});m.L=p.loan}
+  if(m.id==='landlord'&&Object.values(S.props).filter(r=>r.o===p.id).length>=6)m.done=1;
+  if(m.id==='portfolio'&&profitN(p)>=5)m.done=1;
+  if(m.id==='cash2m'&&p.cash>=2e6)m.done=1}
+function msnOk(p,f){const m=p.msn;if(!m)return true;const nd=()=>!(p.loan>0)&&!(p.debt.home>0)&&!(p.debt.car>0)&&!(p.debt.card>0);
+  return m.id==='noprop'?!reKeys(p).length:m.id==='noloan'?!(p.loan>0):m.id==='div'?f.passive>0&&f.div>=f.passive*.5:m.id==='debtfree'?nd():!!m.done}
+function msnStat(p,f){const m=p.msn;if(!m)return '';if(p.badge1)return '✅ สำเร็จแล้ว (ชนะ Lv.1)';const ok=msnOk(p,f);
+  const t=m.id==='noprop'?(reKeys(p).length?`ถืออสังหาอยู่ ${reKeys(p).length} รายการ ต้องขายก่อนถึงจะชนะได้`:'ยังไม่ถืออสังหา'):
+    m.id==='noloan'?(p.loan>0?`มีหนี้ธนาคาร ${B(p.loan)} ต้องคืนให้หมดก่อน`:'ไม่มีหนี้ธนาคาร'):
+    m.id==='div'?`ปันผล ${B(f.div)} / ต้องได้ ${B(Math.ceil(f.passive*.5))} (ครึ่งหนึ่งของ Passive)`:
+    m.id==='debtfree'?(()=>{const r=[['home','บ้าน'],['car','รถ'],['card','บัตร']].filter(([k])=>p.debt[k]>0).map(([,n])=>n);if(p.loan>0)r.push('เงินกู้');return r.length?`ยังมีหนี้: ${r.join(' ')}`:'ไม่มีหนี้แล้ว'})():
+    m.id==='landlord'?(m.done?'ทำได้แล้ว':`ถืออยู่ ${Object.values(S.props).filter(r=>r.o===p.id).length}/6 ช่อง`):
+    m.id==='portfolio'?(m.done?'ทำได้แล้ว':`ตัวที่กำไร ${profitN(p)}/5`):
+    m.id==='cash2m'?(m.done?'ทำได้แล้ว':`เงินสด ${B(p.cash)} / ${B(2e6)}`):'';
+  const ban=['noprop','noloan'].includes(m.id);return `${ok?'✅':'⏳'} ${t}${ban?` · ใบเตือน ${m.w}/2`:''}`}
+let MSNBUSY=false;
+async function msnFlush(p){const m=p&&p.msn;if(!m||MSNBUSY||S.winner!=null||p.badge1)return;msnScan(p);if(!m.q||!m.q.length)return;MSNBUSY=true;
+  try{const a=msnA(p);
+  while(m.q.length){const e=m.q.shift();
+    if(e.t==='re'){const isP=e.k.startsWith('p:'),id=e.k.slice(2);let held=false,cost=0,name='';
+      if(isP){const pr=S.props[id];held=!!(pr&&pr.o===p.id);cost=pr?(pr.inv||SQ(id).down*(1+(pr.l||0))):0;name=SQ(id).n}else{const d=(p.deals||[]).find(x=>String(x.id)===id);held=!!d;cost=d?d.cost:0;name=d?d.t:'อสังหา'}
+      m.w++;log(`🟨 ${esc(p.name)} ได้ใบเตือนภารกิจ ${m.w}/2: ซื้อ ${esc(name)} (ภารกิจ ${esc(a.n)})`);
+      if(m.w>=3){await msnFail(p,`ซื้อ ${name}`);return}
+      ruleNote(p,`ใบเตือนภารกิจ ${m.w}/2`,`ภารกิจ ${a.n}: ห้ามซื้ออสังหา · ครั้งที่ 3 = ล้มละลาย`);
+      const v=await choose({actor:p,kind:'msn',pose:'think',title:`🟨 ใบเตือนภารกิจ ${m.w}/2`,body:`<p>ภารกิจ <b>${a.i} ${esc(a.n)}</b>: ${esc(a.d)}</p><p class="neg">คุณซื้อ <b>${esc(name)}</b> ผิดเงื่อนไขภารกิจ</p><p>ผิดครั้งที่ 3 = <b class="neg">ล้มละลาย เริ่มใหม่</b></p>${held?'<p class="muted">ยังถืออสังหาอยู่จะชนะ Lv.1 ไม่ได้ ขายคืนตอนนี้ได้ทุนคืนเต็มจำนวน</p>':''}`,
+        opts:held?[{v:'sell',l:`💸 ขายคืน รับทุน ${B(cost)}`,c:'pri'},{v:'keep',l:'เก็บไว้ก่อน'}]:[{v:'ok',l:'รับทราบ',c:'pri'}],bot:held?'sell':'ok'});
+      if(v==='sell'&&held){if(isP){delete S.props[id];}else p.deals=p.deals.filter(x=>String(x.id)!==id);cleanListings();
+        p.cash+=cost;m.re=m.re.filter(k=>k!==e.k);log(`💸 ${esc(p.name)} ขายคืน ${esc(name)} รับทุนคืน ${B(cost)}`);ledg&&ledg(p,'💸',`ขายคืน ${name} (ภารกิจ)`,{c:cost})}
+    }else if(e.t==='loan'){const can=p.cash>=e.a&&p.loan>=e.a;
+      const v=await choose({actor:p,kind:'msn',pose:'think',title:'⚠ ภารกิจปลอดหนี้: มีการกู้ธนาคาร',body:`<p>ภารกิจ <b>${a.i} ${esc(a.n)}</b>: ${esc(a.d)}</p><p class="neg">กู้ธนาคารเพิ่ม <b>${B(e.a)}</b></p><p>คืนตอนนี้ = ไม่นับใบเตือน · ไม่คืน = ใบเตือนครั้งที่ ${m.w+1}${m.w+1>=3?' <b class="neg">= ล้มละลาย</b>':' (ครั้งที่ 3 = ล้มละลาย)'}</p>${can?'':'<p class="muted">เงินสดไม่พอคืน</p>'}`,
+        opts:[{v:'pay',l:`💵 คืนเงินกู้ ${B(e.a)}`,c:'pri',dis:!can},{v:'warn',l:'รับใบเตือน'}],bot:can?'pay':'warn'});
+      if(v==='pay'&&can){p.loan-=e.a;p.cash-=e.a;m.L=p.loan;log(`💵 ${esc(p.name)} คืนเงินกู้ ${B(e.a)} ทันที (ภารกิจปลอดหนี้ ไม่นับใบเตือน)`)}
+      else{m.w++;log(`🟨 ${esc(p.name)} ได้ใบเตือนภารกิจ ${m.w}/2: กู้ธนาคาร ${B(e.a)}`);if(m.w>=3){await msnFail(p,`กู้ธนาคาร ${B(e.a)}`);return}
+        ruleNote(p,`ใบเตือนภารกิจ ${m.w}/2`,`ภารกิจ ${a.n}: กู้ธนาคารแล้วไม่คืนทันที · ครั้งที่ 3 = ล้มละลาย`)}
+    }}
+  }finally{MSNBUSY=false;render();save()}}
+async function msnFail(p,why){const a=msnA(p);bankrupt(p,1);msnReset(p);
+  log(`💀 ${esc(p.name)} ผิดภารกิจ ${esc(a.n)} ครั้งที่ 3 (${esc(why)}) ปรับเป็นล้มละลาย`);
+  ruleNote(p,'ผิดภารกิจครั้งที่ 3','ปรับเป็นล้มละลาย ทรัพย์สินถูกยึด เริ่มใหม่จากอาชีพเดิม · ภารกิจเดิม ใบเตือนเริ่มนับใหม่');
+  await choose({actor:p,kind:'msn',pose:'sad',title:'💀 ผิดภารกิจครั้งที่ 3',body:`<p>ภารกิจ <b>${a.i} ${esc(a.n)}</b>: ${esc(a.d)}</p><p class="neg">${esc(why)} เป็นครั้งที่ 3 · ปรับเป็น<b>ล้มละลาย</b> ทรัพย์สินถูกยึดทั้งหมด เริ่มใหม่จากอาชีพเดิม</p><p class="muted">ภารกิจยังเป็นข้อเดิม ใบเตือนเริ่มนับใหม่</p>`,opts:[{v:'ok',l:'รับทราบ',c:'pri'}],bot:'ok'})}
 const LV1_X=2,lv1Goal=f=>f.expenses*LV1_X,lv1Pct=f=>Math.min(100,f.passive/Math.max(1,lv1Goal(f))*100);
 function checkWin(){
   S.ann=S.ann||[];let over=null;
   for(const p of S.players){const f=fin(p);
-    if(!p.badge1&&f.passive>=lv1Goal(f)&&f.passive>0){p.badge1=S.round;const first=!S.players.some(q=>q!==p&&q.badge1);
+    msnScan(p);
+    if(!p.badge1&&f.passive>=lv1Goal(f)&&f.passive>0&&!msnOk(p,f)&&p.msn&&!p.msn.nag){p.msn.nag=1;const a=msnA(p);
+      S.ann.push({t:`🎯 ${esc(p.name)} ถึงเป้า Passive แล้ว`,b:`<p>แต่ภารกิจ <b>${a.i} ${esc(a.n)}</b> ยังไม่สำเร็จ จึงยังไม่ได้ Lv.1</p><p>${esc(a.d)}</p><p>${msnStat(p,f)}</p>`});ruleNote(p,'ยังไม่ชนะ Lv.1',`ถึงเป้า Passive แล้ว แต่ภารกิจ ${a.n} ยังไม่สำเร็จ`)}
+    if(!p.badge1&&f.passive>=lv1Goal(f)&&f.passive>0&&msnOk(p,f)){p.badge1=S.round;const first=!S.players.some(q=>q!==p&&q.badge1);
       log(`🏆 <b>${esc(p.name)} ชนะ Lv.1</b> รายได้จากทรัพย์สิน ${B(f.passive)} ถึง 2 เท่าของรายจ่ายรวม ${B(f.expenses)}`);
       S.ann.push({t:`🏆 ${esc(p.name)} ชนะ Lv.1!`,b:`<p>${first?'<b>คนแรกของเกม!</b> ':''}มีรายได้จากทรัพย์สิน <b class="num pos">${B(f.passive)}</b> ถึง 2 เท่าของรายจ่ายรวม <b class="num neg">${B(f.expenses)}</b> ต่อเดือน ใช้เวลา ${S.round} รอบ</p><p>ได้ถ้วยรางวัล 🏆 ไว้ข้างชื่อ · เกมยังเล่นต่อได้ เป้าหมายต่อไปคือ 💎 Lv.2: ธุรกิจ A ระดับไดมอนด์</p>`})}
     if(!p.badge2&&p.net&&p.net.on&&p.net.rank>=7){p.badge2=S.round;log(`💎 <b>${esc(p.name)} ชนะ Lv.2</b> ธุรกิจ A ระดับไดมอนด์`);over=p}
@@ -2336,7 +2401,9 @@ async function buyFlow(p,cost,o){
   if(nb.lack){first.dis=1;first.l='🔒 ค่าพลังไม่พอ'}
   const opts=[first,{v:'no',l:o.no||'ไม่ซื้อ'}];
   const tShort=nT-p.st.t;if(tShort>0&&!p.hired&&!p.bot&&p.st.t<10)opts.splice(1,0,{v:'hire',l:`🧹 จ้างคนช่วย ⏳+1 · ${B(HIRE_COST)}${p.cash<HIRE_COST?' (กู้)':''}`,c:'hire'});
-  const want=o.bot!==undefined?o.bot:botWants(p,cost,o.cf||0);
+  const mBan=(msnIs(p,'noprop')&&o.re)?'re':(msnIs(p,'noloan')&&short>0)?'loan':'';
+  if(mBan){const a=msnA(p);o={...o,body:o.body+`<p class="neg">⚠ ภารกิจ ${a.i} ${esc(a.n)}: ${mBan==='re'?'ซื้ออสังหา = ใบเตือน':'ต้องกู้ = ใบเตือน (คืนทันทีไม่นับ)'} · ครั้งที่ 3 = ล้มละลาย</p>`}}
+  const want=mBan&&p.bot?false:o.bot!==undefined?o.bot:botWants(p,cost,o.cf||0);
   const v=await choose({actor:p,kind:o.kind,noflip:o._again,pose:o.pose||(nb.lack?'think':'thumb'),title:o.title,body:o.body+discNote+nb.html,opts,bot:want?opts[0].v:'no'});
   if(v==='no')return false;
   if(o.pre&&(v==='buy'||v==='loan')&&!(await o.pre())){toast('มีผู้เล่นอื่นซื้อตัดหน้าไปแล้ว');return false}
@@ -2353,7 +2420,7 @@ async function resolveSquare0(p){
     const d=sq,pr=S.props[key];
     if(!pr){
       const c=buyPrice(p,d.down);
-      const ok=await buyFlow(p,c,{cf:d.cf,needK:d.nk||0,pre:PARH()?()=>parClaim(key,{o:p.id,l:0,inv:c}):null,title:esc(sq.n),body:`<div class="kv"><b>พื้นที่</b><span>${ZONES[d.z].n} · ${RINGN[d.z[0]]}</span><b>ผลตอบแทน</b><span class="num">${d.roi}% ต่อเดือน · ใช้ 📚 ${d.nk}</span><b>เงินดาวน์</b><span class="num neg">${B(c)}</span><b>ค่าเช่าต่อเดือน</b><span class="num pos">+${B(d.cf)}</span><b>ค่าผ่านทาง</b><span class="num neg">${B(d.fee)}</span></div><p class="muted">ครบทั้งเขตได้ค่าเช่า ×1.5 ค่าผ่านทาง ×2</p>`});
+      const ok=await buyFlow(p,c,{re:1,cf:d.cf,needK:d.nk||0,pre:PARH()?()=>parClaim(key,{o:p.id,l:0,inv:c}):null,title:esc(sq.n),body:`<div class="kv"><b>พื้นที่</b><span>${ZONES[d.z].n} · ${RINGN[d.z[0]]}</span><b>ผลตอบแทน</b><span class="num">${d.roi}% ต่อเดือน · ใช้ 📚 ${d.nk}</span><b>เงินดาวน์</b><span class="num neg">${B(c)}</span><b>ค่าเช่าต่อเดือน</b><span class="num pos">+${B(d.cf)}</span><b>ค่าผ่านทาง</b><span class="num neg">${B(d.fee)}</span></div><p class="muted">ครบทั้งเขตได้ค่าเช่า ×1.5 ค่าผ่านทาง ×2</p>`});
       if(ok){S.props[key]={o:p.id,l:0,inv:c};log(`🏠 ${esc(p.name)} ซื้อ ${esc(sq.n)}`)}
     }else if(pr.o===p.id){
       if(pr.l<2){const c=buyPrice(p,d.up);
@@ -2734,7 +2801,7 @@ async function oppCard(p,c,src){
     const cost=buyPrice(p,c.cost*(cap?.8:1));
     const warn=c.ty==='scam'&&knowsScam(p)?`<p class="neg"><b>⚠ ทักษะรู้ทันกลโกงเตือน:</b> ผลตอบแทนสูงผิดปกติ นี่คือแชร์ลูกโซ่ ไม่นับเป็นรายได้จากทรัพย์สิน และพร้อมล่มทุกเดือน</p>`:'';
     const tyN=c.ty==='scam'?'การลงทุน':OPP_TY[c.ty];
-    const ok=await buyFlow(p,cost,{kind:'opp',pre:c._pre||null,needT:c.nt||0,needH:c.nh||0,needK:c.nk||0,cf:c.ty==='scam'?(knowsScam(p)?-1:c.cf):c.cf+(c.act||0),title:c.t,body:`${chips([chip(OPPICO[c.ty]||'💼',tyN,'','tag'),c.ty==='scam'?chip('📈',`+${B(c.cf)}`,'อ้าง/เดือน','gain'):'',c.ty!=='scam'&&(c.cf||!c.act)?chip('📈',`+${B(dealCf(p,c))}`,'Passive/เดือน','gain'):'',c.act?chip('💼',`+${B(c.act)}`,'Active/เดือน','gain2'):''].filter(Boolean))}${src?`<p class="muted">${src}</p>`:''}${cap?chips([chip('🏙️','−20%','เมืองหลวง','gain')]):''}${warn}`});
+    const ok=await buyFlow(p,cost,{re:c.ty==='re',kind:'opp',pre:c._pre||null,needT:c.nt||0,needH:c.nh||0,needK:c.nk||0,cf:c.ty==='scam'?(knowsScam(p)?-1:c.cf):c.cf+(c.act||0),title:c.t,body:`${chips([chip(OPPICO[c.ty]||'💼',tyN,'','tag'),c.ty==='scam'?chip('📈',`+${B(c.cf)}`,'อ้าง/เดือน','gain'):'',c.ty!=='scam'&&(c.cf||!c.act)?chip('📈',`+${B(dealCf(p,c))}`,'Passive/เดือน','gain'):'',c.act?chip('💼',`+${B(c.act)}`,'Active/เดือน','gain2'):''].filter(Boolean))}${src?`<p class="muted">${src}</p>`:''}${cap?chips([chip('🏙️','−20%','เมืองหลวง','gain')]):''}${warn}`});
     if(!ok&&c.ty==='scam')axOf(p).scam=(axOf(p).scam||0)+1;
     if(ok){p.deals.push({id:NOW()+Math.random(),t:c.t,ty:c.ty,cost,cf:c.cf,act:c.act||0});log(`✨ ${esc(p.name)} ลงทุน ${esc(c.t)} ${B(cost)}${c.cf?` · Passive +${B(c.cf)}`:''}${c.act?` · Active +${B(c.act)}`:''}`)}
   }else if(c.ty==='ipo'){
@@ -2852,7 +2919,7 @@ async function botInvest(p){
   if(p.st.t<=2&&!p.hired&&p.cash>HIRE_COST+fin(p).expenses*1.5)await hireHelp(p);
   const f=fin(p),res=f.expenses;
   while(p.loan>=10000&&p.cash-10000>res*1.5){p.loan-=10000;p.cash-=10000}
-  for(const k of ['card','car'])if(p.debt[k]>0&&p.cash-p.debt[k]>res*1.5){p.cash-=p.debt[k];p.debt[k]=0;p.exp[k]=0;log(`✅ ${esc(p.name)} ปิดหนี้${k==='card'?'บัตรเครดิต':'รถ'}`)}
+  for(const k of msnIs(p,'debtfree')?['card','car','home']:['card','car'])if(p.debt[k]>0&&p.cash-p.debt[k]>res*1.5){p.cash-=p.debt[k];p.debt[k]=0;p.exp[k]=0;log(`✅ ${esc(p.name)} ปิดหนี้${k==='card'?'บัตรเครดิต':'รถ'}`)}
   for(const a of ASSETS){const h=p.stocks[a.s];if(h&&h.q&&!a.div&&S.prices[a.s]*h.q>h.c*1.25){const v=S.prices[a.s]*h.q;p.cash+=v-commission(p,v);log(`${esc(p.name)} ขายทำกำไร ${a.n} ${B(v)}`);delete p.stocks[a.s]}}
   const surplus=p.cash-res*2;
   if(surplus>20000){const best=ASSETS.filter(a=>a.div).sort((x,y)=>y.div/S.prices[y.s]-x.div/S.prices[x.s])[0];
@@ -3069,7 +3136,7 @@ function renderFin(){
    <div class="tiles">
      <div class="tile"><span>เงินสด</span><b class="num">${B(q.cash)}</b></div>
      <div class="tile"><span>เงินคงเหลือต่อเดือน</span><b class="num ${f.flow>=0?'pos':'neg'}">${f.flow>=0?'+':''}${B(f.flow)}</b></div>
-     <div class="tile wide"><span>เป้าหมาย: รายได้จากทรัพย์สิน ≥ 2 เท่าของรายจ่ายรวม</span><b class="num"><em class="pos">${B(f.passive)}</em> <small>/ <em class="neg">${B(lv1Goal(f))}</em> (รายจ่าย ${B(f.expenses)} ×2)</small></b><div class="bar ${pct>=100?'win':''}"><i style="width:${pct}%"></i></div><small class="${gap>0?'muted':'pos'}">${gap>0?`ขาดอีก ${B(gap)} ต่อเดือน (${Math.round(pct)}%)`:'ถึงเป้าหมายแล้ว!'}</small></div>
+     <div class="tile wide"><span>เป้าหมาย: รายได้จากทรัพย์สิน ≥ 2 เท่าของรายจ่ายรวม</span><b class="num"><em class="pos">${B(f.passive)}</em> <small>/ <em class="neg">${B(lv1Goal(f))}</em> (รายจ่าย ${B(f.expenses)} ×2)</small></b><div class="bar ${pct>=100?'win':''}"><i style="width:${pct}%"></i></div><small class="${gap>0?'muted':'pos'}">${gap>0?`ขาดอีก ${B(gap)} ต่อเดือน (${Math.round(pct)}%)`:'ถึงเป้าหมายแล้ว!'}</small></div>${msnA(q)?(()=>{const m=msnA(q);return `<div class="tile wide msnt"><span>🎯 ภารกิจผูกชนะ Lv.1 · ${ACH_M[m.m]}</span><b>${m.i} ${esc(m.n)}</b><small>${esc(m.d)}</small><small>${msnStat(q,f)}</small></div>`})():''}
    </div>
    <div class="fgrid">
     <section class="fcard"><h3>รายรับต่อเดือน <span class="num">${B(f.salary+f.act+f.passive)}</span></h3>
@@ -3706,7 +3773,7 @@ function onTag(){let t=$('#roomTag');if(!ON.code){if(t)t.remove();return}
   if(!t){t=document.createElement('span');t.id='roomTag';t.className='roomtag';t.setAttribute('role','button');t.title='ดูข้อมูลห้อง';t.onclick=onRoomInfo;const h=document.querySelector('header .logo')?.parentElement||document.querySelector('header');h.appendChild(t)}
   t.textContent='ห้อง '+ON.code+' ⓘ'}
 /* เวอร์ชันของไฟล์เกม (เปลี่ยนทุกครั้งที่แก้ระบบออนไลน์) · ส่งไปกับสถานะออนไลน์ เพื่อดูว่าใครยังเปิดเวอร์ชันเก่า */
-const BUILD='2026-11-19.10';
+const BUILD='2026-11-19.11';
 /* ป้ายเลขห้อง → ข้อมูลห้อง: เจ้าของห้อง · เครื่องที่คุมรอบ · สถานะผู้เล่นแต่ละคน */
 function onRoomInfo(){const r=ON.room;if(!r||!ON.code)return;
   const seatName=u=>{const q=S&&S.players&&S.players.find(x=>x.uid===u);if(q)return q.name;const s=Object.values(r.seats||{}).find(x=>x&&x.uid===u);return s?(s.name||'ผู้เล่น'):'—'};
