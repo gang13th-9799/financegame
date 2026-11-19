@@ -1774,8 +1774,9 @@ function netFocus(p){return skHas(p,'net_focus')?(p.net.focus||[]).filter(l=>LEG
 function botFocus(p){if(!skHas(p,'net_focus'))return;const n=p.net;p.net.focus=LEGS.filter(l=>n.legs[l]<QPV).sort((a,b)=>n.legs[b]-n.legs[a]).slice(0,3)}
 function netDraw(p){if(p.bot)botFocus(p);const F=netFocus(p);if(!F.length||F.length>=6||(ON.play&&S.par&&S.rp==='h'))return draw('netc');
   if(!S.decks.netc||S.decks.netc.some(i=>i>=NETDB.length))S.decks.netc=[];if(!S.decks.netc.length)S.decks.netc=shuffle(NETDB.map((_,i)=>i));
-  const d=S.decks.netc,m=skV(p,'net_focus')||3,w=d.map(i=>F.includes(NETDB[i][2])?m:1),tot=w.reduce((a,b)=>a+b,0);let r=Math.random()*tot,j=0;for(;j<d.length-1;j++){r-=w[j];if(r<0)break}
-  const i=d.splice(j,1)[0];if(F.includes(NETDB[i][2]))ruleNote(p,'โฟกัสสายงาน',`เปิดได้การ์ดของสาย ${NETDB[i][2]} ที่ติ๊กโฟกัสไว้ (โอกาส ×${m})`);return NETDB[i]}
+  /* สุ่มถ่วงน้ำหนักจากการ์ดทั้งกอง (ไม่ใช่จากที่เหลือในสำรับ) — เดิมสุ่มจากสำรับที่หยิบออกทีละใบ วนครบรอบแล้วทุกใบออกเท่ากัน โอกาสระยะยาวเลยไม่เพิ่มเลย */
+  const d=S.decks.netc,m=skV(p,'net_focus')||3,w=NETDB.map(c=>F.includes(c[2])?m:1),tot=w.reduce((a,b)=>a+b,0);let r=Math.random()*tot,i=0;for(;i<NETDB.length-1;i++){r-=w[i];if(r<0)break}
+  const j=d.indexOf(i);if(j>=0)d.splice(j,1);if(F.includes(NETDB[i][2]))ruleNote(p,'โฟกัสสายงาน',`เปิดได้การ์ดของสาย ${NETDB[i][2]} ที่ติ๊กโฟกัสไว้ (โอกาส ×${m})`);return NETDB[i]}
 function netFocusToggle(l,on){const p=P(S.view);if(!p||!canAct()||p.id!==S.cur||p.bot||!skHas(p,'net_focus'))return;const f=new Set(p.net.focus||[]);on?f.add(l):f.delete(l);p.net.focus=LEGS.filter(x=>f.has(x));render();save()}
 /* ===== การ์ดลด PV: DL เลิก / DL ท้อ (4 ใบ ≈5% ของกอง) · [id,t,leg,kind(1=เลิก 2=ท้อ),..,cat 'DL',..,คำบรรยาย]
    สุ่มสายงานที่มี PV · DL เลิก ลด ฿15,000–30,000 PV · DL ท้อ ลด 5,000–15,000 PV (ไม่เกิน PV ที่สายนั้นมี)
@@ -3842,7 +3843,7 @@ function onTag(){let t=$('#roomTag');if(!ON.code){if(t)t.remove();return}
   if(!t){t=document.createElement('span');t.id='roomTag';t.className='roomtag';t.setAttribute('role','button');t.title='ดูข้อมูลห้อง';t.onclick=onRoomInfo;const h=document.querySelector('header .logo')?.parentElement||document.querySelector('header');h.appendChild(t)}
   t.textContent='ห้อง '+ON.code+' ⓘ'}
 /* เวอร์ชันของไฟล์เกม (เปลี่ยนทุกครั้งที่แก้ระบบออนไลน์) · ส่งไปกับสถานะออนไลน์ เพื่อดูว่าใครยังเปิดเวอร์ชันเก่า */
-const BUILD='2026-11-19.21';
+const BUILD='2026-11-19.22';
 /* ป้ายเลขห้อง → ข้อมูลห้อง: เจ้าของห้อง · เครื่องที่คุมรอบ · สถานะผู้เล่นแต่ละคน */
 function onRoomInfo(){const r=ON.room;if(!r||!ON.code)return;
   const seatName=u=>{const q=S&&S.players&&S.players.find(x=>x.uid===u);if(q)return q.name;const s=Object.values(r.seats||{}).find(x=>x&&x.uid===u);return s?(s.name||'ผู้เล่น'):'—'};
