@@ -1280,6 +1280,9 @@ details[open]>.ib{background:#f2e3bb;border-color:#b89a55}
 .lgd{display:flex;flex-direction:column;align-items:flex-end;margin:4px 6px 0}.lgd .legend{margin-top:4px;align-self:stretch}
 .fcb{width:18px;height:18px;margin:0 8px 0 0;accent-color:#3f8a4a;flex:none;align-self:center}
 .msnt{border-color:#e6cf8f!important;background:#fffaf0!important}.msnt b{font-size:15px}
+.kidc .kids{display:flex;gap:8px;margin:4px 0 8px}.kidc .kid{width:42px;height:42px;border-radius:50%;background:#fdeee0;border:2px solid #f3cfa8;display:grid;place-items:center;font-size:24px}
+.kidc .kid.e{background:none;border:2px dashed #d9d2c6;color:#c9c1b4;font-size:16px}.kidl{display:flex;justify-content:space-between;gap:8px;font-size:13px;padding:4px 0;border-top:1px dashed #eadfcf}.kidl b{text-align:right}.kidl.tot{font-size:14px}
+.bdg.kidb{background:#fdeee0;color:#9a5a1e}
 .tsum{list-style:none;cursor:pointer;display:inline-flex;align-items:center;gap:6px;font-size:12px;user-select:none}.tsum::-webkit-details-marker{display:none}details[open]>.tsum .ib{background:#f2e3bb;border-color:#b89a55}
 .tip{display:inline-block;vertical-align:middle}.tip[open]{display:block}.tip .tipb{margin-top:6px;background:#fffdf5;border:1.5px solid #e9d9a8;border-radius:10px;padding:8px 10px;box-shadow:0 6px 18px rgba(0,0,0,.15);font-size:12px;line-height:1.45;color:var(--ink);font-weight:400;white-space:normal}
 </style>
@@ -1915,7 +1918,7 @@ function fin(p){
   const passive=Math.round(board+deals+div+net+depI);
   const ex=[
     ['ภาษี',Math.round(p.exp.tax*Math.max(0,1-skV(p,'tax')/100))],['ผ่อนบ้าน',p.exp.home],['ผ่อนรถ',p.exp.car],['บัตรเครดิต',p.exp.card],
-    [`ค่าครองชีพ (${RINGN[p.ring]} ×${LIVING[p.ring]})`,Math.round(p.exp.living*LIVING[p.ring]/10)*10],['ค่าเลี้ยงดูบุตร',p.kids*p.kidCost],['ดอกเบี้ยเงินกู้ธนาคาร',Math.round(p.loan*LOAN_R)],['ค่าใช้จ่ายรายเดือนอื่น ๆ',p.exp.extra||0]];
+    [`ค่าครองชีพ (${RINGN[p.ring]} ×${LIVING[p.ring]})`,Math.round(p.exp.living*LIVING[p.ring]/10)*10],[p.kids?`ค่าเลี้ยงดูบุตร 👶 ${p.kids} คน × ${B(p.kidCost)}`:'ค่าเลี้ยงดูบุตร',p.kids*p.kidCost],['ดอกเบี้ยเงินกู้ธนาคาร',Math.round(p.loan*LOAN_R)],['ค่าใช้จ่ายรายเดือนอื่น ๆ',p.exp.extra||0]];
   const expenses=ex.reduce((a,b)=>a+b[1],0);
   const sal=p.warn>0?Math.round(p.salary*.5):p.salary;
   return {board:Math.round(board),deals:Math.round(deals),div:Math.round(div),net:Math.round(net),depI,passive,ex,expenses,salary:sal,act,flow:sal+act+passive-expenses};
@@ -2298,7 +2301,7 @@ async function payday(p){
   }
 }
 function rankPin(p,c='rpin'){return p&&p.net&&p.net.on?`<img class="${c}" src="img/rank-${Math.min(7,p.net.rank||0)}.webp" alt="${NET_RANKS[p.net.rank||0].n}" title="ธุรกิจ A ระดับ ${NET_RANKS[p.net.rank||0].n}">`:''}
-function badges(p){return rankPin(p)+(p.jail>0?`<span class="bdg offn" title="ติดคุก หยุดเดินอีก ${p.jail} เทิร์น">(ติดคุก ${p.jail})</span>`:'')+(p.offnet>0?`<span class="bdg offn" title="หลุดบรรยากาศ: ห้ามเปิดกองธุรกิจ A อีก ${p.offnet} เทิร์น">(หลุดบรรยากาศ ${p.offnet})</span>`:'')+(p.warn>0?`<span class="bdg" title="โดนใบเตือน: เงินเดือนลด 50% อีก ${p.warn} เดือน"><img class="icw" src="img/ic-warn.webp" alt=""></span>`:'')+(p.badge1?'<span class="bdg" title="ชนะ Lv.1: รายได้จากทรัพย์สินถึง 2 เท่าของรายจ่ายรวม">🏆</span>':'')+(p.badge2?'<span class="bdg" title="ชนะ Lv.2: ธุรกิจ A ระดับไดมอนด์">💎</span>':'')}
+function badges(p){return rankPin(p)+(p.kids?`<span class="bdg kidb" title="ลูก ${p.kids} คน · ค่าเลี้ยงดู ${B(p.kids*p.kidCost)}/เดือน">👶${p.kids}</span>`:'')+(p.jail>0?`<span class="bdg offn" title="ติดคุก หยุดเดินอีก ${p.jail} เทิร์น">(ติดคุก ${p.jail})</span>`:'')+(p.offnet>0?`<span class="bdg offn" title="หลุดบรรยากาศ: ห้ามเปิดกองธุรกิจ A อีก ${p.offnet} เทิร์น">(หลุดบรรยากาศ ${p.offnet})</span>`:'')+(p.warn>0?`<span class="bdg" title="โดนใบเตือน: เงินเดือนลด 50% อีก ${p.warn} เดือน"><img class="icw" src="img/ic-warn.webp" alt=""></span>`:'')+(p.badge1?'<span class="bdg" title="ชนะ Lv.1: รายได้จากทรัพย์สินถึง 2 เท่าของรายจ่ายรวม">🏆</span>':'')+(p.badge2?'<span class="bdg" title="ชนะ Lv.2: ธุรกิจ A ระดับไดมอนด์">💎</span>':'')}
 function standings(){return [...S.players].map(q=>[q,fin(q)]).sort((a,b)=>((b[0].badge2?2:0)+(b[0].badge1?1:0))-((a[0].badge2?2:0)+(a[0].badge1?1:0))||b[1].passive/Math.max(1,b[1].expenses)-a[1].passive/Math.max(1,a[1].expenses))}
 function standingsHtml(){return `<table class="ft"><tr class="th"><td>#</td><td>ผู้เล่น</td><td class="r">ทรัพย์สิน / รายจ่าย</td></tr>${standings().map(([q,f],i)=>`<tr><td>${i+1}</td><td><span class="tok pic" style="display:inline-block;${tokStyle(q)}"></span> ${esc(q.name)} ${badges(q)}<div class="fsub">${esc(S.jobs[q.job].n)}${q.badge1?` · Lv.1 รอบ ${q.badge1}`:''}${q.badge2?` · Lv.2 รอบ ${q.badge2}`:''}</div></td><td class="r num"><span class="pos">${B(f.passive)}</span> / <span class="neg">${B(f.expenses)}</span></td></tr>`).join('')}</table>`}
 function endGame(why){if(PAR()&&!parMaster()&&S.winner==null)return;if(S.phase!=='done')log(cryReveal());S.winner=S.winner??(standings()[0][0].id);S.phase='done';if(ON.play&&PAR())onPush();else save();render();lbAward(); /* โหมดพร้อมกัน: save() ช่วงผู้เล่นเล่นส่งแค่ข้อมูลตัวเอง จึงส่งสถานะทั้งเกมตรงๆ */
@@ -2711,6 +2714,17 @@ async function disCard(p,c){
 
 /* ===================== CARDS ===================== */
 const KIDMAX=4;
+/* กล่องครอบครัวในงบการเงิน: จำนวนลูก ค่าเลี้ยงดูรวม และผลของลูก (เวลา −1/คน/เดือน · ธุรกิจ +5%/คน · ลดหัวใจที่ต้องใช้) */
+const KID_IC=['👦','👧','🧒','👶'];
+function kidBox(q){const n=q.kids||0,tot=n*q.kidCost;
+  const slots=Array.from({length:KIDMAX},(_,i)=>i<n?`<span class="kid" title="ลูกคนที่ ${i+1}">${KID_IC[i%KID_IC.length]}</span>`:`<span class="kid e" title="ยังว่าง">＋</span>`).join('');
+  return `<section class="fcard kidc"><h3>👨‍👩‍👧‍👦 ครอบครัว <span class="num">ลูก ${n}/${KIDMAX} คน</span></h3>
+   <div class="kids">${slots}</div>
+   ${n?`<div class="kidl"><span>🍼 ค่าเลี้ยงดูต่อคน</span><b class="num">${B(q.kidCost)}/ด.</b></div>
+   <div class="kidl tot"><span>💸 ค่าเลี้ยงดูรวม (${n} คน)</span><b class="num neg">${B(tot)}/ด.</b></div>
+   <div class="kidl"><span>⏳ ดูแลลูก</span><b class="num neg">เวลา −${n} ทุกเดือน</b></div>
+   <div class="kidl"><span>✨ แรงบันดาลใจ</span><b class="num pos">ธุรกิจ +${n*5}% · ลดหัวใจที่ต้องใช้ ${n}</b></div>`
+   :`<p class="muted" style="font-size:12px;margin:4px 0 0">ยังไม่มีลูก · มีลูกจากการ์ดดำเนินชีวิต · ค่าเลี้ยงดูถ้ามีลูก ${B(q.kidCost)}/คน/เดือน</p>`}</section>`}
 function lifePreview(p,c){const R=[];
   if(+c.cash>0)R.push(chip('💵',`+${B(+c.cash)}`,'','gain'));
   if(+c.cpct){const a=rnd100(p.salary*Math.abs(c.cpct)/100);R.push(chip(c.cpct>0?'💵':'💸',`${c.cpct>0?'+':'−'}${B(a)}`,`${Math.abs(c.cpct)}% เงินเดือน`,c.cpct>0?'gain':'cost'))}
@@ -3173,10 +3187,11 @@ function renderFin(){
    </div>
    <section class="fcard"><h3>ทรัพย์สิน <span class="num pos">+${B(f.passive)}/เดือน</span></h3>
     ${assetRows?`<div class="tw"><table class="ft at"><tr class="th"><td>รายการ</td><td class="r">ทุน/มูลค่า</td><td class="r">รายได้/เดือน</td><td></td></tr>${assetRows}</table></div>`:'<p class="muted">ยังไม่มีทรัพย์สิน · จั่วการ์ดโอกาสชีวิต ซื้ออสังหาฯ บนกระดาน หรือซื้อหุ้นปันผลเพื่อเริ่มสร้างรายได้</p>'}</section>
+   ${kidBox(q)}
    <section class="fcard"><h3>หนี้สิน <span class="num">${B(Object.values(q.debt).reduce((a,b)=>a+b,0)+q.loan)}</span></h3>
     <div class="dlist">${debtRows}
      <div class="dli"><div class="dlt"><b>เงินกู้ธนาคาร</b><span class="fsub">ดอกเบี้ย ${LOAN_TXT} ต่อเดือน</span></div><div class="dlv"><span class="num">${B(q.loan)}</span><small class="num neg">จ่าย ${B(Math.round(q.loan*LOAN_R))}/ด.</small></div><div class="dlb"><button class="sm" onclick="TAB='bank';render()">🏦 กู้ / ชำระ</button></div></div></div>
-    ${q.kids?`<p class="muted" style="font-size:12px;margin:6px 0 0">บุตร ${q.kids} คน · ค่าเลี้ยงดู <span class="neg">${B(q.kids*q.kidCost)}</span> ต่อเดือน</p>`:''}</section>
+</section>
    ${skillBox(q)}
   </div>${q.id!==S.cur?'<p class="muted" style="margin:10px 0 0">กำลังดูงบของผู้เล่นอื่น ปุ่มจัดการใช้ได้เฉพาะในเทิร์นของตัวเอง</p>':''}`;
 }
@@ -3797,7 +3812,7 @@ function onTag(){let t=$('#roomTag');if(!ON.code){if(t)t.remove();return}
   if(!t){t=document.createElement('span');t.id='roomTag';t.className='roomtag';t.setAttribute('role','button');t.title='ดูข้อมูลห้อง';t.onclick=onRoomInfo;const h=document.querySelector('header .logo')?.parentElement||document.querySelector('header');h.appendChild(t)}
   t.textContent='ห้อง '+ON.code+' ⓘ'}
 /* เวอร์ชันของไฟล์เกม (เปลี่ยนทุกครั้งที่แก้ระบบออนไลน์) · ส่งไปกับสถานะออนไลน์ เพื่อดูว่าใครยังเปิดเวอร์ชันเก่า */
-const BUILD='2026-11-19.14';
+const BUILD='2026-11-19.15';
 /* ป้ายเลขห้อง → ข้อมูลห้อง: เจ้าของห้อง · เครื่องที่คุมรอบ · สถานะผู้เล่นแต่ละคน */
 function onRoomInfo(){const r=ON.room;if(!r||!ON.code)return;
   const seatName=u=>{const q=S&&S.players&&S.players.find(x=>x.uid===u);if(q)return q.name;const s=Object.values(r.seats||{}).find(x=>x&&x.uid===u);return s?(s.name||'ผู้เล่น'):'—'};
