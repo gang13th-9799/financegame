@@ -1287,6 +1287,7 @@ details[open]>.ib{background:#f2e3bb;border-color:#b89a55}
 .pcard{display:flex;flex-direction:column;border-radius:16px}.pcard .pdt{align-self:flex-end;margin:-4px 8px 0 0;padding:2px 10px;font-size:12px;min-height:0;border-radius:10px;background:transparent;border:0;color:var(--muted);box-shadow:none}
 .pdet{margin:2px 4px 4px;padding:6px 10px;border:1px dashed #e3d6c2;border-radius:12px;background:#fffdf8;font-size:12.5px}
 .pdl{display:grid;grid-template-columns:22px 82px 1fr;gap:6px;padding:4px 0;border-top:1px dashed #efe5d6;align-items:start}.pdl:first-child{border-top:0}.pdi{text-align:center}.pdk{color:var(--muted)}.pdv{min-width:0;overflow-wrap:anywhere}
+.trainbar{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin:0 0 10px;padding:8px 10px;border:1px solid #e6cf8f;border-radius:14px;background:#fffaf0;font-size:13px}
 .tsum{list-style:none;cursor:pointer;display:inline-flex;align-items:center;gap:6px;font-size:12px;user-select:none}.tsum::-webkit-details-marker{display:none}details[open]>.tsum .ib{background:#f2e3bb;border-color:#b89a55}
 .tip{display:inline-block;vertical-align:middle}.tip[open]{display:block}.tip .tipb{margin-top:6px;background:#fffdf5;border:1.5px solid #e9d9a8;border-radius:10px;padding:8px 10px;box-shadow:0 6px 18px rgba(0,0,0,.15);font-size:12px;line-height:1.45;color:var(--ink);font-weight:400;white-space:normal}
 </style>
@@ -1752,6 +1753,8 @@ const SUB_LAST={pl:'fin',bank:'bank',netg:'net'};
 const subGroup=t=>Object.keys(SUB_TABS).find(g=>SUB_TABS[g].some(x=>x[0]===t));
 let S=null, TAB='fin', MODAL=false, MODAL_CANCEL=null;
 const TURN_MS=180000;
+/* โหมดฝึกสอน (ห้องออนไลน์ S.train): ไม่จับเวลา รอทุกคนกดจบเทิร์น · เจ้าของห้องกด ⏩ บังคับจบเทิร์น (rooms/{code}/fe = รอบ) */
+const TRAIN_MS=365*864e5;function turnMs(){return S&&S.train?TRAIN_MS:TURN_MS}
 
 function cp(){return S.players[S.cur]}
 function P(id){return S.players.find(p=>p.id===id)}
@@ -2249,6 +2252,7 @@ setInterval(()=>{
   if(!S||S.winner!=null||$('#gameView').hidden)return;const el=$('#timer');const p=cp();
   if(p.bot){if(el)el.textContent='';return}
   if(ON.play&&S.par&&(p.done||S.phase==='wait')){if(el)el.textContent='';return}
+  if(ON.play&&S.par&&S.train){if(el){el.textContent='🎓 ฝึกสอน';el.classList.remove('low')}return}
   if(!$('#setov').hidden||TS_OPEN){S.turnEnd+=500;return}
   const ms=S.turnEnd-NOW(),s=Math.max(0,Math.ceil(ms/1000));
   if(el){el.textContent=`⏱ ${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`;el.classList.toggle('low',s<=30)}
@@ -3156,7 +3160,7 @@ function plDetail(q,f,pct){const r=(i,l,v)=>`<div class="pdl"><span class="pdi">
   </div>`}
 function renderPlayers(){
   const rank=[...S.players].map(q=>[q,fin(q)]).sort((a,b)=>b[1].passive/Math.max(1,b[1].expenses)-a[1].passive/Math.max(1,a[1].expenses));
-  return `<div class="plist">${S.players.map(q=>{const f=fin(q),pct=lv1Pct(f),pos=rank.findIndex(x=>x[0]===q)+1,op=plOpen(q.id);
+  return `${trainHost()?`<div class="trainbar"><span>🎓 โหมดฝึกสอน · รอบที่ ${S.round} · ${PARH()?`จบเทิร์นแล้ว ${S.players.filter(q=>!q.bot&&(q.done||q.afk)).length}/${S.players.filter(q=>!q.bot).length} คน`:'บอทกำลังเล่น'}</span><button class="pri" ${PARH()?'':'disabled'} onclick="trainForce()">⏩ บังคับจบเทิร์น</button></div>`:''}<div class="plist">${S.players.map(q=>{const f=fin(q),pct=lv1Pct(f),pos=rank.findIndex(x=>x[0]===q)+1,op=plOpen(q.id);
     return `<div class="pcard ${op?'open':''}"><button class="prow ${q.id===S.cur?'cur':''}" onclick="S.view=${q.id};S.viewPick=1;TAB='fin';render()" aria-label="ดูงบของ ${esc(q.name)}">
       <span class="prk num">${pos}</span>
       <span class="pmain"><span class="pname"><span class="tok pic" style="${tokStyle(q)}"></span><b>${esc(q.name)}</b>${badges(q)}<span class="muted">${esc(S.jobs[q.job].n)}${q.bot&&!q._afkb?' · บอท':''}</span>${q.afk?'<span class="jl afkc">💤 ติดสถานะ Bot</span>':''}${q.id===S.cur?'<span class="chip">ตานี้</span>':''}${q.jobless?`<span class="jl">ตกงาน ${q.jobless}</span>`:''}${q.warn>0?`<span class="jl yw"><img class="icw" src="img/ic-warn.webp" alt=""> โดนใบเตือน ${q.warn}</span>`:''}</span>
@@ -3846,7 +3850,7 @@ function onTag(){let t=$('#roomTag');if(!ON.code){if(t)t.remove();return}
   if(!t){t=document.createElement('span');t.id='roomTag';t.className='roomtag';t.setAttribute('role','button');t.title='ดูข้อมูลห้อง';t.onclick=onRoomInfo;const h=document.querySelector('header .logo')?.parentElement||document.querySelector('header');h.appendChild(t)}
   t.textContent='ห้อง '+ON.code+' ⓘ'}
 /* เวอร์ชันของไฟล์เกม (เปลี่ยนทุกครั้งที่แก้ระบบออนไลน์) · ส่งไปกับสถานะออนไลน์ เพื่อดูว่าใครยังเปิดเวอร์ชันเก่า */
-const BUILD='2026-11-19.25';
+const BUILD='2026-11-19.26';
 /* ป้ายเลขห้อง → ข้อมูลห้อง: เจ้าของห้อง · เครื่องที่คุมรอบ · สถานะผู้เล่นแต่ละคน */
 function onRoomInfo(){const r=ON.room;if(!r||!ON.code)return;
   const seatName=u=>{const q=S&&S.players&&S.players.find(x=>x.uid===u);if(q)return q.name;const s=Object.values(r.seats||{}).find(x=>x&&x.uid===u);return s?(s.name||'ผู้เล่น'):'—'};
@@ -3882,6 +3886,7 @@ async function onRoom(r){
   if(me<0){toast('คุณไม่ได้อยู่ในห้องนี้แล้ว');await ON.be.remove('users/'+ON.user.uid+'/room');onHome();return}
   if(r.status==='lobby'){ON.play=false;onLobby(r);return}
   ON.play=true;if(S&&!$('#gameView').hidden&&ON.lastDrv==null)ON.lastDrv=iDrive();
+  if(S&&S.train)trainFeCheck(r);
   if(!ON.subbed){ON.subbed=1;const c=ON.code;ON.unsub.push(ON.be.on(`rooms/${c}/st`,onState));ON.unsub.push(ON.be.on(`rooms/${c}/q`,onQ));
     ON.unsub.push(ON.be.on(`rooms/${c}/p`,m=>{ON.pQ=(ON.pQ||Promise.resolve()).then(()=>parOnP(m))}),ON.be.on(`rooms/${c}/pr`,parOnPr),ON.be.on(`rooms/${c}/lg`,parOnLg),ON.be.on(`rooms/${c}/led`,m=>{ON.lQ=(ON.lQ||Promise.resolve()).then(()=>parOnLed(m))}),ON.be.on(`rooms/${c}/afk`,parOnAfk),ON.be.on(`rooms/${c}/mk`,parOnMk))}
   onDrive()}
@@ -3895,12 +3900,15 @@ function onLobby(r){
   v.innerHTML=`<div class="setup onl">
    <div class="ol-code"><span class="muted">เลขห้อง</span><b>${r.code}</b><button class="sm" onclick="onShare()">📤 ส่งให้เพื่อน</button></div>
    <h2 style="margin:6px 0">ล็อบบี้ · ${n} ที่นั่ง</h2>
-   ${host?`<div class="ol-row ol-n"><span>จำนวนผู้เล่น</span>${[2,3,4,5,6].map(k=>`<button class="sm ${k===n?'pri':''}" onclick="onSetN(${k})">${k}</button>`).join('')}</div>`:`<p class="muted">รอเจ้าของห้องกดเริ่มเกม…</p>`}
+   ${host?`<div class="ol-row ol-n"><span>จำนวนผู้เล่น</span>${[2,3,4,5,6].map(k=>`<button class="sm ${k===n?'pri':''}" onclick="onSetN(${k})">${k}</button>`).join('')}</div>
+   <div class="ol-row ol-n"><span>โหมด</span><button class="sm ${r.train?'':'pri'}" onclick="onSetTrain(0)">⏱ ปกติ</button><button class="sm ${r.train?'pri':''}" onclick="onSetTrain(1)">🎓 ฝึกสอน</button></div>`:`<p class="muted">รอเจ้าของห้องกดเริ่มเกม…</p>`}
+   <p class="muted" style="font-size:12px;margin:2px 0 6px">${r.train?'🎓 <b>โหมดฝึกสอน</b>: ไม่จับเวลา · รอทุกคนกดจบเทิร์นก่อนเริ่มเทิร์นถัดไป · เจ้าของห้องกดบังคับจบเทิร์นได้ที่แท็บผู้เล่น › รายชื่อ':'⏱ <b>โหมดปกติ</b>: ทุกคนเล่นพร้อมกัน คนละ 3 นาทีต่อเทิร์น'}</p>
    ${[...Array(n).keys()].map(seat).join('')}
    <div class="btnrow" style="justify-content:flex-start;margin-top:12px">
     ${host?`<button class="pri" onclick="onStart()">เริ่มเกม${open?` (ที่ว่าง ${open} ที่ → บอท)`:''}</button>`:''}
     <button onclick="onLeave()">${host?'ยกเลิกห้อง':'ออกจากห้อง'}</button><button class="sm" onclick="onLogout()">ออกจากระบบ</button></div>
    <p class="muted" style="font-size:12px">ถ้าเผลอปิดหน้าจอหรือรีเฟรช ให้เปิดเว็บแล้วเข้าสู่ระบบบัญชีเดิม ระบบจะพากลับเข้าห้องนี้เอง</p></div>`}
+async function onSetTrain(v){const r=ON.room;if(!r||r.host!==ON.user.uid)return;await ON.be.update('rooms/'+ON.code,{train:v?1:null})}
 async function onSetN(k){const r=ON.room;if(!r||r.host!==ON.user.uid)return;const up={n:k};
   for(let i=k;i<6;i++){const s=(r.seats||{})[i];if(s&&s.uid){up[`mem/${s.uid}`]=null;up[`seats/${i}`]={t:'h'}}}
   await ON.be.update('rooms/'+ON.code,up)}
@@ -3917,7 +3925,7 @@ async function onLeave(){const r=ON.room,uid=ON.user.uid,code=ON.code;if(!r)retu
   await ON.be.remove('users/'+uid+'/room');onHome()}
 async function onStart(){const r=ON.room;if(!r||r.host!==ON.user.uid)return;const n=r.n||4;
   seats=[...Array(n).keys()].map(i=>{const s=(r.seats||{})[i]||{t:'h'};return s.uid?{n:s.name||('ผู้เล่น '+(i+1)),bot:false,uid:s.uid}:{n:'บอท '+(i+1),bot:true}});
-  ON.play=true;ON.ver=0;newGame(900);S.par=1;S.gid=NOW().toString(36);await onPush(true);
+  ON.play=true;ON.ver=0;newGame(900);S.par=1;S.train=r.train?1:0;S.gid=NOW().toString(36);await onPush(true);
   await ON.be.update('rooms/'+ON.code,{status:'play',started:ON.be.now()})}
 
 /* ---------- ซิงก์เกม ---------- */
@@ -4031,22 +4039,22 @@ function parDeal(hum){
     for(const q of hum){q.hand=q.hand||{};q.hand[k]=[];for(let i=0;i<n;i++)q.hand[k].push(parDeck(k).pop())}}}
 function parUndeal(){for(const q of S.players){if(!q.hand)continue;for(const k in q.hand){const d=parDeck(k);(q.hand[k]||[]).forEach(i=>d.unshift(i))}delete q.hand}}
 /* ตั้งค่าตัวแปรประจำเทิร์นในเครื่องนี้ให้เป็นตาของเราเอง */
-function parLocalTurn(){const me=parMe();if(!me)return;S.cur=me.id;S.picks=me.pk||0;S.bonusPicks=0;S.freeComm=!!me.fc;S.autoPilot=false;S.forceRoll=0;S.turnEnd=me.tEnd||NOW()+TURN_MS;
+function parLocalTurn(){const me=parMe();if(!me)return;S.cur=me.id;S.picks=me.pk||0;S.bonusPicks=0;S.freeComm=!!me.fc;S.autoPilot=false;S.forceRoll=0;S.turnEnd=me.tEnd||NOW()+turnMs();
   S.phase=me.done||me.afk?'wait':me.ph==='busy'?'card':(['roll','card','free'].includes(me.ph)?me.ph:'roll');S.view=me.id;S.viewPick=0}
 /* ---------- หัวห้อง: เริ่มรอบ ---------- */
 function parStartRound(){
   const now=NOW();S.rp='h';S.rt0=now;S.nq=[];delete S.bq;
   const hum=S.players.filter(q=>!q.bot);
   for(const q of hum){if(!q.afk&&!onLive(q.uid)){q.afk=true;ON.be.set(`rooms/${ON.code}/afk/${q.uid}`,true);log(`💤 ${esc(q.name)} ไม่ได้ออนไลน์ ติดสถานะ Bot · ระบบทอยลูกเต๋าให้`)}
-    q.done=!!q.afk;q.acted=false;q.tEnd=now+TURN_MS;delete q.ph;delete q.pk;delete q.fc;q.hired=false}
+    q.done=!!q.afk;q.acted=false;q.tEnd=now+turnMs();delete q.ph;delete q.pk;delete q.fc;q.hired=false}
   parDeal(hum.filter(q=>!q.done));
-  log(`🔔 <b>เริ่มรอบที่ ${S.round}</b> · ผู้เล่นทุกคนเล่นพร้อมกัน คนละ 3 นาที`);
+  log(`🔔 <b>เริ่มรอบที่ ${S.round}</b> · ผู้เล่นทุกคนเล่นพร้อมกัน ${S.train?'(โหมดฝึกสอน ไม่จับเวลา)':'คนละ 3 นาที'}`);
   const c=ON.code;['p','pr','lg','led','nq','mk'].forEach(k=>ON.be.remove(`rooms/${c}/${k}`));
   ON.lgSeen={};ON.pz={};ON.prSent={};ON.ownRound=S.round;
   parLocalTurn();tsShow(parMe());render();onPush();parBanner();
 }
 function parBanner(){let el=$('#rbanner');if(!el){el=document.createElement('div');el.id='rbanner';el.className='rbanner';el.onclick=()=>el.classList.remove('on');document.body.appendChild(el)}
-  const me=parMe();el.innerHTML=`<b>🔔 เริ่มรอบที่ ${S.round}</b><span>${me&&me.afk?'คุณติดสถานะ Bot · กดปลดเพื่อกลับมาเล่น':'ทุกคนเล่นพร้อมกัน · คนละ 3 นาที'}</span>`;el.classList.add('on');clearTimeout(parBanner.t);parBanner.t=setTimeout(()=>el.classList.remove('on'),2800)}
+  const me=parMe();el.innerHTML=`<b>🔔 เริ่มรอบที่ ${S.round}</b><span>${me&&me.afk?'คุณติดสถานะ Bot · กดปลดเพื่อกลับมาเล่น':(S.train?'🎓 โหมดฝึกสอน · ไม่จับเวลา รอทุกคนกดจบเทิร์น':'ทุกคนเล่นพร้อมกัน · คนละ 3 นาที')}</span>`;el.classList.add('on');clearTimeout(parBanner.t);parBanner.t=setTimeout(()=>el.classList.remove('on'),2800)}
 /* ---------- จบเทิร์นของตัวเอง ---------- */
 /* ทุกเทิร์น (ตอนจบเทิร์น): รายได้จากทรัพย์สิน ≥25/50/75% ของรายจ่าย → ⏳ +1/+2/+3 */
 /* Passive เทียบรายจ่าย (นับตอนจบเทิร์น) ได้รางวัลขั้นสูงสุดขั้นเดียว · ชนะ Lv.1 แล้วได้โบนัส Lv.1 แทน ไม่ได้ขั้น Passive ซ้อน · 25% ⏳+1 · 50% ⏳+1 📚+1 · 75% ❤+1 ⏳+1 📚+1 */
@@ -4065,7 +4073,8 @@ function parEndTurn(early){
     if(p.uid!==ON.user.uid||p.done)return;tsBegin(p);
     if(early&&!S.autoPilot&&NOW()<S.turnEnd){const sx=ledAdj(p,{t:1},'⏱','จบเทิร์นก่อนหมดเวลา');if(sx)log(`⏱ ${esc(p.name)} จบเทิร์นก่อนเวลา${sx}`)}
     turnPassiveTime(p);
-    if(S.autoPilot&&!p.acted){p.afk=true;ON.be.set(`rooms/${ON.code}/afk/${ON.user.uid}`,true);log(`💤 ${esc(p.name)} ไม่ได้เล่นภายใน 3 นาที ติดสถานะ Bot`)}
+    if(S.forced){log(`⏩ ${esc(p.name)} ถูกบังคับจบเทิร์นโดยเจ้าของห้อง`);delete S.forced}
+    else if(S.autoPilot&&!p.acted){p.afk=true;ON.be.set(`rooms/${ON.code}/afk/${ON.user.uid}`,true);log(`💤 ${esc(p.name)} ไม่ได้เล่นภายใน 3 นาที ติดสถานะ Bot`)}
     else if(S.autoPilot)log(`⏰ ${esc(p.name)} หมดเวลา ระบบจบเทิร์นให้`);
     S.autoPilot=false;p.done=true;S.phase='wait';render();parPushMe(true);if(parMaster())parCheck();return}
   /* ช่วงบอท (หัวห้อง) */
@@ -4123,9 +4132,22 @@ function parApplyNews(list,npc){ /* npc=true: ข่าวที่ NPC เป�
   if(blocks.length){myDv=Math.round(myDv);const my=me?`<div class="nwme"><span>ผลต่อคุณ</span><span class="num ${myDv+myCash>0?'pos':myDv+myCash<0?'neg':'muted'}">${myDv?`พอร์ต ${myDv>0?'+':'−'}${B(Math.abs(myDv)).replace('−','')}`:'ไม่ได้ถือสินทรัพย์ในข่าว'}${myCash?` · เงินสด ${myCash>0?'+':'−'}${B(Math.abs(myCash))}`:''}</span></div>`:'';
     S.ann=S.ann||[];S.ann.push({k:npc?'newsnpc':'newsfx',t:npc?'🧑‍💼 ข่าวต้นรอบจาก NPC':'📊 สรุปข่าวจากรอบที่แล้ว',b:blocks.join('')+my})}}
 /* ---------- หัวห้อง: ทุกคนจบแล้ว → บอท ---------- */
+function trainHost(){return !!(ON.play&&S&&S.train&&ON.room&&ON.room.host===ON.user.uid&&!ON.spec)}
+async function trainForce(){if(!trainHost())return;if(!PARH()){toast('ตอนนี้เป็นตาบอท รอบอทเล่นจบก่อน');return}
+  const wait=S.players.filter(q=>!q.bot&&!q.done&&!q.afk).map(q=>esc(q.name));
+  const v1=await choose({title:'⏩ บังคับจบเทิร์น?',body:`<p>จบเทิร์นรอบที่ ${S.round} ของทุกคนทันที แล้วเริ่มเทิร์นถัดไป</p>${wait.length?`<p>ยังเล่นอยู่: <b>${wait.join(' · ')}</b></p><p class="muted">สิ่งที่กำลังทำอยู่จะถูกปิด การ์ดที่ยังไม่ได้จั่วจะข้ามไป</p>`:''}`,opts:[{v:'n',l:'ยกเลิก'},{v:'y',l:'บังคับจบเทิร์น',c:'pri'}]});if(v1!=='y')return;
+  const v2=await choose({title:'ยืนยันอีกครั้ง',body:`<p>แน่ใจไหมว่าจะ<b>บังคับจบเทิร์นของทุกคน</b>ในรอบที่ ${S.round}?</p>`,opts:[{v:'n',l:'ไม่'},{v:'y',l:'ยืนยัน บังคับจบเทิร์น',c:'pri'}]});if(v2!=='y'||!PARH())return;
+  await ON.be.update('rooms/'+ON.code,{fe:S.round});toast('⏩ บังคับจบเทิร์นแล้ว')}
+/* ทุกเครื่อง: เห็นคำสั่งบังคับจบเทิร์นของรอบนี้ → จบเทิร์นตัวเองแบบอัตโนมัติ (ไม่ติดสถานะ Bot) · เครื่องคุมรอบรอ 10 วิแล้วไปต่อเลย */
+function trainFeCheck(r){if(!PARH()||!r||r.fe!==S.round||ON.feSeen===S.round)return;ON.feSeen=S.round;ON.feAt=NOW();
+  const me=parMe();if(me&&!me.done&&!me.afk&&S.cur===me.id){S.autoPilot=true;S.forced=1;toast('⏩ เจ้าของห้องบังคับจบเทิร์นนี้');
+    if(MODAL_CANCEL){MODAL_CANCEL();setTimeout(()=>{if(S&&S.autoPilot&&!MODAL&&['roll','card','free'].includes(S.phase))endTurn()},1500)}
+    else if(['roll','card','free'].includes(S.phase))endTurn()}
+  if(parMaster())setTimeout(()=>{if(PARH())parCheck()},10500)}
 function parCheck(){if(!PARH()||!parMaster()||ON.parBusy)return;const now=NOW();
   const hum=S.players.filter(q=>!q.bot);
-  const ok=hum.every(q=>q.done||q.afk||(!onLive(q.uid)&&q.uid!==ON.user.uid)||now>(q.tEnd||0)+15000);
+  const fe=!!(ON.room&&ON.room.fe===S.round&&ON.feAt&&now>ON.feAt+10000);
+  const ok=fe||hum.every(q=>q.done||q.afk||(!onLive(q.uid)&&q.uid!==ON.user.uid)||now>(q.tEnd||0)+15000);
   if(ok)parBots()}
 async function parBots(){ON.parBusy=1;try{
   const c=ON.code;S.rp='b';
@@ -4133,7 +4155,8 @@ async function parBots(){ON.parBusy=1;try{
   await ON.be.remove(`rooms/${c}/led`);
   const pr=await ON.be.get(`rooms/${c}/pr`)||{};for(const k in pr)if(pr[k])S.props[k]=pr[k];
   const nq=await ON.be.get(`rooms/${c}/nq`)||{};S.nq=(S.nq||[]).concat(Object.keys(nq).sort().map(k=>nq[k]));await ON.be.remove(`rooms/${c}/nq`);
-  for(const q of S.players)if(!q.bot&&!q.done){q.done=true;if(!q.acted){q.afk=true;ON.be.set(`rooms/${c}/afk/${q.uid}`,true);log(`💤 ${esc(q.name)} ไม่ได้เล่นในรอบนี้ ติดสถานะ Bot`)}}
+  const fe=!!(ON.room&&ON.room.fe===S.round);
+  for(const q of S.players)if(!q.bot&&!q.done){q.done=true;if(fe&&!q.afk){turnPassiveTime(q);log(`⏩ ${esc(q.name)} ถูกบังคับจบเทิร์นโดยเจ้าของห้อง`);continue}if(!q.acted){q.afk=true;ON.be.set(`rooms/${c}/afk/${q.uid}`,true);log(`💤 ${esc(q.name)} ไม่ได้เล่นในรอบนี้ ติดสถานะ Bot`)}}
   const afk=S.players.filter(q=>!q.bot&&q.afk);afk.forEach(q=>{q.bot=true;q._afkb=1});
   S.bq=[...afk,...S.players.filter(q=>q.bot&&!q._afkb)].map(q=>q.id);
   if(checkWin())return;
@@ -4166,7 +4189,7 @@ function afkAutoClose(){if(!ON.play||ON.spec||!S||!S.players||S.winner!=null)ret
   if(MODAL&&typeof MODAL_CANCEL==='function'){try{MODAL_CANCEL();n++}catch(e){}}
   if(n)ON.afkSkip=(ON.afkSkip||0)+n}
 async function parUnafk(){const me=parMe();if(!me)return;me.afk=false;if(ON.afkSkip){toast(`ระหว่างติดสถานะ Bot ระบบปิดป๊อปอัปให้ ${ON.afkSkip} อัน · ดูย้อนหลังได้ที่แท็บบันทึกเกม`);ON.afkSkip=0}await ON.be.set(`rooms/${ON.code}/afk/${ON.user.uid}`,false);
-  if(PARH()&&me.done&&NOW()<S.rt0+TURN_MS-15000){me.done=false;me.acted=false;me.tEnd=S.rt0+TURN_MS;parLocalTurn();toast('กลับมาเล่นแล้ว · ทันรอบนี้')}
+  if(PARH()&&me.done&&(S.train||NOW()<S.rt0+TURN_MS-15000)){me.done=false;me.acted=false;me.tEnd=S.rt0+turnMs();parLocalTurn();toast('กลับมาเล่นแล้ว · ทันรอบนี้')}
   else toast('ปลดสถานะ Bot แล้ว · กลับมาเล่นได้ตั้งแต่รอบถัดไป');
   render();if(PARH())parPushMe(true);parOverlay()}
 function parOverlay(){let el=$('#afkov');const me=ON.play&&S&&S.players&&parMe(),on=!!(me&&me.afk&&S.winner==null&&!$('#gameView').hidden);
