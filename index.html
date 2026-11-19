@@ -3139,7 +3139,7 @@ function plDetail(q,f,pct){const r=(i,l,v)=>`<div class="pdl"><span class="pdi">
    ${a?r(a.i,'ภารกิจ Lv.1',`<b>${esc(a.n)}</b> <span class="muted">${esc(a.d)}</span><br><small>${msnStat(q,f)}</small>`):''}
    ${r('💎','ชนะ Lv.2',q.badge2?'<b class="pos">ไดมอนด์แล้ว</b>':rk?`ธุรกิจ A ระดับ <b>${esc(rk.n||rk[0]||'')}</b> · ยอดกลุ่ม <b class="num">${netGV(q).toLocaleString()}</b> PV`:'<span class="muted">ยังไม่สมัครธุรกิจ A</span>')}
    ${r('👨‍👩‍👧','ลูก',nKid?`<b>${nKid}/${KIDMAX} คน</b> ${KID_IC.slice(0,nKid).join('')} · ค่าเลี้ยงดู <b class="num neg">${B(nKid*q.kidCost)}</b>/ด.`:'<span class="muted">ยังไม่มีลูก</span>')}
-   ${r('🃏','จั่วจากกอง',`โอกาส <b>${d.opp||0}</b> · ชีวิต <b>${d.life||0}</b> · เรียนรู้ <b>${d.learn||0}</b> · ธุรกิจ A <b>${d.net||0}</b>`)}
+   ${r('🃏','จั่วจากกอง',`โอกาส <b>${d.opp||0}</b> · ชีวิต <b>${d.life||0}</b> · เรียนรู้ <b>${d.learn||0}</b> · ธุรกิจเครือข่าย <b>${d.net||0}</b>`)}
    ${r('🏠','ทรัพย์สิน',`ช่องอสังหา <b>${nP}</b> · ดีล <b>${(q.deals||[]).filter(x=>x.ty!=='scam').length}</b> · หุ้น/สินทรัพย์ <b>${nH}</b> ตัว`)}
    ${r('💳','หนี้รวม',`<b class="num ${debt?'neg':''}">${B(debt)}</b>`)}
    ${r('🧠','ทักษะ',q.skills&&q.skills.length?q.skills.map(k=>SKILLDB[k]?esc(SKILLDB[k].n):'').filter(Boolean).join(' · '):'<span class="muted">ยังไม่มี</span>')}
@@ -3837,7 +3837,7 @@ function onTag(){let t=$('#roomTag');if(!ON.code){if(t)t.remove();return}
   if(!t){t=document.createElement('span');t.id='roomTag';t.className='roomtag';t.setAttribute('role','button');t.title='ดูข้อมูลห้อง';t.onclick=onRoomInfo;const h=document.querySelector('header .logo')?.parentElement||document.querySelector('header');h.appendChild(t)}
   t.textContent='ห้อง '+ON.code+' ⓘ'}
 /* เวอร์ชันของไฟล์เกม (เปลี่ยนทุกครั้งที่แก้ระบบออนไลน์) · ส่งไปกับสถานะออนไลน์ เพื่อดูว่าใครยังเปิดเวอร์ชันเก่า */
-const BUILD='2026-11-19.16';
+const BUILD='2026-11-19.17';
 /* ป้ายเลขห้อง → ข้อมูลห้อง: เจ้าของห้อง · เครื่องที่คุมรอบ · สถานะผู้เล่นแต่ละคน */
 function onRoomInfo(){const r=ON.room;if(!r||!ON.code)return;
   const seatName=u=>{const q=S&&S.players&&S.players.find(x=>x.uid===u);if(q)return q.name;const s=Object.values(r.seats||{}).find(x=>x&&x.uid===u);return s?(s.name||'ผู้เล่น'):'—'};
