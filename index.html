@@ -1432,10 +1432,10 @@ const ASSETS=[
  {s:'PPC',n:'เพียร์คอยน์',k:'cry',p:0,v:.2,d:0,div:0,risk:6,st:[10000,1000,100,10],c:'#3cb054',g:'P'},
  /* กองทุนรวม (ซื้อขายที่แท็บธนาคาร) · ราคาอิงกองทุน ETF จริง (MKT) · d = ผลตอบแทนเฉลี่ยต่อเดือนตอนสุ่มต่อหลังข้อมูลหมด */
  {s:'MMF',n:'กองทุนตลาดเงิน',k:'fund',p:10,v:.002,d:.0015,div:0,risk:1},
- {s:'BOND',n:'กองทุนตราสารหนี้',k:'fund',p:10,v:.008,d:.0025,div:0,risk:2},
- {s:'DIVF',n:'กองทุนหุ้นปันผล',k:'fund',p:10,v:.035,d:.002,div:.04,risk:4},
- {s:'SET50',n:'กองทุนดัชนี SET50',k:'fund',p:10,v:.045,d:.005,div:0,risk:5},
- {s:'GLOB',n:'กองทุนหุ้นโลก',k:'fund',p:10,v:.055,d:.006,div:0,risk:6},
+ {s:'BOND',n:'กองทุนตราสารหนี้',k:'fund',p:10,v:.008,d:.0025,div:.02,risk:2},
+ {s:'DIVF',n:'กองทุนหุ้นปันผล',k:'fund',p:10,v:.035,d:.002,div:.055,risk:4},
+ {s:'SET50',n:'กองทุนดัชนี SET50',k:'fund',p:10,v:.045,d:.005,div:.025,risk:5},
+ {s:'GLOB',n:'กองทุนหุ้นโลก',k:'fund',p:10,v:.055,d:.006,div:.03,risk:6},
  {s:'GOLDF',n:'กองทุนทองคำ',k:'fund',p:10,v:.04,d:.003,div:0,risk:5},
 ];
 const LOT=a=>a.k==='com'?1:1000;
@@ -3844,7 +3844,7 @@ function onTag(){let t=$('#roomTag');if(!ON.code){if(t)t.remove();return}
   if(!t){t=document.createElement('span');t.id='roomTag';t.className='roomtag';t.setAttribute('role','button');t.title='ดูข้อมูลห้อง';t.onclick=onRoomInfo;const h=document.querySelector('header .logo')?.parentElement||document.querySelector('header');h.appendChild(t)}
   t.textContent='ห้อง '+ON.code+' ⓘ'}
 /* เวอร์ชันของไฟล์เกม (เปลี่ยนทุกครั้งที่แก้ระบบออนไลน์) · ส่งไปกับสถานะออนไลน์ เพื่อดูว่าใครยังเปิดเวอร์ชันเก่า */
-const BUILD='2026-11-19.23';
+const BUILD='2026-11-19.24';
 /* ป้ายเลขห้อง → ข้อมูลห้อง: เจ้าของห้อง · เครื่องที่คุมรอบ · สถานะผู้เล่นแต่ละคน */
 function onRoomInfo(){const r=ON.room;if(!r||!ON.code)return;
   const seatName=u=>{const q=S&&S.players&&S.players.find(x=>x.uid===u);if(q)return q.name;const s=Object.values(r.seats||{}).find(x=>x&&x.uid===u);return s?(s.name||'ผู้เล่น'):'—'};
