@@ -1756,7 +1756,15 @@ async function offCard(p,c){const [,t,,,,,,,,,,d]=c,n=2+Math.floor(Math.random()
 async function scamBCard(p,c){const [,t,,,cost,,,cf,,,,d]=c;
   if(p.scamB||p.jail){await choose({actor:p,kind:'netc',title:esc(t),body:`<p>${esc(d)}</p><p class="muted">คุณลงทุนในธุรกิจ B ไปแล้ว</p>`,opts:[{v:'ok',l:'รับทราบ',c:'pri'}],bot:'ok'});return}
   const ok=await buyFlow(p,cost,{kind:'netc',verb:'ลงทุน',no:'ไม่สนใจ',cf,bot:p.cash>cost*1.5&&Math.random()<.35,title:`💸 ${esc(t)}`,body:`<p>${esc(d)}</p><div class="kv"><b>เงินลงทุน</b><span class="num">${B(cost)}</span><b>ผลตอบแทน</b><span class="num pos">+${B(cf)} ทุกเทิร์น</span></div>`});
-  if(!ok)return;p.scamB={left:1+Math.floor(Math.random()*3),paid:0,_new:1};log(`💸 ${esc(p.name)} ลงทุนธุรกิจ B ${B(cost)} ตามคำชวนของเพื่อน`)}
+  if(!ok)return;scamStart(p,'B')}
+function scamStart(p,k){if(k==='B')p.scamB={left:1+Math.floor(Math.random()*3),paid:0,_new:1};else p.scamC={left:3+Math.floor(Math.random()*4),inv:50000,cf:SCC_CF,paid:0,_new:1};log(`💸 ${esc(p.name)} ลงทุนธุรกิจ ${k} ${B(k==='B'?100000:50000)} ตามคำชวนของเพื่อน`)}
+/* ปุ่มในแท็บธุรกิจ B/C (เฉพาะตาของตัวเอง) */
+async function scamTabInvest(k){const p=cp();if(!canAct()||S.view!==p.id||p.jail||(k==='B'?p.scamB:p.scamC))return;const cost=k==='B'?100000:50000,cf=k==='B'?20000:SCC_CF;
+  const ok=await buyFlow(p,cost,{kind:'netc',verb:'ลงทุน',no:'ไม่ลงทุน',cf,bot:false,title:`💸 ลงทุนธุรกิจ ${k}`,body:`<div class="kv"><b>เงินลงทุน</b><span class="num">${B(cost)}</span><b>ผลตอบแทน</b><span class="num pos">+${B(cf)} ทุกเทิร์น</span></div>`});
+  if(ok)scamStart(p,k);render()}
+async function scamTabCancel(k){const p=cp();if(!canAct()||S.view!==p.id||!(k==='B'?p.scamB:p.scamC))return;
+  const v=await choose({actor:p,kind:'netc',title:`ยกเลิกการลงทุนธุรกิจ ${k}?`,body:`<p>ถอนตัวจากธุรกิจ ${k} ตอนนี้ คุณจะไม่ได้รับผลตอบแทนอีก</p>`,opts:[{v:'no',l:'ลงทุนต่อ'},{v:'yes',l:'ยกเลิกการลงทุน',c:'pri'}]});
+  if(v==='yes')await scamQuit(p,k,'ขอยกเลิกการลงทุน');render()}
 function scamBTick(p){const z=p.scamB;if(!z)return;if(z._new){delete z._new;return}
   p.cash+=20000;z.paid+=20000;z.left--;ledg(p,'💸','ผลตอบแทนธุรกิจ B',{c:20000});log(`💸 ${esc(p.name)} ได้ผลตอบแทนธุรกิจ B +${B(20000)}`);
   if(z.left>0){ruleNote(p,'ผลตอบแทนธุรกิจ B',`ได้ +${B(20000)} (รวม ${B(z.paid)})`);return}
@@ -1776,7 +1784,7 @@ const SCC_ADD=50000,SCC_CF=15000;
 async function scamCCard(p,c){const [,t,,,cost,,,cf,,,,d]=c;
   if(p.scamC||p.jail){await choose({actor:p,kind:'netc',title:esc(t),body:`<p>${esc(d)}</p><p class="muted">คุณลงทุนในธุรกิจ C ไปแล้ว</p>`,opts:[{v:'ok',l:'รับทราบ',c:'pri'}],bot:'ok'});return}
   const ok=await buyFlow(p,cost,{kind:'netc',verb:'ลงทุน',no:'ไม่สนใจ',cf,bot:p.cash>cost*1.5&&Math.random()<.35,title:`💸 ${esc(t)}`,body:`<p>${esc(d)}</p><div class="kv"><b>เงินลงทุน</b><span class="num">${B(cost)}</span><b>ผลตอบแทน</b><span class="num pos">+${B(cf)} ทุกเทิร์น</span></div>`});
-  if(!ok)return;p.scamC={left:3+Math.floor(Math.random()*4),inv:cost,cf,paid:0,_new:1};log(`💸 ${esc(p.name)} ลงทุนธุรกิจ C ${B(cost)} ตามคำชวนของเพื่อน`)}
+  if(!ok)return;scamStart(p,'C')}
 function scamCTick(p){const z=p.scamC;if(!z)return;if(z._new){delete z._new;return}
   p.cash+=z.cf;z.paid+=z.cf;z.left--;ledg(p,'💸','ผลตอบแทนธุรกิจ C',{c:z.cf});log(`💸 ${esc(p.name)} ได้ผลตอบแทนธุรกิจ C +${B(z.cf)}`);
   if(z.left>0){z.ask=1;ruleNote(p,'ผลตอบแทนธุรกิจ C',`ได้ +${B(z.cf)} (รวม ${B(z.paid)} · ลงทุนไป ${B(z.inv)})`);return}
@@ -1788,10 +1796,12 @@ async function scamCAsk(p){const z=p.scamC;if(!z||!z.ask)return;delete z.ask;
   const ok=await buyFlow(p,SCC_ADD,{kind:'netc',verb:'เพิ่มทุน',no:'ไม่เพิ่ม',cf:SCC_CF,bot:p.cash>=SCC_ADD*1.2&&Math.random()<.6,title:'💸 ธุรกิจ C ขอให้เพิ่มเงินลงทุน',
     body:`<p>เพื่อนบอกว่ารอบนี้ต้อง "เพิ่มทุน" เพื่อรักษาสิทธิ์รับผลตอบแทน ถ้าเพิ่มทุนจะได้ผลตอบแทนมากขึ้น</p><div class="kv"><b>ลงทุนไปแล้ว</b><span class="num">${B(z.inv)}</span><b>ได้ผลตอบแทนแล้ว</b><span class="num pos">${B(z.paid)}</span><b>เพิ่มทุน</b><span class="num">${B(SCC_ADD)}</span><b>ผลตอบแทนใหม่</b><span class="num pos">+${B(z.cf+SCC_CF)} ทุกเทิร์น</span></div><p class="muted" style="font-size:12px">ถ้าไม่เพิ่มทุน ธุรกิจ C จะตัดสิทธิ์คุณ</p>`});
   if(ok){z.inv+=SCC_ADD;z.cf+=SCC_CF;log(`💸 ${esc(p.name)} เพิ่มทุนธุรกิจ C ${B(SCC_ADD)} (ลงทุนรวม ${B(z.inv)} · ผลตอบแทน ${B(z.cf)}/เทิร์น)`);return}
-  const inv=z.inv,paid=z.paid;delete p.scamC;
-  log(`💨 ${esc(p.name)} ไม่เพิ่มทุน ธุรกิจ C ปิดตัวหนี เงินลงทุน ${B(inv)} สูญ (ได้คืนมาแล้ว ${B(paid)})`);
-  await choose({actor:p,kind:'netc',title:'💨 ธุรกิจ C ปิดตัวหนี',body:`<p>หลังคุณปฏิเสธเพิ่มทุน ไม่กี่วันต่อมาธุรกิจ C ก็ปิดเว็บและติดต่อเพื่อนไม่ได้อีก มันคือ<b>แชร์ลูกโซ่</b></p><div class="kv"><b>ลงทุนไป</b><span class="num neg">${B(inv)}</span><b>ได้คืนมา</b><span class="num pos">${B(paid)}</span><b>สุทธิ</b><span class="num ${paid-inv>=0?'pos':'neg'}">${paid-inv>=0?'+':'−'}${B(Math.abs(paid-inv))}</span></div><p>โชคดีที่ถอนตัวทัน <b>คุณไม่โดนแจ้งจับ</b> คนที่เพิ่มทุนตามไปเรื่อย ๆ คือคนที่ติดร่างแห</p>`,opts:[{v:'ok',l:'รับทราบ',c:'pri'}],bot:'ok'});
-  ruleNote(p,'ธุรกิจ C ปิดตัวหนี',`ไม่เพิ่มทุน เงินลงทุน ${B(inv)} สูญ แต่ไม่โดนแจ้งจับ`)}
+  await scamQuit(p,'C','ไม่เพิ่มทุน')}
+/* ถอนตัว/ไม่เพิ่มทุน: ธุรกิจปิดตัวหนี เงินลงทุนสูญ ไม่โดนจับ */
+async function scamQuit(p,k,why){const z=k==='B'?p.scamB:p.scamC;if(!z)return;const inv=k==='B'?100000:z.inv,paid=z.paid;if(k==='B')delete p.scamB;else delete p.scamC;
+  log(`💨 ${esc(p.name)} ${why} ธุรกิจ ${k} ปิดตัวหนี เงินลงทุน ${B(inv)} สูญ (ได้คืนมาแล้ว ${B(paid)})`);
+  await choose({actor:p,kind:'netc',title:`💨 ธุรกิจ ${k} ปิดตัวหนี`,body:`<p>หลังคุณ${why} ไม่กี่วันต่อมาธุรกิจ ${k} ก็ปิดเว็บและติดต่อเพื่อนไม่ได้อีก มันคือ<b>แชร์ลูกโซ่</b></p><div class="kv"><b>ลงทุนไป</b><span class="num neg">${B(inv)}</span><b>ได้คืนมา</b><span class="num pos">${B(paid)}</span><b>สุทธิ</b><span class="num ${paid-inv>=0?'pos':'neg'}">${paid-inv>=0?'+':'−'}${B(Math.abs(paid-inv))}</span></div><p>โชคดีที่ถอนตัวทัน <b>คุณไม่โดนแจ้งจับ</b> คนที่เพิ่มทุนตามไปเรื่อย ๆ คือคนที่ติดร่างแห</p>`,opts:[{v:'ok',l:'รับทราบ',c:'pri'}],bot:'ok'});
+  ruleNote(p,`ธุรกิจ ${k} ปิดตัวหนี`,`${why} เงินลงทุน ${B(inv)} สูญ แต่ไม่โดนแจ้งจับ`);render()}
 function scamArrest(p){const j=S.jobs[p.job];delete p.scamB;delete p.scamC;
   for(const k in S.props)if(S.props[k].o===p.id)delete S.props[k];
   S.listings=(S.listings||[]).filter(l=>l.seller!==p.id);
@@ -2957,6 +2967,7 @@ function renderScamTab(k){const q=P(S.view),z=k==='B'?q.scamB:q.scamC;
     :`<p class="muted">${esc(q.name)} ยังไม่ได้ลงทุนในธุรกิจ ${k} · จะมีโอกาสเมื่อเปิดได้การ์ดชวนลงทุนในกองธุรกิจเครือข่าย</p>`;
   return `<div class="fin"><div class="goal"><div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px"><span><b>ธุรกิจ ${k}</b> · ${esc(q.name)}</span><span class="chip">${z?'กำลังลงทุน':'ยังไม่ได้ลงทุน'}</span></div>
     <p style="margin:4px 0 0">${info.d}</p><div class="kv" style="margin-top:6px"><b>เงินลงทุนเริ่มต้น</b><span class="num">${B(info.cost)}</span><b>ผลตอบแทนที่สัญญา</b><span class="num pos">+${B(info.cf)} ทุกเทิร์น</span></div></div>
+    ${q.id===S.cur&&!q.bot&&onMine()?`<div class="btnrow" style="justify-content:flex-start;margin-top:4px">${z?`<button ${canAct()?'':'disabled'} onclick="scamTabCancel('${k}')">✖ ยกเลิกการลงทุน</button>`:`<button class="pri" ${canAct()&&!q.jail?'':'disabled'} onclick="scamTabInvest('${k}')">💸 ลงทุน ${B(info.cost)}</button>`}</div>`:''}
     ${st}${others.length?`<p class="muted" style="font-size:12px">ผู้เล่นคนอื่นที่ลงทุนธุรกิจ ${k}: ${others.join(' · ')}</p>`:''}</div>`}
 function renderSkills(){
   const desc=k=>(EFFTXT[SKILLDB[k].eff]||(()=>''))(SKILLDB[k].val);
@@ -3640,7 +3651,7 @@ function onTag(){let t=$('#roomTag');if(!ON.code){if(t)t.remove();return}
   if(!t){t=document.createElement('span');t.id='roomTag';t.className='roomtag';t.setAttribute('role','button');t.title='ดูข้อมูลห้อง';t.onclick=onRoomInfo;const h=document.querySelector('header .logo')?.parentElement||document.querySelector('header');h.appendChild(t)}
   t.textContent='ห้อง '+ON.code+' ⓘ'}
 /* เวอร์ชันของไฟล์เกม (เปลี่ยนทุกครั้งที่แก้ระบบออนไลน์) · ส่งไปกับสถานะออนไลน์ เพื่อดูว่าใครยังเปิดเวอร์ชันเก่า */
-const BUILD='2026-11-19.3';
+const BUILD='2026-11-19.4';
 /* ป้ายเลขห้อง → ข้อมูลห้อง: เจ้าของห้อง · เครื่องที่คุมรอบ · สถานะผู้เล่นแต่ละคน */
 function onRoomInfo(){const r=ON.room;if(!r||!ON.code)return;
   const seatName=u=>{const q=S&&S.players&&S.players.find(x=>x.uid===u);if(q)return q.name;const s=Object.values(r.seats||{}).find(x=>x&&x.uid===u);return s?(s.name||'ผู้เล่น'):'—'};
