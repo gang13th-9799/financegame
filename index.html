@@ -1284,7 +1284,7 @@ body:has(#setupView .setup.onl) header{position:relative;z-index:5}
   <section>
     <div class="tabs" role="tablist">
       <button id="t-pl" class="on" data-tab="pl">ผู้เล่น</button>
-      <button id="t-net" data-tab="net">ธุรกิจ A</button>
+      <button id="t-net" data-tab="netg">ธุรกิจเครือข่าย</button>
       <button id="t-news" data-tab="news">ข่าวสาร</button>
       <button id="t-bank" data-tab="bank">ธนาคาร</button>
       <button id="t-log" data-tab="log">บันทึกเกม</button>
@@ -1486,7 +1486,7 @@ let OPP=[];
 const NET_HEART=[['ฟิตเนส',2],['ไอโฟน',1],['ซีรีส์',1],['เสื้อผ้าใหม่',1],['ของขวัญ',1],['น้ำท่วม',-1]];
 async function netCard(p){
   if(!p.net.on){
-    const v=await choose({actor:p,kind:'netc',title:'เพื่อนชวนสมัครธุรกิจ A',body:`<p>ค่าสมัคร ${B(NET_FEE)} แล้วเปิดแท็บธุรกิจ A ได้</p><p>สร้างสายงาน A–F ทำยอด PV ไต่ระดับจนถึงไดมอนด์ รายได้ Passive มาจากการ์ดสร้างธุรกิจ</p>`,
+    const v=await choose({actor:p,kind:'netc',title:'เพื่อนชวนสมัครธุรกิจ A',body:`<p>ค่าสมัคร ${B(NET_FEE)} แล้วเปิดแท็บธุรกิจเครือข่าย › ธุรกิจ A ได้</p><p>สร้างสายงาน A–F ทำยอด PV ไต่ระดับจนถึงไดมอนด์ รายได้ Passive มาจากการ์ดสร้างธุรกิจ</p>`,
       opts:[{v:'y',l:`สมัคร ${B(NET_FEE)}`,c:'pri',dis:p.cash<NET_FEE},{v:'n',l:'ไม่สนใจ'}],bot:p.cash>NET_FEE*20&&Math.random()<.4?'y':'n'});
     if(v==='y')netJoin(p,NET_FEE);return;
   }
@@ -1695,8 +1695,8 @@ function togglePc(id){S.view=id;S.viewPick=1;if(id!==S.cur){EXP.has(id)?EXP.dele
 function toggleAll(){const o=S.players.filter(q=>q.id!==S.cur);if(o.every(q=>EXP.has(q.id)))o.forEach(q=>EXP.delete(q.id));else o.forEach(q=>EXP.add(q.id));render()}
 /* แท็บหลักที่มีแท็บย่อย (ปุ่มแท็บหลัก data-tab = ชื่อกลุ่ม) · SUB_LAST จำแท็บย่อยล่าสุดของแต่ละกลุ่ม
    ผู้เล่น: รายชื่อ (pl) · งบการเงิน (fin) · ทักษะ (sk) · ธนาคาร: ธนาคาร (bank) · กองทุน (fund) · ตลาด NPC (npcm) · เทรด (mkt) */
-const SUB_TABS={pl:[['pl','👥 รายชื่อ'],['fin','📊 งบการเงิน'],['sk','🃏 ทักษะ']],bank:[['bank','🏦 ธนาคาร'],['fund','📈 กองทุน'],['npcm','🏪 ตลาด'],['mkt','🔁 เทรด']]};
-const SUB_LAST={pl:'fin',bank:'bank'};
+const SUB_TABS={pl:[['pl','👥 รายชื่อ'],['fin','📊 งบการเงิน'],['sk','🃏 ทักษะ']],netg:[['net','💎 ธุรกิจ A'],['netb','💼 ธุรกิจ B'],['netc','💼 ธุรกิจ C']],bank:[['bank','🏦 ธนาคาร'],['fund','📈 กองทุน'],['npcm','🏪 ตลาด'],['mkt','🔁 เทรด']]};
+const SUB_LAST={pl:'fin',bank:'bank',netg:'net'};
 const subGroup=t=>Object.keys(SUB_TABS).find(g=>SUB_TABS[g].some(x=>x[0]===t));
 let S=null, TAB='fin', MODAL=false, MODAL_CANCEL=null;
 const TURN_MS=180000;
@@ -2007,7 +2007,7 @@ const RULES=`<ol class="rules">
 <li>เดินผ่านช่อง <b>เงินเดือน</b> รับกระแสเงินสด = เงินเดือน + รายได้จากทรัพย์สิน − รายจ่ายรวม</li>
 <li>ซื้ออสังหาฯ แบบเกมเศรษฐี ใครหยุดต้องจ่ายค่าผ่านทาง ครบทั้งเขตได้ค่าเช่า ×1.5 ค่าผ่านทาง ×2 หยุดที่ของตัวเองอัปเกรดได้ 2 ขั้น แตะช่องบนกระดานเพื่อดูรายละเอียด</li>
 <li>ตลาดหุ้นและสินค้าเทรดได้ตลอดเทิร์นของคุณ ช่องตลาดหลักทรัพย์ (เมืองหลวง) เทรดฟรีค่าคอม</li>
-<li><b>ธุรกิจ A</b> (ธุรกิจเครือข่าย): ไม่มีช่องบนแผนที่ สมัคร ฿900 เพื่อเปิดแท็บธุรกิจ A · จั่วกองการ์ดธุรกิจ A เพื่อสร้างสายงาน A–F ทำยอด PV และไต่ระดับ สมาชิก → ซิลเวอร์ → โกลด์ → แพลทินัม → รูบี้ → เพิร์ล → เอเมอรัลด์ → ไดมอนด์ · การ์ดในกองนี้ส่วนใหญ่ใช้เวลา 1</li>
+<li><b>ธุรกิจ A</b> (ธุรกิจเครือข่าย): ไม่มีช่องบนแผนที่ สมัคร ฿900 เพื่อเปิดแท็บธุรกิจเครือข่าย › ธุรกิจ A · จั่วกองการ์ดธุรกิจ A เพื่อสร้างสายงาน A–F ทำยอด PV และไต่ระดับ สมาชิก → ซิลเวอร์ → โกลด์ → แพลทินัม → รูบี้ → เพิร์ล → เอเมอรัลด์ → ไดมอนด์ · การ์ดในกองนี้ส่วนใหญ่ใช้เวลา 1</li>
 <li><b>ศูนย์เรียนรู้</b> (ชั้นนอก 4 ช่อง ชั้นใน 2 ช่อง): ได้ความรู้ +2–4 และสกิลการ์ดสุ่ม 1 อย่าง ฟรี</li><li><b>แท็บตลาด</b>: ทุกต้นรอบ NPC เปิดการ์ดโอกาส 2 ใบ · ธุรกิจ/อสังหาฯ ขึ้นแท็บตลาด ซื้อได้ในตาของคุณ ใครยืนยันก่อนได้ (บอทซื้อได้เฉพาะตาของบอท) · ข่าวหุ้น/คริปโต/สินค้า/กองทุน ขึ้นแท็บข่าวสารและมีผลกับราคาทันที · โชว์ 2 รอบ · ในแท็บตลาดยังติดป้ายขาย ซื้อจากป้ายคนอื่น และขายให้ธนาคารได้</li>
 <li>ซื้อขายทรัพย์สินกับผู้เล่นอื่นได้ กู้ธนาคารได้ ดอกเบี้ย 2% ต่อเดือน (เพดานหนี้ ฿400,000 หรือ 12 เท่าของเงินเดือน เกิน = ล้มละลาย)</li>
 <li>⏱ <b>เทิร์นละไม่เกิน 3 นาที</b> หมดเวลาแล้วจบเทิร์นอัตโนมัติ (การตัดสินใจที่ค้างจะถูกปฏิเสธ) · กด <b>จบเทิร์น</b> ก่อนครบ 3 นาทีได้ ⏳ เวลา +1</li>
@@ -2703,7 +2703,7 @@ async function oppCard(p,c,src){
       opts:[{v:1,l:loanLbl(p,pr,`1 บาท ${B(pr)}`),c:'pri',dis:nb.lack},{v:3,l:loanLbl(p,pr*3,`3 บาท ${B(pr*3)}`),dis:nb.lack},{v:0,l:'ข้าม'}],bot:p.cash>pr*2+fin(p).expenses?1:0});
     if(v){adj(p,{t:-(c.nt||0),h:-(c.nh||0),k:-(c.nk||0)},true);loanFor(p,pr*v);p.cash-=pr*v;addHold(p,'GOLD',v,pr*v);log(`🥇 ${esc(p.name)} ซื้อทองคำ ${v} บาท`)}
   }else if(c.ty==='netinv'){
-    if(!p.net.on){await choose({actor:p,kind:'opp',title:'คนรู้จักสนใจธุรกิจ A',body:'<p>ต้องเป็นสมาชิกธุรกิจ A ก่อน การ์ดนี้ถึงจะเพิ่ม PV ให้</p><p class="muted">สมัครได้ที่แท็บธุรกิจ A หรือตอนเปิดกองการ์ดธุรกิจเครือข่าย A</p>',opts:[{v:'ok',l:'รับทราบ',c:'pri'}],bot:'ok'})}
+    if(!p.net.on){await choose({actor:p,kind:'opp',title:'คนรู้จักสนใจธุรกิจ A',body:'<p>ต้องเป็นสมาชิกธุรกิจ A ก่อน การ์ดนี้ถึงจะเพิ่ม PV ให้</p><p class="muted">สมัครได้ที่แท็บธุรกิจเครือข่าย › ธุรกิจ A หรือตอนเปิดกองการ์ดธุรกิจเครือข่าย A</p>',opts:[{v:'ok',l:'รับทราบ',c:'pri'}],bot:'ok'})}
     else{const l=LEGS.find(x=>!p.net.legs[x])||LEGS[Math.floor(Math.random()*6)];p.net.legs[l]+=6000;p.net.pas+=1000;log(`🤝 ${esc(p.name)} คนรู้จักเข้าสายงาน ${l} +6,000 PV`);netRankCheck(p);await choose({actor:p,kind:'opp',title:'คนรู้จักสนใจธุรกิจ A',body:`<p class="pos">สายงาน ${l} +6,000 PV · Passive +฿1,000 ต่อเดือน</p>`,opts:[{v:'ok',l:'เยี่ยม',c:'pri'}],bot:'ok'})}
   }else if(c.ty==='buyer'){
     const items=[];for(const k in S.props)if(S.props[k].o===p.id)items.push({k:'p',i:k,n:SQ(k).n,cost:S.props[k].inv});
@@ -2939,8 +2939,19 @@ function render(){
   document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.tab===TAB||(!!grp&&b.dataset.tab===grp)));
   const nm=(S.mk||[]).filter(x=>x.sold==null).length,nn=(S.nw||[]).length,tn=n=>n?` <span class="tabn">${n}</span>`:'';
   {const a=$('#t-bank'),b=$('#t-news');if(a)a.innerHTML=`ธนาคาร${tn(nm)}`;if(b)b.innerHTML=`ข่าวสาร${tn(nn)}`}
-  $('#panel').innerHTML=(grp?`<div class="subtabs" role="tablist">${SUB_TABS[grp].map(([k,l])=>`<button class="${k===TAB?'on':''}" role="tab" onclick="TAB='${k}';render()">${l}${k==='npcm'?tn(nm):''}</button>`).join('')}</div>`:'')+(TAB==='pl'?renderPlayers():TAB==='sk'?renderSkills():TAB==='fin'?renderFin():TAB==='net'?renderNet():TAB==='npcm'?renderNpcMarket():TAB==='news'?renderNewsTab():TAB==='mkt'?renderMkt():TAB==='bank'?renderBank():TAB==='fund'?renderBank('fund'):`<div class="log">${S.log.map(l=>`<div>${l}</div>`).join('')}</div>`);
+  $('#panel').innerHTML=(grp?`<div class="subtabs" role="tablist">${SUB_TABS[grp].map(([k,l])=>`<button class="${k===TAB?'on':''}" role="tab" onclick="TAB='${k}';render()">${l}${k==='npcm'?tn(nm):''}</button>`).join('')}</div>`:'')+(TAB==='pl'?renderPlayers():TAB==='sk'?renderSkills():TAB==='fin'?renderFin():TAB==='net'?renderNet():TAB==='netb'?renderScamTab('B'):TAB==='netc'?renderScamTab('C'):TAB==='npcm'?renderNpcMarket():TAB==='news'?renderNewsTab():TAB==='mkt'?renderMkt():TAB==='bank'?renderBank():TAB==='fund'?renderBank('fund'):`<div class="log">${S.log.map(l=>`<div>${l}</div>`).join('')}</div>`);
 }
+/* แท็บย่อย ธุรกิจ B / C (ไม่เฉลยว่าเป็นแชร์ลูกโซ่ จนกว่าจะโดนจับหรือปิดตัว) */
+function renderScamTab(k){const q=P(S.view),z=k==='B'?q.scamB:q.scamC;
+  const info=k==='B'?{cost:100000,cf:20000,d:'เพื่อนชวนทำธุรกิจ B รวยกว่า เร็วกว่าธุรกิจ A ไม่ต้องหาลูกค้า ไม่ต้องสร้างทีม'}:{cost:50000,cf:15000,d:'เพื่อนชวนลงทุนธุรกิจ C ระบบปันผลอัตโนมัติ ยิ่งเพิ่มทุนยิ่งได้ผลตอบแทนมาก'};
+  const others=S.players.filter(x=>x.id!==q.id&&(k==='B'?x.scamB:x.scamC)).map(x=>esc(x.name));
+  const st=z?`<div class="tiles"><div class="tile"><span>ลงทุนไปแล้ว</span><b class="num">${B(k==='B'?100000:z.inv)}</b></div><div class="tile"><span>ได้ผลตอบแทนแล้ว</span><b class="num pos">${B(z.paid)}</b></div><div class="tile wide"><span>ผลตอบแทน</span><b class="num pos">+${B(k==='B'?20000:z.cf)} <small>ทุกจบเทิร์น</small></b></div></div>
+     ${k==='C'?`<p class="muted" style="font-size:12px">ธุรกิจ C จะขอให้เพิ่มทุนครั้งละ ${B(SCC_ADD)} ทุกต้นเทิร์น (ผลตอบแทน +${B(SCC_CF)}) ถ้าไม่เพิ่มจะถูกตัดสิทธิ์</p>`:''}`
+    :q.jail>0?`<p class="neg"><b>🚔 ติดคุกอีก ${q.jail} เทิร์น</b> หยุดเดินจนกว่าจะพ้นโทษ</p>`
+    :`<p class="muted">${esc(q.name)} ยังไม่ได้ลงทุนในธุรกิจ ${k} · จะมีโอกาสเมื่อเปิดได้การ์ดชวนลงทุนในกองธุรกิจเครือข่าย</p>`;
+  return `<div class="fin"><div class="goal"><div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px"><span><b>ธุรกิจ ${k}</b> · ${esc(q.name)}</span><span class="chip">${z?'กำลังลงทุน':'ยังไม่ได้ลงทุน'}</span></div>
+    <p style="margin:4px 0 0">${info.d}</p><div class="kv" style="margin-top:6px"><b>เงินลงทุนเริ่มต้น</b><span class="num">${B(info.cost)}</span><b>ผลตอบแทนที่สัญญา</b><span class="num pos">+${B(info.cf)} ทุกเทิร์น</span></div></div>
+    ${st}${others.length?`<p class="muted" style="font-size:12px">ผู้เล่นคนอื่นที่ลงทุนธุรกิจ ${k}: ${others.join(' · ')}</p>`:''}</div>`}
 function renderSkills(){
   const desc=k=>(EFFTXT[SKILLDB[k].eff]||(()=>''))(SKILLDB[k].val);
   const per=[P(S.view)].map(q=>{const ps=q.skills.filter(k=>SKILLDB[k]),as=Object.keys(q.charges||{}).filter(k=>SKILLDB[k]&&q.charges[k]>0);
@@ -3623,7 +3634,7 @@ function onTag(){let t=$('#roomTag');if(!ON.code){if(t)t.remove();return}
   if(!t){t=document.createElement('span');t.id='roomTag';t.className='roomtag';t.setAttribute('role','button');t.title='ดูข้อมูลห้อง';t.onclick=onRoomInfo;const h=document.querySelector('header .logo')?.parentElement||document.querySelector('header');h.appendChild(t)}
   t.textContent='ห้อง '+ON.code+' ⓘ'}
 /* เวอร์ชันของไฟล์เกม (เปลี่ยนทุกครั้งที่แก้ระบบออนไลน์) · ส่งไปกับสถานะออนไลน์ เพื่อดูว่าใครยังเปิดเวอร์ชันเก่า */
-const BUILD='2026-11-19.1';
+const BUILD='2026-11-19.2';
 /* ป้ายเลขห้อง → ข้อมูลห้อง: เจ้าของห้อง · เครื่องที่คุมรอบ · สถานะผู้เล่นแต่ละคน */
 function onRoomInfo(){const r=ON.room;if(!r||!ON.code)return;
   const seatName=u=>{const q=S&&S.players&&S.players.find(x=>x.uid===u);if(q)return q.name;const s=Object.values(r.seats||{}).find(x=>x&&x.uid===u);return s?(s.name||'ผู้เล่น'):'—'};
