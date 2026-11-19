@@ -3613,7 +3613,7 @@ const ACH=[
  {id:'escape',c:'g',m:2,i:'🏃',n:'ถอนตัวทัน',d:'ยกเลิกธุรกิจ B หรือ C ก่อนโดนแจ้งจับ',tip:'ยกเลิกได้ที่แท็บธุรกิจเครือข่าย › B / C'},
  {id:'family',c:'g',m:2,i:'👨‍👩‍👧‍👦',n:'ครอบครัวใหญ่',d:'ชนะโดยมีลูก ≥ 3 คน',tip:'ลูกเพิ่มรายจ่าย ต้องมี Passive รองรับ'},
  {id:'landlord',c:'g',m:2,i:'🏘️',n:'เจ้าที่ดิน',d:'ถือช่องอสังหาบนแผนที่ ≥ 6 ช่องพร้อมกัน',tip:'ซื้อช่องที่เดินตก ขายทีหลังได้'},
- {id:'portfolio',c:'g',m:2,i:'🧺',n:'พอร์ตหลากหลาย',d:'ถือหุ้น/คริปโต/กองทุนที่กำลังกำไร ≥ 5 ตัวพร้อมกัน',tip:'นับเฉพาะตัวที่ราคาสูงกว่าทุน มูลค่าแต่ละตัวต้องไม่ต่ำกว่า ฿200,000'},
+ {id:'portfolio',c:'g',m:2,i:'🧺',n:'พอร์ตหลากหลาย',d:'ถือหุ้น/คริปโต/กองทุน/สินค้าโภคภัณฑ์ที่กำลังกำไร ≥ 5 ตัวพร้อมกัน',tip:'นับเฉพาะตัวที่ราคาสูงกว่าทุน มูลค่าแต่ละตัวต้องไม่ต่ำกว่า ฿200,000'},
  {id:'cash2m',c:'g',m:2,i:'💵',n:'กระเป๋าหนัก',d:'มีเงินสด ฿2,000,000 พร้อมกัน',tip:'สะสมกระแสเงินสดก่อนลงทุนก้อนใหญ่'},
  {id:'debtfree',c:'g',m:2,i:'🧾',n:'ปลดหนี้หมด',d:'ชนะโดยไม่มีหนี้บ้าน รถ บัตร และเงินกู้',tip:'ปิดหนี้ได้ที่งบการเงิน'},
  {id:'storm',c:'g',m:2,i:'🌪️',n:'ฝ่าวิกฤต',d:'ชนะเกมที่เกิดภัยพิบัติ ≥ 2 ครั้ง',tip:'ภัยพิบัติมาจากกองการ์ดชีวิต'},
@@ -3774,7 +3774,7 @@ function onTag(){let t=$('#roomTag');if(!ON.code){if(t)t.remove();return}
   if(!t){t=document.createElement('span');t.id='roomTag';t.className='roomtag';t.setAttribute('role','button');t.title='ดูข้อมูลห้อง';t.onclick=onRoomInfo;const h=document.querySelector('header .logo')?.parentElement||document.querySelector('header');h.appendChild(t)}
   t.textContent='ห้อง '+ON.code+' ⓘ'}
 /* เวอร์ชันของไฟล์เกม (เปลี่ยนทุกครั้งที่แก้ระบบออนไลน์) · ส่งไปกับสถานะออนไลน์ เพื่อดูว่าใครยังเปิดเวอร์ชันเก่า */
-const BUILD='2026-11-19.12';
+const BUILD='2026-11-19.13';
 /* ป้ายเลขห้อง → ข้อมูลห้อง: เจ้าของห้อง · เครื่องที่คุมรอบ · สถานะผู้เล่นแต่ละคน */
 function onRoomInfo(){const r=ON.room;if(!r||!ON.code)return;
   const seatName=u=>{const q=S&&S.players&&S.players.find(x=>x.uid===u);if(q)return q.name;const s=Object.values(r.seats||{}).find(x=>x&&x.uid===u);return s?(s.name||'ผู้เล่น'):'—'};
