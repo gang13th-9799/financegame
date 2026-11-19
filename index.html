@@ -1640,17 +1640,17 @@ const LEARN_V16=[
  {t:'ซื้อหนังสือพัฒนาตัวเองมาอ่านก่อนนอน',ty:'readbook',cost:500,nt:1,nh:0,nk:0,kg:0},
  {t:'สมัครแอปหนังสือเสียงรายปี ฟังระหว่างเดินทาง',ty:'readbook',cost:1500,nt:1,nh:0,nk:0,kg:0},
  {t:'ยืมหนังสือธุรกิจจากห้องสมุดประชาชน',ty:'readbook',cost:0,nt:1,nh:0,nk:0,kg:0},
- {t:'จัดประชุมทีมประจำสัปดาห์ วางเป้ายอดขาย',ty:'bizmeet',cost:2000,nt:1,nh:0,nk:2,kg:0},
- {t:'เช่าห้องประชุมนัดคุยแผนธุรกิจกับทีม',ty:'bizmeet',cost:5000,nt:1,nh:0,nk:2,kg:0},
- {t:'จัดประชุมออนไลน์กับทีมงานทั่วประเทศ',ty:'bizmeet',cost:1000,nt:1,nh:0,nk:3,kg:0},
- {t:'จัดงานสัมมนาเปิดโอกาสธุรกิจ',ty:'seminar',cost:15000,nt:2,nh:0,nk:3,kg:0},
- {t:'เช่าห้องจัดเลี้ยงโรงแรม จัดสัมมนาประจำปี',ty:'seminar',cost:30000,nt:2,nh:0,nk:4,kg:0},
- {t:'ขึ้นเป็นวิทยากรในงานสัมมนาใหญ่',ty:'seminar',cost:8000,nt:2,nh:0,nk:5,kg:0},
- {t:'คอร์สวางแผนสายงานเชิงลึก',ty:'focus',cost:20000,nt:2,nh:0,nk:3,kg:1},
- {t:'โค้ชชิ่งตัวต่อตัวกับอัพไลน์ระดับไดมอนด์',ty:'focus',cost:10000,nt:2,nh:0,nk:4,kg:1},
- {t:'นั่งวิเคราะห์ข้อมูลยอดขายรายสายงาน',ty:'focus',cost:5000,nt:1,nh:0,nk:5,kg:1}];
+ {t:'จัดประชุมทีมประจำสัปดาห์ วางเป้ายอดขาย',ty:'bizmeet',cost:2000,nt:1,nh:0,nk:0,kg:0},
+ {t:'เช่าห้องประชุมนัดคุยแผนธุรกิจกับทีม',ty:'bizmeet',cost:5000,nt:1,nh:0,nk:0,kg:0},
+ {t:'จัดประชุมออนไลน์กับทีมงานทั่วประเทศ',ty:'bizmeet',cost:1000,nt:1,nh:0,nk:0,kg:0},
+ {t:'จัดงานสัมมนาเปิดโอกาสธุรกิจ',ty:'seminar',cost:15000,nt:2,nh:0,nk:0,kg:0},
+ {t:'เช่าห้องจัดเลี้ยงโรงแรม จัดสัมมนาประจำปี',ty:'seminar',cost:30000,nt:2,nh:0,nk:0,kg:0},
+ {t:'ขึ้นเป็นวิทยากรในงานสัมมนาใหญ่',ty:'seminar',cost:8000,nt:2,nh:0,nk:0,kg:0},
+ {t:'คอร์สวางแผนสายงานเชิงลึก',ty:'focus',cost:20000,nt:2,nh:0,nk:0,kg:1},
+ {t:'โค้ชชิ่งตัวต่อตัวกับอัพไลน์ระดับไดมอนด์',ty:'focus',cost:10000,nt:2,nh:0,nk:0,kg:1},
+ {t:'นั่งวิเคราะห์ข้อมูลยอดขายรายสายงาน',ty:'focus',cost:5000,nt:1,nh:0,nk:0,kg:1}];
 function skillsV16(D){D.skills=D.skills||[];for(const r of SK_V16)if(!D.skills.some(x=>x.key===r.key))D.skills.push({...r});D.learn=D.learn||[];for(const r of LEARN_V16)if(!D.learn.some(x=>x.t===r.t))D.learn.push({...r})}
-function loadDB(){skillsV16(DEFAULT_DB);for(const r of DEFAULT_DB.opp)if(r.ty==='biz'&&!(+r.nh>=1))r.nh=1;lifeNoDrain(DEFAULT_DB);balanceDB(DEFAULT_DB);cardsV15(DEFAULT_DB);DEFAULT_DB.ver=16;let d=null;try{d=JSON.parse(localStorage.getItem('ffdb-v1')||'null')}catch(e){}DB=d&&d.jobs?d:JSON.parse(JSON.stringify(DEFAULT_DB));if(!(DB.ver>=2)&&DB.skills){for(const r of DB.skills)if(!r.kind){r.kind='passive';r.uses=0}for(const r of DEFAULT_DB.skills)if(r.kind==='active'&&!DB.skills.some(x=>x.key===r.key))DB.skills.push({...r});if(DB.learn)for(const r of DEFAULT_DB.learn)if(DEFAULT_DB.skills.some(s=>s.key===r.ty&&s.kind==='active')&&!DB.learn.some(x=>x.t===r.t))DB.learn.push({...r});DB.ver=2;try{localStorage.setItem('ffdb-v1',JSON.stringify(DB))}catch(e){}}if(!(DB.ver>=3)&&DB.net){const H=[['ฟิตเนส',2],['ไอโฟน',1],['ซีรีส์',1],['เสื้อผ้าใหม่',1],['ของขวัญ',1],['น้ำท่วม',-1]];
+function loadDB(){skillsV16(DEFAULT_DB);for(const r of DEFAULT_DB.opp)if(r.ty==='biz'&&!(+r.nh>=1))r.nh=1;lifeNoDrain(DEFAULT_DB);balanceDB(DEFAULT_DB);cardsV15(DEFAULT_DB);DEFAULT_DB.ver=17;let d=null;try{d=JSON.parse(localStorage.getItem('ffdb-v1')||'null')}catch(e){}DB=d&&d.jobs?d:JSON.parse(JSON.stringify(DEFAULT_DB));if(!(DB.ver>=2)&&DB.skills){for(const r of DB.skills)if(!r.kind){r.kind='passive';r.uses=0}for(const r of DEFAULT_DB.skills)if(r.kind==='active'&&!DB.skills.some(x=>x.key===r.key))DB.skills.push({...r});if(DB.learn)for(const r of DEFAULT_DB.learn)if(DEFAULT_DB.skills.some(s=>s.key===r.ty&&s.kind==='active')&&!DB.learn.some(x=>x.t===r.t))DB.learn.push({...r});DB.ver=2;try{localStorage.setItem('ffdb-v1',JSON.stringify(DB))}catch(e){}}if(!(DB.ver>=3)&&DB.net){const H=[['ฟิตเนส',2],['ไอโฟน',1],['ซีรีส์',1],['เสื้อผ้าใหม่',1],['ของขวัญ',1],['น้ำท่วม',-1]];
   for(const r of DB.net.filter(r=>r.cat==='ชีวิต')){const o={t:r.t,cash:0,cpct:0,spct:0,mexp:0,kid:0,h:0,tt:0,k:0,act:0,pas:0,opt:0,nt:0,nh:0,nk:0,sp:''};
     if(String(r.t).startsWith('ตกงาน'))o.sp='jobless';else if(!+r.A&&!+r.P){if(/ต่อเดือน/.test(r.t))o.mexp=+r.cost;else o.cash=-(+r.cost);const hh=H.find(([w])=>r.t.includes(w));if(hh)o.h=hh[1]}
     else Object.assign(o,{opt:1,cash:-(+r.cost),act:+r.A,pas:+r.P,nt:+r.nt||1,nh:+r.nh||0,nk:+r.nk||0});(DB.life=DB.life||[]).push(o)}
@@ -1671,6 +1671,7 @@ if(!(DB.ver>=12)){try{const j=JSON.stringify(DB).replace(/บริษัทแ�
 if(!(DB.ver>=14)){for(const r of DB.opp||[])if(/หุ้น GROW/.test(r.t))r.t=r.t.replace('หุ้น GROW','หุ้น Tesla');DB.ver=14;try{localStorage.setItem('ffdb-v1',JSON.stringify(DB))}catch(e){}}
 if(!(DB.ver>=15)){cardsV15(DB);DB.ver=15;try{localStorage.setItem('ffdb-v1',JSON.stringify(DB))}catch(e){}}
 if(!(DB.ver>=16)){skillsV16(DB);DB.ver=16;try{localStorage.setItem('ffdb-v1',JSON.stringify(DB))}catch(e){}}
+if(!(DB.ver>=17)){for(const r of DB.learn||[])if(LEARN_V16.some(x=>x.t===r.t))r.nk=0;DB.ver=17;try{localStorage.setItem('ffdb-v1',JSON.stringify(DB))}catch(e){}}
 for(const r of DB.net||[])if(/คอนโดราคา 2\.5M/.test(r.t))r.t='ลงทุนดาวน์คอนโดเพื่อปล่อยเช่า';
 for(const r of DB.life||[])if(r.sp==='jobless'&&/จ่ายเงินเท่ากับ/.test(r.t))r.t='ตกงาน (หัวใจ −2 · 2 เดือนได้แค่ Passive)';
 for(const k in DEFAULT_DB)if(!DB[k])DB[k]=JSON.parse(JSON.stringify(DEFAULT_DB[k]));applyDB()}
@@ -3682,7 +3683,7 @@ function onTag(){let t=$('#roomTag');if(!ON.code){if(t)t.remove();return}
   if(!t){t=document.createElement('span');t.id='roomTag';t.className='roomtag';t.setAttribute('role','button');t.title='ดูข้อมูลห้อง';t.onclick=onRoomInfo;const h=document.querySelector('header .logo')?.parentElement||document.querySelector('header');h.appendChild(t)}
   t.textContent='ห้อง '+ON.code+' ⓘ'}
 /* เวอร์ชันของไฟล์เกม (เปลี่ยนทุกครั้งที่แก้ระบบออนไลน์) · ส่งไปกับสถานะออนไลน์ เพื่อดูว่าใครยังเปิดเวอร์ชันเก่า */
-const BUILD='2026-11-19.6';
+const BUILD='2026-11-19.7';
 /* ป้ายเลขห้อง → ข้อมูลห้อง: เจ้าของห้อง · เครื่องที่คุมรอบ · สถานะผู้เล่นแต่ละคน */
 function onRoomInfo(){const r=ON.room;if(!r||!ON.code)return;
   const seatName=u=>{const q=S&&S.players&&S.players.find(x=>x.uid===u);if(q)return q.name;const s=Object.values(r.seats||{}).find(x=>x&&x.uid===u);return s?(s.name||'ผู้เล่น'):'—'};
