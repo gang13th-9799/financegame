@@ -1513,6 +1513,7 @@ let LIFE=[];
 let LEARN=[];
 let OPP=[];
 const NET_HEART=[['ฟิตเนส',2],['ไอโฟน',1],['ซีรีส์',1],['เสื้อผ้าใหม่',1],['ของขวัญ',1],['น้ำท่วม',-1]];
+const NET_OVER=20000;/* การ์ด "สายงาน X ได้ N PV" ถ้าสายนั้นมี PV ≥ N อยู่แล้ว → บวกเพิ่ม 20,000 PV แทน */
 async function netCard(p){
   if(!p.net.on){
     const v=await choose({actor:p,kind:'netc',title:'เพื่อนชวนสมัครธุรกิจ A',body:`<p>ค่าสมัคร ${B(NET_FEE)} แล้วเปิดแท็บธุรกิจเครือข่าย › ธุรกิจ A ได้</p><p>สร้างสายงาน A–F ทำยอด PV ไต่ระดับจนถึงไดมอนด์ รายได้ Passive มาจากการ์ดสร้างธุรกิจ</p>`,
@@ -1521,7 +1522,7 @@ async function netCard(p){
   }
   const _c=netDraw(p);if(_c[5]==='DL'){await dlCard(p,_c);return}if(_c[5]==='OFF'){await offCard(p,_c);return}if(_c[5]==='SCAMB'){await scamBCard(p,_c);return}if(_c[5]==='SCAMC'){await scamCCard(p,_c);return}
   const [id,t,leg,pv,cost,cat,A,Pv,nT,nH,nK,dsc='']=_c;const tdx=t+' '+dsc;const n=p.net;const NEED={needT:nT,needH:nH,needK:nK};
-  const info=`${dsc&&CDESC_AMB.has(t)?`<p class="cdesc">${esc(dsc)}</p>`:''}<div class="kv">${leg?`<b>เป้าหมาย</b><span>สายงาน ${leg} (ตอนนี้ ${n.legs[leg].toLocaleString()} PV)</span>`:''}${(()=>{const mm=leg&&tdx.match(/ได้\s*([\d,]+)\s*PV/i);if(mm){const g=Math.round(+mm[1].replace(/,/g,'')*(1+skV(p,'net')/100));return `<b>ผลลัพธ์</b><span class="num pos">สายงาน ${leg} ขึ้นเป็น ${g.toLocaleString()} PV${n.legs[leg]>=g?' (ตอนนี้สูงกว่าแล้ว ไม่เพิ่ม)':` (+${(g-n.legs[leg]).toLocaleString()})`}</span>`}return pv?`<b>PV</b><span class="num">+${pv.toLocaleString()}${leg?` เข้าสายงาน ${leg}`:' (ยอดส่วนตัว)'}</span>`:''})()}${cost?`<b>ค่าใช้จ่าย</b><span class="num neg">${B(cost)}</span>`:''}${A?`<b>Active</b><span class="num pos">+${B(A)}${cat==='ชีวิต'?' ต่อเดือน':' ครั้งเดียว'}</span>`:''}${Pv?`<b>Passive</b><span class="num pos">+${B(Pv)} ต่อเดือน</span>`:''}</div>${cat==='สร้างธุรกิจ'&&skV(p,'net')?`<p class="pos">ทักษะผู้นำเครือข่าย: PV และ Passive +${skV(p,'net')}%</p>`:''}<p class="muted">หมวด ${cat} · การ์ด ${id}</p>`;
+  const info=`${dsc&&CDESC_AMB.has(t)?`<p class="cdesc">${esc(dsc)}</p>`:''}<div class="kv">${leg?`<b>เป้าหมาย</b><span>สายงาน ${leg} (ตอนนี้ ${n.legs[leg].toLocaleString()} PV)</span>`:''}${(()=>{const mm=leg&&tdx.match(/ได้\s*([\d,]+)\s*PV/i);if(mm){const g=Math.round(+mm[1].replace(/,/g,'')*(1+skV(p,'net')/100));return `<b>ผลลัพธ์</b><span class="num pos">สายงาน ${leg} ขึ้นเป็น ${g.toLocaleString()} PV${n.legs[leg]>=g?` (ตอนนี้สูงกว่าแล้ว → บวกเพิ่ม +${NET_OVER.toLocaleString()} แทน)`:` (+${(g-n.legs[leg]).toLocaleString()})`}</span>`}return pv?`<b>PV</b><span class="num">+${pv.toLocaleString()}${leg?` เข้าสายงาน ${leg}`:' (ยอดส่วนตัว)'}</span>`:''})()}${cost?`<b>ค่าใช้จ่าย</b><span class="num neg">${B(cost)}</span>`:''}${A?`<b>Active</b><span class="num pos">+${B(A)}${cat==='ชีวิต'?' ต่อเดือน':' ครั้งเดียว'}</span>`:''}${Pv?`<b>Passive</b><span class="num pos">+${B(Pv)} ต่อเดือน</span>`:''}</div>${cat==='สร้างธุรกิจ'&&skV(p,'net')?`<p class="pos">ทักษะผู้นำเครือข่าย: PV และ Passive +${skV(p,'net')}%</p>`:''}<p class="muted">หมวด ${cat} · การ์ด ${id}</p>`;
   const ok1=(o)=>({v:'ok',l:'รับทราบ',c:'pri',...o});
   // life: salary / unemployment / expenses / side income
   if(cat==='ชีวิต'){
@@ -1546,7 +1547,7 @@ async function netCard(p){
   if(invest){p.deals.push({id:NOW()+Math.random(),t,ty:/คอนโด/.test(t)?'re':'fund',cost,cf:Pv});log(`✨ ${esc(p.name)} ลงทุน ${esc(t)}`);return}
   const nb=1+skV(p,'net')/100;
   const m=tdx.match(/ได้\s*([\d,]+)\s*PV/i);
-  if(leg){const goal=m?Math.round(+m[1].replace(/,/g,'')*nb):0;n.legs[leg]=goal?Math.max(n.legs[leg],goal):n.legs[leg]+Math.round(pv*nb)}else n.ppv+=Math.round(pv*nb);
+  if(leg){const goal=m?Math.round(+m[1].replace(/,/g,'')*nb):0;if(goal&&n.legs[leg]>=goal){n.legs[leg]+=NET_OVER;ruleNote(p,'สายงานเกินเป้าการ์ด',`สาย ${leg} มี PV เกิน ${goal.toLocaleString()} อยู่แล้ว จึงได้บวกเพิ่ม +${NET_OVER.toLocaleString()} PV แทน`)}else n.legs[leg]=goal?goal:n.legs[leg]+Math.round(pv*nb)}else n.ppv+=Math.round(pv*nb);
   p.cash+=A;n.pas+=Math.round(Pv*nb);
   log(`🤝 ${esc(p.name)} ธุรกิจ A: ${esc(t)}${leg?` · สาย ${leg} = ${n.legs[leg].toLocaleString()} PV`:''}${A?` · กำไร ${B(A)}`:''}${Pv?` · Passive +${B(Pv)}`:''}`);
   netRankCheck(p);
@@ -3841,7 +3842,7 @@ function onTag(){let t=$('#roomTag');if(!ON.code){if(t)t.remove();return}
   if(!t){t=document.createElement('span');t.id='roomTag';t.className='roomtag';t.setAttribute('role','button');t.title='ดูข้อมูลห้อง';t.onclick=onRoomInfo;const h=document.querySelector('header .logo')?.parentElement||document.querySelector('header');h.appendChild(t)}
   t.textContent='ห้อง '+ON.code+' ⓘ'}
 /* เวอร์ชันของไฟล์เกม (เปลี่ยนทุกครั้งที่แก้ระบบออนไลน์) · ส่งไปกับสถานะออนไลน์ เพื่อดูว่าใครยังเปิดเวอร์ชันเก่า */
-const BUILD='2026-11-19.20';
+const BUILD='2026-11-19.21';
 /* ป้ายเลขห้อง → ข้อมูลห้อง: เจ้าของห้อง · เครื่องที่คุมรอบ · สถานะผู้เล่นแต่ละคน */
 function onRoomInfo(){const r=ON.room;if(!r||!ON.code)return;
   const seatName=u=>{const q=S&&S.players&&S.players.find(x=>x.uid===u);if(q)return q.name;const s=Object.values(r.seats||{}).find(x=>x&&x.uid===u);return s?(s.name||'ผู้เล่น'):'—'};
