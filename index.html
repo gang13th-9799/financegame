@@ -1264,6 +1264,7 @@ body:has(#setupView .setup.onl) header{position:relative;z-index:5}
 .ib::-webkit-details-marker{display:none}.ib::marker{content:''}
 details[open]>.ib{background:#f2e3bb;border-color:#b89a55}
 .lgd{display:flex;flex-direction:column;align-items:flex-end;margin:4px 6px 0}.lgd .legend{margin-top:4px;align-self:stretch}
+.fcb{width:18px;height:18px;margin:0 8px 0 0;accent-color:#3f8a4a;flex:none;align-self:center}
 .tsum{list-style:none;cursor:pointer;display:inline-flex;align-items:center;gap:6px;font-size:12px;user-select:none}.tsum::-webkit-details-marker{display:none}details[open]>.tsum .ib{background:#f2e3bb;border-color:#b89a55}
 .tip{display:inline-block;vertical-align:middle}.tip[open]{display:block}.tip .tipb{margin-top:6px;background:#fffdf5;border:1.5px solid #e9d9a8;border-radius:10px;padding:8px 10px;box-shadow:0 6px 18px rgba(0,0,0,.15);font-size:12px;line-height:1.45;color:var(--ink);font-weight:400;white-space:normal}
 </style>
@@ -1497,7 +1498,7 @@ async function netCard(p){
       opts:[{v:'y',l:`สมัคร ${B(NET_FEE)}`,c:'pri',dis:p.cash<NET_FEE},{v:'n',l:'ไม่สนใจ'}],bot:p.cash>NET_FEE*20&&Math.random()<.4?'y':'n'});
     if(v==='y')netJoin(p,NET_FEE);return;
   }
-  const _c=draw('netc');if(_c[5]==='DL'){await dlCard(p,_c);return}if(_c[5]==='OFF'){await offCard(p,_c);return}if(_c[5]==='SCAMB'){await scamBCard(p,_c);return}if(_c[5]==='SCAMC'){await scamCCard(p,_c);return}
+  const _c=netDraw(p);if(_c[5]==='DL'){await dlCard(p,_c);return}if(_c[5]==='OFF'){await offCard(p,_c);return}if(_c[5]==='SCAMB'){await scamBCard(p,_c);return}if(_c[5]==='SCAMC'){await scamCCard(p,_c);return}
   const [id,t,leg,pv,cost,cat,A,Pv,nT,nH,nK,dsc='']=_c;const tdx=t+' '+dsc;const n=p.net;const NEED={needT:nT,needH:nH,needK:nK};
   const info=`<div class="kv">${leg?`<b>เป้าหมาย</b><span>สายงาน ${leg} (ตอนนี้ ${n.legs[leg].toLocaleString()} PV)</span>`:''}${(()=>{const mm=leg&&tdx.match(/ได้\s*([\d,]+)\s*PV/i);if(mm){const g=Math.round(+mm[1].replace(/,/g,'')*(1+skV(p,'net')/100));return `<b>ผลลัพธ์</b><span class="num pos">สายงาน ${leg} ขึ้นเป็น ${g.toLocaleString()} PV${n.legs[leg]>=g?' (ตอนนี้สูงกว่าแล้ว ไม่เพิ่ม)':` (+${(g-n.legs[leg]).toLocaleString()})`}</span>`}return pv?`<b>PV</b><span class="num">+${pv.toLocaleString()}${leg?` เข้าสายงาน ${leg}`:' (ยอดส่วนตัว)'}</span>`:''})()}${cost?`<b>ค่าใช้จ่าย</b><span class="num neg">${B(cost)}</span>`:''}${A?`<b>Active</b><span class="num pos">+${B(A)}${cat==='ชีวิต'?' ต่อเดือน':' ครั้งเดียว'}</span>`:''}${Pv?`<b>Passive</b><span class="num pos">+${B(Pv)} ต่อเดือน</span>`:''}</div>${cat==='สร้างธุรกิจ'&&skV(p,'net')?`<p class="pos">ทักษะผู้นำเครือข่าย: PV และ Passive +${skV(p,'net')}%</p>`:''}<p class="muted">หมวด ${cat} · การ์ด ${id}</p>`;
   const ok1=(o)=>({v:'ok',l:'รับทราบ',c:'pri',...o});
@@ -1562,7 +1563,7 @@ const DEFAULT_DB={"jobs":[{"n":"พนักงานส่งของ","sal":2
 const DBCOLS={
  jobs:{name:'อาชีพ',cols:[['n','ชื่ออาชีพ','s'],['sal','เงินเดือน','n'],['cash','เงินเก็บเริ่มต้น','n'],['tax','ภาษี','n'],['home','ผ่อนบ้าน','n'],['car','ผ่อนรถ','n'],['card','บัตรเครดิต','n'],['living','ค่าครองชีพ','n'],['kc','ค่าเลี้ยงดูบุตร/คน/เดือน','n'],['h','หัวใจ','n'],['t','เวลา','n'],['k','ความรู้','n']],
    note:'หนี้เริ่มต้นคำนวณอัตโนมัติ: หนี้บ้าน = ผ่อนบ้าน×100 · หนี้รถ = ผ่อนรถ×25 · หนี้บัตร = บัตรเครดิต×20 · หัวใจ/เวลา/ความรู้ 0–10'},
- skills:{name:'ทักษะ',cols:[['key','รหัสทักษะ (ภาษาอังกฤษ ไม่ซ้ำ)','s'],['n','ชื่อทักษะ','s'],['kind','ชนิด','o',['passive','active']],['eff','ผลของทักษะ','o',['rent','stock','biz','net','tax','buy','scam','salary','dice_pick','heal_h','heal_t','discount_next','shield_jobless','peek_news','extra_pick']],['val','ค่า (% หรือจำนวน)','n'],['uses','จำนวนครั้งที่ได้ต่อการเรียน (Active)','n']],
+ skills:{name:'ทักษะ',cols:[['key','รหัสทักษะ (ภาษาอังกฤษ ไม่ซ้ำ)','s'],['n','ชื่อทักษะ','s'],['kind','ชนิด','o',['passive','active']],['eff','ผลของทักษะ','o',['rent','stock','biz','net','tax','buy','scam','salary','dice_pick','heal_h','heal_t','discount_next','shield_jobless','peek_news','extra_pick','heal_k','net_focus']],['val','ค่า (% หรือจำนวน)','n'],['uses','จำนวนครั้งที่ได้ต่อการเรียน (Active)','n']],
    note:'Passive = คำนวณให้อัตโนมัติตลอด (ค่าเช่า หุ้น ธุรกิจ ธุรกิจ A ภาษี ส่วนลดซื้อ รู้ทันกลโกง เงินเดือน) · Active = สกิลการ์ด สะสมจำนวนครั้งไว้ กดใช้เองในตาของตัวเอง (เลือกแต้มเดิน ฟื้นหัวใจ ฟื้นเวลา ส่วนลดดีลถัดไป ประกันตกงาน ดูข่าวล่วงหน้า จั่วเพิ่ม) · เรียนการ์ดทักษะ Active ซ้ำได้เพื่อเพิ่มจำนวนครั้ง'},
  life:{name:'การ์ดดำเนินชีวิต',cols:[['t','ชื่อการ์ด','s'],['d','รายละเอียด (แสดงใต้ชื่อ)','s'],['cash','เงิน ± (ครั้งเดียว · ค่าใช้จ่ายคูณค่าครองชีพเขต)','n'],['cpct','% ของเงินเดือน ± (ครั้งเดียว)','n'],['spct','ขึ้นเงินเดือน %','n'],['mexp','รายจ่ายต่อเดือน +','n'],['kid','มีลูก (1=ใช่)','n'],['h','❤','n'],['tt','⏳','n'],['k','📚','n'],['act','รายได้เสริมต่อเดือน +','n'],['pas','Passive ต่อเดือน +','n'],['opt','เลือกทำหรือไม่ (1=ใช่)','n'],['acc','อุบัติเหตุ บังคับรับ (1=ใช่)','n'],['perkid','ค่าใช้จ่ายคูณจำนวนลูก (1=ใช่)','n'],['nt','ใช้ ⏳ เวลา (ถ้าเลือกทำ)','n'],['nh','ใช้ ❤ หัวใจ (ถ้าเลือกทำ)','n'],['nk','📚 ใช้ความรู้ (ถ้าเลือกทำ)','n'],['sp','เหตุการณ์พิเศษ','o',['','jobless']]],
    note:'เงินติดลบคือจ่าย (ปรับตามเงินเดือนสำหรับอาชีพรายได้สูง) · เลือกทำหรือไม่ = ผู้เล่นเลือกได้ว่าจะจ่ายเงินและค่าพลังเพื่อรับรายได้เสริม/Passive หรือข้าม · เหตุการณ์พิเศษ ตกงาน = ใช้กติกาเดียวกับช่องตกงาน · การ์ดที่มีผลเสียจะถูกใช้ในช่องฟุ่มเฟือยด้วย'},
@@ -1582,7 +1583,7 @@ function learnNeedDef(r){if(r.ty==='know')return {nt:1,nh:0,nk:0,kg:1};if(r.ty==
 const OPP_TY={re:'อสังหาริมทรัพย์',biz:'ธุรกิจ',fund:'กองทุน / สินทรัพย์การเงิน',scam:'แชร์ลูกโซ่ (หลอกลวง)',ipo:'หุ้นจอง IPO',gold:'ทองคำราคาพิเศษ',netinv:'คำชวนธุรกิจ A',buyer:'มีคนขอซื้ออสังหาฯ',refi:'รีไฟแนนซ์บ้าน'};
 function oppNeedDef(r){const c=+r.cost||0;if(['re','biz','fund','scam'].includes(r.ty))return {nt:{biz:2,re:1}[r.ty]||0,nh:r.ty==='biz'?1:0,nk:c>=300000?7:c>=150000?5:0};if(['ipo','gold'].includes(r.ty))return {nt:0,nh:0,nk:0};return {nt:0,nh:0,nk:0}}
 let DB=null,SKILLDB={};
-const EFFTXT={rent:v=>`ค่าเช่าอสังหาฯ +${v}%`,stock:v=>`ไม่เสียค่าคอมหุ้น ปันผล +${v}%`,biz:v=>`กำไรธุรกิจ +${v}%`,net:v=>`ธุรกิจ A: PV และ Passive จากการ์ด +${v}%`,tax:v=>`ภาษี −${v}%`,buy:v=>`ซื้ออสังหาฯ และดีลถูกลง ${v}%`,scam:()=>'มองเห็นกลโกง',salary:v=>`เงินเดือน +${v}%`,
+const EFFTXT={heal_k:v=>`ความรู้ 📚 +${v}`,net_focus:v=>`ธุรกิจ A: ติ๊กโฟกัสสายงาน การ์ดของสายที่ติ๊กออกบ่อยขึ้น ${v} เท่า`,rent:v=>`ค่าเช่าอสังหาฯ +${v}%`,stock:v=>`ไม่เสียค่าคอมหุ้น ปันผล +${v}%`,biz:v=>`กำไรธุรกิจ +${v}%`,net:v=>`ธุรกิจ A: PV และ Passive จากการ์ด +${v}%`,tax:v=>`ภาษี −${v}%`,buy:v=>`ซื้ออสังหาฯ และดีลถูกลง ${v}%`,scam:()=>'มองเห็นกลโกง',salary:v=>`เงินเดือน +${v}%`,
  dice_pick:()=>'เลือกแต้มเดินเอง 1 ครั้ง',heal_h:v=>`ฟื้น ❤ หัวใจ +${v}`,heal_t:v=>`ฟื้น ⏳ เวลา +${v}`,discount_next:v=>`ส่วนลด ${v}% สำหรับการซื้อครั้งถัดไป`,shield_jobless:()=>'กันการตกงาน 1 ครั้ง (ไม่ต้องจ่าย ไม่ติดสถานะ)',peek_news:()=>'ดูข่าวตลาดใบถัดไปล่วงหน้า',extra_pick:v=>`จั่วการ์ดเพิ่ม +${v} ใบในเทิร์นนี้`};
 const EFFKIND={dice_pick:1,heal_h:1,heal_t:1,discount_next:1,shield_jobless:1,peek_news:1,extra_pick:1};
 function skillName(k){return SKILLDB[k]?SKILLDB[k].n:k}
@@ -1633,7 +1634,23 @@ function gainBars(p,g){return `<div class="gbars">${[['h','❤','หัวใจ
   return `<div class="gbr"><span class="gbn">${ic} ${nm}</span><span class="gbc">${c}</span><span class="gbv num">${cur} → <b class="pos">${a}${b>a?'–'+b:''}</b></span></div>`}).join('')}</div>`}
 function cardDescHTML(kind,title){if(!['life','learn','opp','netc'].includes(kind)||!CDESC.size)return '';const t=String(title||'').replace(/<[^>]*>/g,'').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&#39;/g,"'").trim();
   let d=CDESC.get(t);if(!d){let best='';for(const [k] of CDESC)if(k.length>best.length&&t.includes(k))best=k;if(best)d=CDESC.get(best)}return d?`<p class="cdesc">${esc(d)}</p>`:''}
-function loadDB(){for(const r of DEFAULT_DB.opp)if(r.ty==='biz'&&!(+r.nh>=1))r.nh=1;lifeNoDrain(DEFAULT_DB);balanceDB(DEFAULT_DB);cardsV15(DEFAULT_DB);DEFAULT_DB.ver=15;let d=null;try{d=JSON.parse(localStorage.getItem('ffdb-v1')||'null')}catch(e){}DB=d&&d.jobs?d:JSON.parse(JSON.stringify(DEFAULT_DB));if(!(DB.ver>=2)&&DB.skills){for(const r of DB.skills)if(!r.kind){r.kind='passive';r.uses=0}for(const r of DEFAULT_DB.skills)if(r.kind==='active'&&!DB.skills.some(x=>x.key===r.key))DB.skills.push({...r});if(DB.learn)for(const r of DEFAULT_DB.learn)if(DEFAULT_DB.skills.some(s=>s.key===r.ty&&s.kind==='active')&&!DB.learn.some(x=>x.t===r.t))DB.learn.push({...r});DB.ver=2;try{localStorage.setItem('ffdb-v1',JSON.stringify(DB))}catch(e){}}if(!(DB.ver>=3)&&DB.net){const H=[['ฟิตเนส',2],['ไอโฟน',1],['ซีรีส์',1],['เสื้อผ้าใหม่',1],['ของขวัญ',1],['น้ำท่วม',-1]];
+/* v16: ทักษะใหม่ (Active: อ่านหนังสือ/จัดประชุมธุรกิจ/จัดงานสัมมนา = ความรู้ +1/+2/+3 · Passive: โฟกัสสายงาน) + การ์ดเรียนรู้อย่างละ 3 ใบ */
+const SK_V16=[{key:'readbook',n:'อ่านหนังสือ',kind:'active',eff:'heal_k',val:1,uses:2},{key:'bizmeet',n:'จัดประชุมธุรกิจ',kind:'active',eff:'heal_k',val:2,uses:2},{key:'seminar',n:'จัดงานสัมมนา',kind:'active',eff:'heal_k',val:3,uses:2},{key:'focus',n:'โฟกัสสายงาน',kind:'passive',eff:'net_focus',val:3,uses:0}];
+const LEARN_V16=[
+ {t:'ซื้อหนังสือพัฒนาตัวเองมาอ่านก่อนนอน',ty:'readbook',cost:500,nt:1,nh:0,nk:0,kg:0},
+ {t:'สมัครแอปหนังสือเสียงรายปี ฟังระหว่างเดินทาง',ty:'readbook',cost:1500,nt:1,nh:0,nk:0,kg:0},
+ {t:'ยืมหนังสือธุรกิจจากห้องสมุดประชาชน',ty:'readbook',cost:0,nt:1,nh:0,nk:0,kg:0},
+ {t:'จัดประชุมทีมประจำสัปดาห์ วางเป้ายอดขาย',ty:'bizmeet',cost:2000,nt:1,nh:0,nk:2,kg:0},
+ {t:'เช่าห้องประชุมนัดคุยแผนธุรกิจกับทีม',ty:'bizmeet',cost:5000,nt:1,nh:0,nk:2,kg:0},
+ {t:'จัดประชุมออนไลน์กับทีมงานทั่วประเทศ',ty:'bizmeet',cost:1000,nt:1,nh:0,nk:3,kg:0},
+ {t:'จัดงานสัมมนาเปิดโอกาสธุรกิจ',ty:'seminar',cost:15000,nt:2,nh:0,nk:3,kg:0},
+ {t:'เช่าห้องจัดเลี้ยงโรงแรม จัดสัมมนาประจำปี',ty:'seminar',cost:30000,nt:2,nh:0,nk:4,kg:0},
+ {t:'ขึ้นเป็นวิทยากรในงานสัมมนาใหญ่',ty:'seminar',cost:8000,nt:2,nh:0,nk:5,kg:0},
+ {t:'คอร์สวางแผนสายงานเชิงลึก',ty:'focus',cost:20000,nt:2,nh:0,nk:3,kg:1},
+ {t:'โค้ชชิ่งตัวต่อตัวกับอัพไลน์ระดับไดมอนด์',ty:'focus',cost:10000,nt:2,nh:0,nk:4,kg:1},
+ {t:'นั่งวิเคราะห์ข้อมูลยอดขายรายสายงาน',ty:'focus',cost:5000,nt:1,nh:0,nk:5,kg:1}];
+function skillsV16(D){D.skills=D.skills||[];for(const r of SK_V16)if(!D.skills.some(x=>x.key===r.key))D.skills.push({...r});D.learn=D.learn||[];for(const r of LEARN_V16)if(!D.learn.some(x=>x.t===r.t))D.learn.push({...r})}
+function loadDB(){skillsV16(DEFAULT_DB);for(const r of DEFAULT_DB.opp)if(r.ty==='biz'&&!(+r.nh>=1))r.nh=1;lifeNoDrain(DEFAULT_DB);balanceDB(DEFAULT_DB);cardsV15(DEFAULT_DB);DEFAULT_DB.ver=16;let d=null;try{d=JSON.parse(localStorage.getItem('ffdb-v1')||'null')}catch(e){}DB=d&&d.jobs?d:JSON.parse(JSON.stringify(DEFAULT_DB));if(!(DB.ver>=2)&&DB.skills){for(const r of DB.skills)if(!r.kind){r.kind='passive';r.uses=0}for(const r of DEFAULT_DB.skills)if(r.kind==='active'&&!DB.skills.some(x=>x.key===r.key))DB.skills.push({...r});if(DB.learn)for(const r of DEFAULT_DB.learn)if(DEFAULT_DB.skills.some(s=>s.key===r.ty&&s.kind==='active')&&!DB.learn.some(x=>x.t===r.t))DB.learn.push({...r});DB.ver=2;try{localStorage.setItem('ffdb-v1',JSON.stringify(DB))}catch(e){}}if(!(DB.ver>=3)&&DB.net){const H=[['ฟิตเนส',2],['ไอโฟน',1],['ซีรีส์',1],['เสื้อผ้าใหม่',1],['ของขวัญ',1],['น้ำท่วม',-1]];
   for(const r of DB.net.filter(r=>r.cat==='ชีวิต')){const o={t:r.t,cash:0,cpct:0,spct:0,mexp:0,kid:0,h:0,tt:0,k:0,act:0,pas:0,opt:0,nt:0,nh:0,nk:0,sp:''};
     if(String(r.t).startsWith('ตกงาน'))o.sp='jobless';else if(!+r.A&&!+r.P){if(/ต่อเดือน/.test(r.t))o.mexp=+r.cost;else o.cash=-(+r.cost);const hh=H.find(([w])=>r.t.includes(w));if(hh)o.h=hh[1]}
     else Object.assign(o,{opt:1,cash:-(+r.cost),act:+r.A,pas:+r.P,nt:+r.nt||1,nh:+r.nh||0,nk:+r.nk||0});(DB.life=DB.life||[]).push(o)}
@@ -1653,6 +1670,7 @@ if(!(DB.ver>=12)){try{const j=JSON.stringify(DB).replace(/บริษัทแ�
   if(!(DB.ver>=13)){try{let j=JSON.stringify(DB);for(const [a,b] of [['ไทยเทค','Apple '],['พลังงานไทย','ExxonMobil '],['ธนาคารสยาม','JPMorgan '],['อาหารไทยได้สัญญาส่งออกล็อตใหญ่','McDonald’s ยอดขายทั่วโลกโตเกินคาด'],['อาหารไทย','McDonald’s '],['สตาร์ทอัพโกรว์','Tesla '],['โกรว์','Tesla '],['ผู้ก่อตั้งTesla','ผู้ก่อตั้ง Tesla'],['ของExxonMobil','ของ ExxonMobil']])j=j.split(a).join(b);DB=JSON.parse(j)}catch(e){}DB.ver=13;try{localStorage.setItem('ffdb-v1',JSON.stringify(DB))}catch(e){}}
 if(!(DB.ver>=14)){for(const r of DB.opp||[])if(/หุ้น GROW/.test(r.t))r.t=r.t.replace('หุ้น GROW','หุ้น Tesla');DB.ver=14;try{localStorage.setItem('ffdb-v1',JSON.stringify(DB))}catch(e){}}
 if(!(DB.ver>=15)){cardsV15(DB);DB.ver=15;try{localStorage.setItem('ffdb-v1',JSON.stringify(DB))}catch(e){}}
+if(!(DB.ver>=16)){skillsV16(DB);DB.ver=16;try{localStorage.setItem('ffdb-v1',JSON.stringify(DB))}catch(e){}}
 for(const r of DB.net||[])if(/คอนโดราคา 2\.5M/.test(r.t))r.t='ลงทุนดาวน์คอนโดเพื่อปล่อยเช่า';
 for(const r of DB.life||[])if(r.sp==='jobless'&&/จ่ายเงินเท่ากับ/.test(r.t))r.t='ตกงาน (หัวใจ −2 · 2 เดือนได้แค่ Passive)';
 for(const k in DEFAULT_DB)if(!DB[k])DB[k]=JSON.parse(JSON.stringify(DEFAULT_DB[k]));applyDB()}
@@ -1725,6 +1743,14 @@ function draw(k){const DEF={life:LIFE,learn:LEARN,opp:OPP,news:NEWS,netc:NETDB}[
 
 /* ===================== FINANCE ===================== */
 let NETDB=[];
+/* ทักษะโฟกัสสายงาน: สายที่ติ๊ก (p.net.focus) การ์ดของสายนั้นมีน้ำหนักสุ่ม ×val (3) จากใบที่เหลือในกอง */
+function netFocus(p){return skHas(p,'net_focus')?(p.net.focus||[]).filter(l=>LEGS.includes(l)):[]}
+function botFocus(p){if(!skHas(p,'net_focus'))return;const n=p.net;p.net.focus=LEGS.filter(l=>n.legs[l]<QPV).sort((a,b)=>n.legs[b]-n.legs[a]).slice(0,3)}
+function netDraw(p){if(p.bot)botFocus(p);const F=netFocus(p);if(!F.length||F.length>=6||(ON.play&&S.par&&S.rp==='h'))return draw('netc');
+  if(!S.decks.netc||S.decks.netc.some(i=>i>=NETDB.length))S.decks.netc=[];if(!S.decks.netc.length)S.decks.netc=shuffle(NETDB.map((_,i)=>i));
+  const d=S.decks.netc,m=skV(p,'net_focus')||3,w=d.map(i=>F.includes(NETDB[i][2])?m:1),tot=w.reduce((a,b)=>a+b,0);let r=Math.random()*tot,j=0;for(;j<d.length-1;j++){r-=w[j];if(r<0)break}
+  const i=d.splice(j,1)[0];if(F.includes(NETDB[i][2]))ruleNote(p,'โฟกัสสายงาน',`เปิดได้การ์ดของสาย ${NETDB[i][2]} ที่ติ๊กโฟกัสไว้ (โอกาส ×${m})`);return NETDB[i]}
+function netFocusToggle(l,on){const p=P(S.view);if(!p||!canAct()||p.id!==S.cur||p.bot||!skHas(p,'net_focus'))return;const f=new Set(p.net.focus||[]);on?f.add(l):f.delete(l);p.net.focus=LEGS.filter(x=>f.has(x));render();save()}
 /* ===== การ์ดลด PV: DL เลิก / DL ท้อ (4 ใบ ≈5% ของกอง) · [id,t,leg,kind(1=เลิก 2=ท้อ),..,cat 'DL',..,คำบรรยาย]
    สุ่มสายงานที่มี PV · DL เลิก ลด ฿15,000–30,000 PV · DL ท้อ ลด 5,000–15,000 PV (ไม่เกิน PV ที่สายนั้นมี)
    ป้องกันได้: หัก ❤ 1–3 (ต้องเหลืออย่างน้อย 1) และ 📚 1–5 ตามจำนวน PV ที่จะเสีย */
@@ -2143,6 +2169,7 @@ async function openSkills(){
   if(!r||!r.startsWith('use:'))return;const k=r.slice(4),s=SKILLDB[k];if(!s||!p.charges[k])return;
   p.charges[k]--;if(!p.charges[k])delete p.charges[k];
   if(s.eff==='heal_h'){const sx=adj(p,{h:s.val||1});log(`🃏 ${esc(p.name)} ใช้ ${esc(s.n)}${sx}`);toast(`🃏 ${s.n}${sx}`)}
+  else if(s.eff==='heal_k'){const sx=adj(p,{k:s.val||1});log(`🃏 ${esc(p.name)} ใช้ ${esc(s.n)}${sx}`);toast(`🃏 ${s.n}${sx}`)}
   else if(s.eff==='heal_t'){const sx=adj(p,{t:s.val||1});log(`🃏 ${esc(p.name)} ใช้ ${esc(s.n)}${sx}`);toast(`🃏 ${s.n}${sx}`)}
   else if(s.eff==='discount_next'){p.nextDisc=Math.max(p.nextDisc||0,s.val||10);log(`🃏 ${esc(p.name)} ใช้ ${esc(s.n)} ส่วนลด ${p.nextDisc}% สำหรับการซื้อครั้งถัดไป`)}
   else if(s.eff==='extra_pick'){S.bonusPicks=(S.bonusPicks||0)+(s.val||1);log(`🃏 ${esc(p.name)} ใช้ ${esc(s.n)} จั่วการ์ดได้ ${picksMax()} ใบในเทิร์นนี้`)}
@@ -2155,6 +2182,7 @@ async function openSkills(){
 function botSkills(p){
   if(!p.charges)return;
   if(p.st.h<=3&&useableCount(p,'heal_h')){const k=consumeEff(p,'heal_h');adj(p,{h:SKILLDB[k].val||1},true);log(`🃏 ${esc(p.name)} ใช้ ${esc(SKILLDB[k].n)}`)}
+  if(p.st.k<=7&&useableCount(p,'heal_k')){const k=consumeEff(p,'heal_k');const sx=adj(p,{k:SKILLDB[k].val||1},true);log(`🃏 ${esc(p.name)} ใช้ ${esc(SKILLDB[k].n)}${sx}`)}
   if(p.st.t<=1&&useableCount(p,'heal_t')){const k=consumeEff(p,'heal_t');adj(p,{t:SKILLDB[k].val||1},true);log(`🃏 ${esc(p.name)} ใช้ ${esc(SKILLDB[k].n)}`)}
   if(S.phase==='card'&&useableCount(p,'extra_pick')&&Math.random()<.5){const k=consumeEff(p,'extra_pick');S.bonusPicks=(S.bonusPicks||0)+(SKILLDB[k].val||1);log(`🃏 ${esc(p.name)} ใช้ ${esc(SKILLDB[k].n)}`)}
 }
@@ -3007,6 +3035,7 @@ function passiveDetail(p,k){const s=SKILLDB[k];if(!s)return '';const v=s.val;
   if(s.eff==='net')return 'คิดเพิ่มให้ทุกครั้งที่ทำการ์ดสร้างธุรกิจในกองธุรกิจ A';
   if(s.eff==='scam')return 'การ์ดหลอกลวงจะขึ้นคำเตือน และไม่เสียเงินกับคอร์สหลอกลวง';
   if(s.eff==='salary')return 'เพิ่มเงินเดือนไปแล้วตอนได้รับทักษะ';
+  if(s.eff==='net_focus'){const f=(p.net.focus||[]);return f.length?`โฟกัสอยู่: สาย ${f.join(', ')}`:'ยังไม่ได้ติ๊กสายงาน (ติ๊กที่แท็บธุรกิจเครือข่าย › ธุรกิจ A)'}
   return ''}
 function skillBox(q){
   const ps=q.skills.filter(k=>SKILLDB[k]),as=Object.keys(q.charges||{}).filter(k=>SKILLDB[k]&&q.charges[k]>0);
@@ -3076,8 +3105,8 @@ function renderNet(){
     <div class="muted" style="font-size:12px">ยอดกลุ่ม <b class="num">${gv.toLocaleString()} PV</b> · ขั้นโบนัส <b>${Math.round(eff*100)}%</b> · PV ส่วนตัว ${n.ppv.toLocaleString()}</div>
     ${nx?`<div class="muted" style="font-size:12px">ระดับถัดไป <b>${nx.n}</b>: ${nx.req}${n.s21?` · 21% ติดต่อกัน ${n.s21} เดือน`:''}${n.sq3?` · 3 สาย 21% ติดต่อกัน ${n.sq3} เดือน`:''}</div>`:'<div class="pos">ถึงระดับสูงสุด ไดมอนด์แล้ว</div>'}</div>
    <div class="box"><h3><span>สายงาน A–F</span><span class="muted" style="font-size:12px">ถึง 21% = ${QPV.toLocaleString()} PV</span></h3>
-    ${LEGS.map(l=>{const x=n.legs[l];return `<div class="ln"><span style="flex:1">สาย ${l} · <b class="num">${x.toLocaleString()}</b> PV ${x?`<span class="chip">${Math.round(netPct(x)*100)}%</span>`:'<span class="muted">ยังไม่เปิด</span>'}<span class="bar ${x>=QPV?'win':''}" style="display:block;margin-top:3px"><i style="width:${Math.min(100,x/QPV*100)}%"></i></span></span></div>`}).join('')}
-    <p class="muted" style="font-size:12px">จั่วการ์ดกอง "ธุรกิจ A" เพื่อสร้างและขยายสายงาน</p>
+    ${LEGS.map(l=>{const x=n.legs[l],fo=skHas(q,'net_focus'),fon=(n.focus||[]).includes(l),fed=fo&&canAct()&&q.id===S.cur&&!q.bot;return `<div class="ln">${fo?`<input type="checkbox" class="fcb" ${fon?'checked':''} ${fed?'':'disabled'} onchange="netFocusToggle('${l}',this.checked)" title="โฟกัสสาย ${l}: การ์ดของสายนี้ออกบ่อยขึ้น ${skV(q,'net_focus')||3} เท่า" aria-label="โฟกัสสาย ${l}">`:''}<span style="flex:1">สาย ${l} · <b class="num">${x.toLocaleString()}</b> PV ${x?`<span class="chip">${Math.round(netPct(x)*100)}%</span>`:'<span class="muted">ยังไม่เปิด</span>'}<span class="bar ${x>=QPV?'win':''}" style="display:block;margin-top:3px"><i style="width:${Math.min(100,x/QPV*100)}%"></i></span></span></div>`}).join('')}
+    <p class="muted" style="font-size:12px">จั่วการ์ดกอง "ธุรกิจ A" เพื่อสร้างและขยายสายงาน${skHas(q,'net_focus')?` · ☑ ติ๊กสายที่ต้องการโฟกัส การ์ดของสายนั้นออกบ่อยขึ้น ${skV(q,'net_focus')||3} เท่า (ติ๊กได้ในตาของตัวเอง)`:''}</p>
     <details class="tip" id="nbrk"><summary class="tsum muted" title="ดูขั้นบันไดโบนัส">ขั้นบันไดโบนัส <span class="ib">i</span></summary><div class="tipb">${[...NET_BRACKETS].reverse().map(([t,r])=>`<div class="ln ${gv>=t?'':'muted'}"><span>${t.toLocaleString()} PV ขึ้นไป</span><span class="num">${Math.round(r*100)}%</span></div>`).join('')}</div></details></div>
    <div class="box"><h3><span>ระดับ (พิน)</span></h3>${NET_RANKS.map((r,i)=>`<div class="ln ${i<=n.rank?'':'muted'}"><span><img class="rpin" src="img/rank-${i}.webp" alt="" style="${i<=n.rank?'':'filter:grayscale(1);opacity:.45'}">${i<=n.rank?'✓ ':''}${r.n}</span><span style="font-size:12px;text-align:right">${r.req}${i?`<br><b class="pos">ทุกเทิร์น ${netTurnTxt(i)}</b>`:''}</span></div>`).join('')}<p class="muted" style="font-size:12px;margin:4px 0 0">โบนัสทุกเทิร์นนับเฉพาะระดับสูงสุดที่ถึง (ไม่รวมทุกระดับ)</p></div>
   </div>`;
@@ -3653,7 +3682,7 @@ function onTag(){let t=$('#roomTag');if(!ON.code){if(t)t.remove();return}
   if(!t){t=document.createElement('span');t.id='roomTag';t.className='roomtag';t.setAttribute('role','button');t.title='ดูข้อมูลห้อง';t.onclick=onRoomInfo;const h=document.querySelector('header .logo')?.parentElement||document.querySelector('header');h.appendChild(t)}
   t.textContent='ห้อง '+ON.code+' ⓘ'}
 /* เวอร์ชันของไฟล์เกม (เปลี่ยนทุกครั้งที่แก้ระบบออนไลน์) · ส่งไปกับสถานะออนไลน์ เพื่อดูว่าใครยังเปิดเวอร์ชันเก่า */
-const BUILD='2026-11-19.5';
+const BUILD='2026-11-19.6';
 /* ป้ายเลขห้อง → ข้อมูลห้อง: เจ้าของห้อง · เครื่องที่คุมรอบ · สถานะผู้เล่นแต่ละคน */
 function onRoomInfo(){const r=ON.room;if(!r||!ON.code)return;
   const seatName=u=>{const q=S&&S.players&&S.players.find(x=>x.uid===u);if(q)return q.name;const s=Object.values(r.seats||{}).find(x=>x&&x.uid===u);return s?(s.name||'ผู้เล่น'):'—'};
