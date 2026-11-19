@@ -502,6 +502,19 @@ select,input,textarea{border-radius:12px;border:2px solid var(--line)}
 .fxb{position:fixed;left:0;right:0;top:30%;display:flex;justify-content:center;animation:bannerIn 1.7s cubic-bezier(.3,1,.3,1) forwards}
 .fxb>div{font-family:var(--display);font-size:24px;font-weight:800;color:#5a3d12;background:linear-gradient(90deg,#ffe8a8,#fff6d8,#ffe8a8);border:3px solid #fff;border-radius:18px;padding:10px 26px;box-shadow:0 10px 28px rgba(80,60,20,.3);display:flex;align-items:center;gap:10px}
 .fxb .tok{width:22px;height:22px}
+/* ภัยพิบัติ: เปลี่ยนพื้นหลังเกมเป็นภาพภัยพิบัติ opacity 50% (P037) · body[data-dis] ตั้งใน render() */
+body[data-dis]::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:center/cover no-repeat;opacity:.5;animation:disbgIn 1s ease-out}
+body[data-dis=quake]::before{background-image:url(img/dis-quake.webp);background-size:600px;background-repeat:repeat}
+body[data-dis=flood]::before{background-image:url(img/dis-flood.webp)}
+body[data-dis=plague]::before{background-image:url(img/dis-plague.webp)}
+@keyframes disbgIn{from{opacity:0}to{opacity:.5}}
+
+.disbar{position:absolute;left:10px;bottom:10px;z-index:45;display:flex;align-items:center;gap:6px;max-width:calc(100% - 74px);padding:6px 14px;border-radius:999px;border:2px solid #fff;background:linear-gradient(90deg,#c0392b,#e8613c);color:#fff;font-weight:800;font-size:13px;line-height:1.25;box-shadow:0 4px 14px rgba(150,40,20,.4);cursor:pointer;animation:disPulse 1.6s ease-in-out infinite;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.disbar small{font-weight:600;opacity:.92}
+@keyframes disPulse{0%,100%{box-shadow:0 4px 14px rgba(150,40,20,.4)}50%{box-shadow:0 0 0 5px rgba(232,97,60,.35),0 4px 14px rgba(150,40,20,.4)}}
+.fxb.dis>div{background:linear-gradient(90deg,#c0392b,#e8613c,#c0392b);color:#fff;font-size:22px}
+.fxb.disok>div{background:linear-gradient(90deg,#3f8f4f,#62b36f,#3f8f4f);color:#fff;font-size:20px}
+
 @keyframes bannerIn{0%{transform:translateX(-110%)}22%{transform:translateX(0)}78%{transform:translateX(0);opacity:1}100%{transform:translateX(110%);opacity:0}}
 .coin{position:fixed;font-size:22px;animation:coinFly 1.1s cubic-bezier(.2,.8,.4,1) forwards}
 @keyframes coinFly{0%{opacity:0;transform:translate(0,0) scale(.4)}20%{opacity:1}100%{opacity:0;transform:translate(var(--dx),var(--dy)) scale(1.1) rotate(var(--r))}}
@@ -520,7 +533,7 @@ select,input,textarea{border-radius:12px;border:2px solid var(--line)}
 /* center */
 .center{position:relative}.center::before{content:'';position:absolute;inset:18% 22%;background:#be1e2d;opacity:.06;-webkit-mask:var(--logo) center/contain no-repeat;mask:var(--logo) center/contain no-repeat;pointer-events:none;z-index:0}.center>*{position:relative;z-index:1}
 .center{background:radial-gradient(120% 60% at 50% 115%,#d9efc4 0 38%,transparent 39%),radial-gradient(80% 40% at 15% 120%,#c7e6ad 0 45%,transparent 46%),linear-gradient(180deg,#eaf6ff,#fffaf0 60%)!important}
-@media (prefers-reduced-motion: reduce){.cell.here,.tok.cur,.tok.hop,.bigdie,.modal.cardflip,.fxb,.fxf,.coin,.cell.trail::after{animation-duration:.01ms!important;animation-iteration-count:1!important}}
+@media (prefers-reduced-motion: reduce){.disbar,body[data-dis]::before{animation:none!important}.cell.here,.tok.cur,.tok.hop,.bigdie,.modal.cardflip,.fxb,.fxf,.coin,.cell.trail::after{animation-duration:.01ms!important;animation-iteration-count:1!important}}
 
 
 /* v-ui: modal header banner + tidy chips */
@@ -1288,7 +1301,7 @@ details[open]>.ib{background:#f2e3bb;border-color:#b89a55}
   <section>
     <div class="mapbar"><span class="muted" id="mapcap">แผนที่</span><button class="sm" id="btnCam" onclick="toggleCam()"></button><button class="sm" id="btnV3" onclick="toggleV3()"></button><button class="sm" id="btnMap" onclick="toggleMap()">ย่อแผนที่</button></div>
     <div id="minimap" hidden></div>
-    <div class="bwrap" id="bwrap"><div class="hud center" id="hud" hidden></div><div class="bzoom" id="bzoom"><div class="board" id="board"></div></div><button class="bzreset" id="bzreset" hidden onclick="boardZoom(1)">⟲ 100%</button><div class="bzctl" id="bzctl"><button onclick="boardZoom(BZ.s*1.25)" aria-label="ซูมเข้า" title="ซูมเข้า">＋</button><button onclick="boardZoom(BZ.s/1.25)" aria-label="ซูมออก" title="ซูมออก">－</button><button class="bzr" id="bzr" hidden onclick="boardZoom(1)" title="กลับขนาดปกติ">⟲</button></div><div class="bzhint" id="bzhint">ใช้ 2 นิ้วซูมกระดานได้</div></div>
+    <div class="bwrap" id="bwrap"><div class="hud center" id="hud" hidden></div><button class="disbar" id="disbar" hidden onclick="disInfo()"></button><div class="bzoom" id="bzoom"><div class="board" id="board"></div></div><button class="bzreset" id="bzreset" hidden onclick="boardZoom(1)">⟲ 100%</button><div class="bzctl" id="bzctl"><button onclick="boardZoom(BZ.s*1.25)" aria-label="ซูมเข้า" title="ซูมเข้า">＋</button><button onclick="boardZoom(BZ.s/1.25)" aria-label="ซูมออก" title="ซูมออก">－</button><button class="bzr" id="bzr" hidden onclick="boardZoom(1)" title="กลับขนาดปกติ">⟲</button></div><div class="bzhint" id="bzhint">ใช้ 2 นิ้วซูมกระดานได้</div></div>
     <details class="lgd" id="lgdw"><summary class="ib" title="คำอธิบายสีบนแผนที่" aria-label="คำอธิบายสีบนแผนที่">i</summary><div class="legend" id="legend"></div></details>
   </section>
   <section>
@@ -2652,11 +2665,25 @@ function disApply(p,D,tag){const T=DIS[D.k],r=disTick(p,D),net=r.biz-r.rep-r.all
   if(net||sx){ledg(p,T.ico,`${T.n}${tag?` (${tag})`:''}`,{c:net,h:-(r.heart||0)});log(`${T.ico} ${esc(p.name)} ${T.n}${tag?` ${tag}`:''}: ${r.lines.join(' · ')||'ไม่กระทบ'}${sx}`);
     ruleNote(p,`${T.ico} ${T.n} ${SEVN[D.sev]}${tag?` · ${tag}`:''}`,`${r.lines.join(' · ')}${sx} · รวม ${net>=0?'+':'−'}${B(Math.abs(net))} · เหลืออีก ${D.left} รอบ`)}
   return net}
+/* แจ้งเตือนบนจอ (ทุกคนเห็น แม้บอทเป็นคนเปิด) · ok=true = สิ้นสุด */
+function disFx(T,txt,ok){if(RM||(S&&S.autoPilot))return;const e=document.createElement('div');e.className='fxb '+(ok?'disok':'dis');e.innerHTML=`<div>${ok?'✅':T.ico} ${txt}</div>`;$('#fx').appendChild(e);setTimeout(()=>e.remove(),2600)}
+/* รายการผล (ใช้ทั้งตอนเปิดการ์ดและแตะแถบแจ้งเตือน) */
+function disLines(T,sev){const goodS=T.good.map(g=>DIS_SN[g]).join(' · '),badS=T.bad.map(g=>DIS_SN[g]).join(' · ');
+  return `<div class="mnl">${T.rep?`<div class="ln"><span>🏚️ ค่าซ่อมอสังหาฯ</span><span class="num neg">${+(T.rep*sev*100).toFixed(1)}% ของมูลค่า/รอบ (สุ่ม ±50%)</span></div>`:''}
+   ${T.all?`<div class="ln"><span>💸 ทุกคนจ่าย</span><span class="num neg">≈${B(T.all*sev)}/รอบ</span></div>`:''}
+   ${T.hp?`<div class="ln"><span>🏥 ค่าดูแลสุขภาพทุกคน</span><span class="num neg">${T.hp*sev*100}% เงินเดือน/รอบ (ขั้นต่ำ ${B(1000)})</span></div>`:''}
+   <div class="ln"><span>💼 วันเงินเดือน ทุกคน</span><span class="num neg">ไม่ได้รายได้ Active (เงินเดือน + รายได้เสริม) ได้แค่ Passive − รายจ่าย</span></div>
+   ${T.heart?`<div class="ln"><span>❤ ทุกคน</span><span class="num neg">−${T.heart}/รอบ</span></div>`:''}
+   <div class="ln"><span>🟢 ธุรกิจได้ประโยชน์ (${goodS})</span><span class="num pos">+${Math.round(T.biz*sev*100)}% ของรายได้/รอบ</span></div>
+   ${T.bad.length?`<div class="ln"><span>🔴 ธุรกิจเสียหาย (${badS})</span><span class="num neg">−${Math.round(T.bizB*sev*100)}% ของรายได้/รอบ</span></div>`:''}</div>`}
+/* แตะแถบภัยพิบัติบนแผนที่ */
+function disInfo(){if(!disOn()||MODAL)return;const D=S.dis,T=DIS[D.k],by=S.players.find(q=>q.id===D.by);
+  ask({kind:'life',noflip:true,title:`${T.ico} ภัยพิบัติ: ${T.n} ระดับ${SEVN[D.sev]}`,body:`${chips([chip('⏱',`เหลือ ${D.left} รอบ`,`จาก ${D.n} รอบ`,'use')])}<p>${T.d}</p>${disLines(T,D.sev)}<p class="muted" style="font-size:12px">${by?`${esc(by.name)} เป็นคนเปิดการ์ด · `:''}ผลต่อเนื่องคิดทุกจบรอบ · ภัยพิบัติเกิดได้ทีละ 1 อย่าง</p>`,opts:[{v:'ok',l:'ปิด',c:'pri'}]})}
 /* จบรอบ: คิดผลต่อเนื่องให้ทุกคน แล้วนับถอยหลัง */
 function disRound(){if(!disOn())return;const D=S.dis,T=DIS[D.k];D.left--;
   for(const q of S.players)disApply(q,D,`รอบ ${D.n-D.left}/${D.n}`);
   const e={};for(const g of T.good)for(const s of DIS_STK[g])e[s]=+(1*D.sev).toFixed(1);for(const b of T.bad)for(const s of DIS_STK[b])e[s]=-(1*D.sev);if(Object.keys(e).length)shockPrices(e);
-  if(D.left<=0){log(`${T.ico} ${T.n}สิ้นสุดแล้ว`);S.dis=null}}
+  if(D.left<=0){log(`${T.ico} ${T.n}สิ้นสุดแล้ว`);S.dis=null;disFx(T,`${T.n}สิ้นสุดแล้ว · กลับมาได้รายได้ Active ตามปกติ`,true);for(const q of S.players)ruleNote(q,`✅ ${T.n}สิ้นสุดแล้ว`,'วันเงินเดือนได้รายได้ Active (เงินเดือน + รายได้เสริม) ตามปกติ');render()}}
 async function disCard(p,c){
   const k=c.dis,T=DIS[k],w=Math.random(),sev=w<.5?1:w<.85?2:3,n=disRI(T.dur[0],T.dur[1]);
   S.dis={k,sev,n,left:n,by:p.id};S.disN=(S.disN||0)+1;
@@ -2666,23 +2693,19 @@ async function disCard(p,c){
   const rows=S.players.map(q=>{const r=disTick(q,{k,sev});let dv=0;for(const x of ch){const h=q.stocks[x.s];if(h&&h.q)dv+=h.q*(x.np-x.old)}return {q,r,dv:Math.round(dv),est:r.biz-r.rep-r.all-r.hp}});
   log(`${T.ico} ${esc(p.name)} เปิดการ์ดภัยพิบัติ: <b>${T.n}ระดับ${SEVN[sev]}</b> นาน ${n} รอบ · ${ch.map(x=>`${SN(x.a)} ${x.pct>0?'+':''}${x.pct}%`).join(' ')}`);
   render();
-  const goodS=T.good.map(g=>DIS_SN[g]).join(' · '),badS=T.bad.map(g=>DIS_SN[g]).join(' · ');
+  disFx(T,`ภัยพิบัติ! ${T.n}ระดับ${SEVN[sev]} · ${n} รอบ`);
   const body=`${chips([chip(T.ico,T.n,`ระดับ${SEVN[sev]}`,'cost'),chip('⏱',`${n} รอบ`,'ผลต่อเนื่องทุกจบรอบ','use')])}
    <p>${T.d}</p>
-   <div class="mnl">${T.rep?`<div class="ln"><span>🏚️ ค่าซ่อมอสังหาฯ</span><span class="num neg">${+(T.rep*sev*100).toFixed(1)}% ของมูลค่า/รอบ (สุ่ม ±50%)</span></div>`:''}
-   ${T.all?`<div class="ln"><span>💸 ทุกคนจ่าย</span><span class="num neg">≈${B(T.all*sev)}/รอบ</span></div>`:''}
-   ${T.hp?`<div class="ln"><span>🏥 ค่าดูแลสุขภาพทุกคน</span><span class="num neg">${T.hp*sev*100}% เงินเดือน/รอบ (ขั้นต่ำ ${B(1000)})</span></div>`:''}
-   <div class="ln"><span>💼 วันเงินเดือน ทุกคน</span><span class="num neg">ไม่ได้รายได้ Active (เงินเดือน + รายได้เสริม) ได้แค่ Passive − รายจ่าย</span></div>
-   ${T.heart?`<div class="ln"><span>❤ ทุกคน</span><span class="num neg">−${T.heart}/รอบ</span></div>`:''}
-   <div class="ln"><span>🟢 ธุรกิจได้ประโยชน์ (${goodS})</span><span class="num pos">+${Math.round(T.biz*sev*100)}% ของรายได้/รอบ</span></div>
-   ${T.bad.length?`<div class="ln"><span>🔴 ธุรกิจเสียหาย (${badS})</span><span class="num neg">−${Math.round(T.bizB*sev*100)}% ของรายได้/รอบ</span></div>`:''}</div>
+   ${disLines(T,sev)}
    <h4 style="margin:10px 0 4px;font-size:13px">ราคาหุ้น/สินค้าตามหมวด</h4>
    <div class="mnl">${ch.map(x=>`<div class="ln"><span>${x.a.n}${SYMH(x.a)}</span><span class="num ${x.pct>0?'pos':'neg'}">${x.pct>0?'+':''}${x.pct}% → ${fmtP(x.a,x.np)}</span></div>`).join('')||'<p class="muted">—</p>'}</div>
    ${T.good.includes('pharma')?'<p class="muted" style="font-size:12px">ในเกมยังไม่มีหุ้นกลุ่มยา ผลดีหมวดยาจึงได้เฉพาะธุรกิจ เช่น คลินิกเอกชน</p>':''}
    <h4 style="margin:10px 0 4px;font-size:13px">ผลต่อผู้เล่นแต่ละคน (ประมาณ/รอบ)</h4>
    <div class="mnl">${rows.map(x=>`<div class="ln"><span>${esc(x.q.name)}</span><span class="num ${x.est>0?'pos':x.est<0?'neg':'muted'}">${x.est?`${x.est>0?'+':'−'}${B(Math.abs(x.est))}/รอบ`:'ไม่กระทบ'}${x.dv?` · พอร์ต ${x.dv>0?'+':'−'}${B(Math.abs(x.dv))}`:''}${T.heart?` · ❤−${T.heart}`:''}</span></div>`).join('')}</div>
    <p class="muted" style="font-size:12px">ภัยพิบัติเกิดได้ทีละ 1 อย่าง · ระหว่างนี้ถ้าเปิดได้การ์ดภัยพิบัติอีก ระบบจะสอดไว้ใต้กองแล้วเปิดใบใหม่ให้อัตโนมัติ</p>`;
-  await choose({actor:p,kind:'life',title:`${T.ico} ภัยพิบัติ: ${T.n}`,body,opts:[{v:'ok',l:'รับทราบ',c:'pri'}],bot:'ok'});
+  /* บอทเปิด: ยังต้องโชว์ให้ผู้เล่นคนเห็น (ปกติป๊อปอัปของบอทข้ามไปเงียบๆ) */
+  if(p.bot&&!S.autoPilot&&S.players.some(q=>!q.bot))await ask({kind:'life',title:`${T.ico} ภัยพิบัติ: ${T.n}`,body:`<p><b>${esc(p.name)}</b> เปิดได้การ์ดภัยพิบัติ</p>${body}`,opts:[{v:'ok',l:'รับทราบ',c:'pri'}]});
+  else await choose({actor:p,kind:'life',title:`${T.ico} ภัยพิบัติ: ${T.n}`,body,opts:[{v:'ok',l:'รับทราบ',c:'pri'}],bot:'ok'});
   ruleNote(p,`${T.ico} ${T.n}ระดับ${SEVN[sev]} ${n} รอบ`,`ผลต่อเนื่องคิดทุกจบรอบ (ค่าซ่อม/ค่าใช้จ่าย/รายได้ธุรกิจตามหมวด)${T.heart?` · ❤ −${T.heart} ทุกรอบ`:''}`);
 }
 
@@ -2986,7 +3009,7 @@ function tileBase(k){if(!TILE_BASE_ON||(k[0]!=='o'&&!SQIMG[k])||k in PROPIMG)ret
 function toggleMap(){MAPMIN=!MAPMIN;try{localStorage.setItem('ff-mapmin',MAPMIN?'1':'0')}catch(e){}render()}
 function render(){
   if(!S)return;axPoll();
-  $('#roundLbl').textContent=`รอบที่ ${S.round}${disOn()?` · ${DIS[S.dis.k].ico} ${DIS[S.dis.k].n} เหลือ ${S.dis.left} รอบ`:''}`;
+  $('#roundLbl').textContent=`รอบที่ ${S.round}${disOn()?` · ${DIS[S.dis.k].ico} ${DIS[S.dis.k].n} เหลือ ${S.dis.left} รอบ`:''}`;{const on0=disOn();if(on0)document.body.dataset.dis=S.dis.k;else delete document.body.dataset.dis}{const db=$('#disbar');if(db){const on=disOn();db.hidden=!on;if(on){const T=DIS[S.dis.k];db.innerHTML=`${T.ico} ${T.n} ระดับ${SEVN[S.dis.sev]} <small>· เหลือ ${S.dis.left} รอบ · แตะดูผล</small>`}}}
   const p=cp(),bd=$('#board');let h='';
   for(const k in SQ_MAP){const b=SQ(k),[r,c]=cellPos(k),pr=S.props[k],i=+k.slice(1),corner=i%(RING_LEN[k[0]]/4)===0;
     const now=NOW(),toks=S.players.filter(q=>q.ring+q.pos===k).map(q=>{const hp=FXT.hop&&FXT.hop.id===q.id&&now-FXT.hop.t<340;return `<span class="tok pic ${q.id===p.id&&(!hp||(V3.on&&!MAPMIN))?'cur':''} ${hp?'hop':''}" style="${tokStyle(q)};${hp?`animation-delay:-${now-FXT.hop.t}ms`:''}" title="${esc(q.name)}"></span>`}).join('');
@@ -3774,7 +3797,7 @@ function onTag(){let t=$('#roomTag');if(!ON.code){if(t)t.remove();return}
   if(!t){t=document.createElement('span');t.id='roomTag';t.className='roomtag';t.setAttribute('role','button');t.title='ดูข้อมูลห้อง';t.onclick=onRoomInfo;const h=document.querySelector('header .logo')?.parentElement||document.querySelector('header');h.appendChild(t)}
   t.textContent='ห้อง '+ON.code+' ⓘ'}
 /* เวอร์ชันของไฟล์เกม (เปลี่ยนทุกครั้งที่แก้ระบบออนไลน์) · ส่งไปกับสถานะออนไลน์ เพื่อดูว่าใครยังเปิดเวอร์ชันเก่า */
-const BUILD='2026-11-19.13';
+const BUILD='2026-11-19.14';
 /* ป้ายเลขห้อง → ข้อมูลห้อง: เจ้าของห้อง · เครื่องที่คุมรอบ · สถานะผู้เล่นแต่ละคน */
 function onRoomInfo(){const r=ON.room;if(!r||!ON.code)return;
   const seatName=u=>{const q=S&&S.players&&S.players.find(x=>x.uid===u);if(q)return q.name;const s=Object.values(r.seats||{}).find(x=>x&&x.uid===u);return s?(s.name||'ผู้เล่น'):'—'};
