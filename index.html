@@ -1283,6 +1283,9 @@ details[open]>.ib{background:#f2e3bb;border-color:#b89a55}
 .kidc .kids{display:flex;gap:8px;margin:4px 0 8px}.kidc .kid{width:42px;height:42px;border-radius:50%;background:#fdeee0;border:2px solid #f3cfa8;display:grid;place-items:center;font-size:24px}
 .kidc .kid.e{background:none;border:2px dashed #d9d2c6;color:#c9c1b4;font-size:16px}.kidl{display:flex;justify-content:space-between;gap:8px;font-size:13px;padding:4px 0;border-top:1px dashed #eadfcf}.kidl b{text-align:right}.kidl.tot{font-size:14px}
 .bdg.kidb{background:#fdeee0;color:#9a5a1e}
+.pcard{display:flex;flex-direction:column;border-radius:16px}.pcard .pdt{align-self:flex-end;margin:-4px 8px 0 0;padding:2px 10px;font-size:12px;min-height:0;border-radius:10px;background:transparent;border:0;color:var(--muted);box-shadow:none}
+.pdet{margin:2px 4px 4px;padding:6px 10px;border:1px dashed #e3d6c2;border-radius:12px;background:#fffdf8;font-size:12.5px}
+.pdl{display:grid;grid-template-columns:22px 82px 1fr;gap:6px;padding:4px 0;border-top:1px dashed #efe5d6;align-items:start}.pdl:first-child{border-top:0}.pdi{text-align:center}.pdk{color:var(--muted)}.pdv{min-width:0;overflow-wrap:anywhere}
 .tsum{list-style:none;cursor:pointer;display:inline-flex;align-items:center;gap:6px;font-size:12px;user-select:none}.tsum::-webkit-details-marker{display:none}details[open]>.tsum .ib{background:#f2e3bb;border-color:#b89a55}
 .tip{display:inline-block;vertical-align:middle}.tip[open]{display:block}.tip .tipb{margin-top:6px;background:#fffdf5;border:1.5px solid #e9d9a8;border-radius:10px;padding:8px 10px;box-shadow:0 6px 18px rgba(0,0,0,.15);font-size:12px;line-height:1.45;color:var(--ink);font-weight:400;white-space:normal}
 </style>
@@ -2159,6 +2162,7 @@ async function previewPile(k){if(!canAct()||S.phase!=='card')return;if(k==='net'
 async function pickPile(k){
   const p=cp();if(S.phase!=='card')return;
   if(k==='net'&&offNet(p)){if(p.bot)k='opp';else{toast(`🌫️ หลุดบรรยากาศ: เปิดกองธุรกิจ A ไม่ได้อีก ${p.offnet} เทิร์น`);ruleNote(p,`หลุดบรรยากาศ (${p.offnet})`,'ช่วงนี้เปิดการ์ดกองธุรกิจ A ไม่ได้ เลือกกองอื่นแทน');return}}S.phase='busy';render();
+  p.drawn=p.drawn||{};p.drawn[k]=(p.drawn[k]||0)+1; /* นับใบที่จั่วจากกอง (แสดงในแท็บรายชื่อ) */
   if(k==='life'){let c=draw('life');
     /* ภัยพิบัติห้ามซ้อน: ถ้ายังมีภัยพิบัติอยู่ ใบที่เปิดได้ไปไว้ใต้กอง แล้วเปิดใบใหม่อัตโนมัติ (ไม่แสดงให้ผู้เล่นเห็น) */
     for(let i=0;i<8&&c&&c.dis&&disOn();i++){const ix=LIFE.indexOf(c);if(ix>=0&&S.decks.life)S.decks.life.unshift(ix);c=draw('life')}
@@ -3121,16 +3125,37 @@ function renderSkills(){
     <div class="tw"><table class="ft at"><tr class="th"><td>ทักษะ</td><td>ชนิด</td><td>ผู้ที่มี</td></tr>${all}</table></div>
     <p class="muted" style="font-size:12px;margin:6px 0 0">Passive ทำงานอัตโนมัติ · Active (สกิลการ์ด) สะสมจำนวนครั้งไว้กดใช้เอง · ได้ทักษะจากการจั่วกองเรียนรู้</p></section></div>`;
 }
+/* รายละเอียดใต้ชื่อในแท็บรายชื่อ (กดเปิด/ปิดได้ จำไว้ในเครื่อง ff-plopen) */
+let PL_OPEN=(()=>{try{return JSON.parse(localStorage.getItem('ff-plopen')||'[]')}catch(e){return []}})();
+function plOpen(id){return PL_OPEN.includes(id)}
+function plToggle(id){PL_OPEN=plOpen(id)?PL_OPEN.filter(x=>x!==id):[...PL_OPEN,id];try{localStorage.setItem('ff-plopen',JSON.stringify(PL_OPEN))}catch(e){}render()}
+function plAll(on){PL_OPEN=on?S.players.map(q=>q.id):[];try{localStorage.setItem('ff-plopen',JSON.stringify(PL_OPEN))}catch(e){}render()}
+function plDetail(q,f,pct){const r=(i,l,v)=>`<div class="pdl"><span class="pdi">${i}</span><span class="pdk">${l}</span><span class="pdv">${v}</span></div>`,d=q.drawn||{};
+  const n=q.net,rk=n&&n.on?NET_RANKS[n.rank||0]:null,a=msnA(q),nKid=q.kids||0;
+  const nP=Object.values(S.props).filter(x=>x.o===q.id).length,nH=Object.values(q.stocks||{}).filter(h=>h&&h.q>0).length,debt=Object.values(q.debt).reduce((x,y)=>x+y,0)+(q.loan||0);
+  const st=[];if(q.scamB)st.push('ลงทุนธุรกิจ B');if(q.scamC)st.push('ลงทุนธุรกิจ C');if(q.offnet>0)st.push(`หลุดบรรยากาศ ${q.offnet}`);if(q.jail>0)st.push(`ติดคุก ${q.jail}`);
+  return `<div class="pdet">
+   ${r('🏆','ชนะ Lv.1',q.badge1?`<b class="pos">ชนะแล้ว (รอบ ${q.badge1})</b>`:`Passive <b class="num">${B(f.passive)}</b> / <b class="num">${B(lv1Goal(f))}</b> <span class="muted">(${Math.round(pct)}%)</span>`)}
+   ${a?r(a.i,'ภารกิจ Lv.1',`<b>${esc(a.n)}</b> <span class="muted">${esc(a.d)}</span><br><small>${msnStat(q,f)}</small>`):''}
+   ${r('💎','ชนะ Lv.2',q.badge2?'<b class="pos">ไดมอนด์แล้ว</b>':rk?`ธุรกิจ A ระดับ <b>${esc(rk.n||rk[0]||'')}</b> · ยอดกลุ่ม <b class="num">${netGV(q).toLocaleString()}</b> PV`:'<span class="muted">ยังไม่สมัครธุรกิจ A</span>')}
+   ${r('👨‍👩‍👧','ลูก',nKid?`<b>${nKid}/${KIDMAX} คน</b> ${KID_IC.slice(0,nKid).join('')} · ค่าเลี้ยงดู <b class="num neg">${B(nKid*q.kidCost)}</b>/ด.`:'<span class="muted">ยังไม่มีลูก</span>')}
+   ${r('🃏','จั่วจากกอง',`โอกาส <b>${d.opp||0}</b> · ชีวิต <b>${d.life||0}</b> · เรียนรู้ <b>${d.learn||0}</b> · ธุรกิจ A <b>${d.net||0}</b>`)}
+   ${r('🏠','ทรัพย์สิน',`ช่องอสังหา <b>${nP}</b> · ดีล <b>${(q.deals||[]).filter(x=>x.ty!=='scam').length}</b> · หุ้น/สินทรัพย์ <b>${nH}</b> ตัว`)}
+   ${r('💳','หนี้รวม',`<b class="num ${debt?'neg':''}">${B(debt)}</b>`)}
+   ${r('🧠','ทักษะ',q.skills&&q.skills.length?q.skills.map(k=>SKILLDB[k]?esc(SKILLDB[k].n):'').filter(Boolean).join(' · '):'<span class="muted">ยังไม่มี</span>')}
+   ${st.length?r('⚠️','สถานะ',st.join(' · ')):''}
+  </div>`}
 function renderPlayers(){
   const rank=[...S.players].map(q=>[q,fin(q)]).sort((a,b)=>b[1].passive/Math.max(1,b[1].expenses)-a[1].passive/Math.max(1,a[1].expenses));
-  return `<div class="plist">${S.players.map(q=>{const f=fin(q),pct=lv1Pct(f),pos=rank.findIndex(x=>x[0]===q)+1;
-    return `<button class="prow ${q.id===S.cur?'cur':''}" onclick="S.view=${q.id};S.viewPick=1;TAB='fin';render()" aria-label="ดูงบของ ${esc(q.name)}">
+  return `<div class="plist">${S.players.map(q=>{const f=fin(q),pct=lv1Pct(f),pos=rank.findIndex(x=>x[0]===q)+1,op=plOpen(q.id);
+    return `<div class="pcard ${op?'open':''}"><button class="prow ${q.id===S.cur?'cur':''}" onclick="S.view=${q.id};S.viewPick=1;TAB='fin';render()" aria-label="ดูงบของ ${esc(q.name)}">
       <span class="prk num">${pos}</span>
       <span class="pmain"><span class="pname"><span class="tok pic" style="${tokStyle(q)}"></span><b>${esc(q.name)}</b>${badges(q)}<span class="muted">${esc(S.jobs[q.job].n)}${q.bot&&!q._afkb?' · บอท':''}</span>${q.afk?'<span class="jl afkc">💤 ติดสถานะ Bot</span>':''}${q.id===S.cur?'<span class="chip">ตานี้</span>':''}${q.jobless?`<span class="jl">ตกงาน ${q.jobless}</span>`:''}${q.warn>0?`<span class="jl yw"><img class="icw" src="img/ic-warn.webp" alt=""> โดนใบเตือน ${q.warn}</span>`:''}</span>
         <span class="pnums"><span>เงินสด <b class="num">${B(q.cash)}</b></span><span>ทรัพย์สิน <b class="num pos">${B(f.passive)}</b> / รายจ่าย <b class="num neg">${B(f.expenses)}</b></span><span class="muted">❤${q.st.h} ⏳${q.st.t} 📚${q.st.k}</span></span>
         <span class="bar ${pct>=100?'win':''}"><i style="width:${pct}%"></i></span></span>
-      <span class="ppct num">${Math.round(pct)}%</span></button>`}).join('')}</div>
-    ${S.winner==null&&!ON.play?'<div class="btnrow" style="justify-content:flex-start;margin-top:8px"><button class="sm" onclick="confirmEnd()">🏁 จบเกมและสรุปผล</button></div>':''}
+      <span class="ppct num">${Math.round(pct)}%</span></button>
+      <button class="pdt" onclick="plToggle(${q.id})" aria-expanded="${op}">${op?'▴ ซ่อนรายละเอียด':'▾ รายละเอียด'}</button>${op?plDetail(q,f,pct):''}</div>`}).join('')}</div>
+    <div class="btnrow" style="justify-content:flex-start;margin-top:8px"><button class="sm" onclick="plAll(${PL_OPEN.length<S.players.length})">${PL_OPEN.length<S.players.length?'▾ เปิดรายละเอียดทั้งหมด':'▴ ซ่อนรายละเอียดทั้งหมด'}</button>${S.winner==null&&!ON.play?'<button class="sm" onclick="confirmEnd()">🏁 จบเกมและสรุปผล</button>':''}</div>
     <p class="muted" style="font-size:12px;margin:8px 0 0">🏆 ชนะ Lv.1 = รายได้จากทรัพย์สินถึง 2 เท่าของรายจ่ายรวม · 💎 ชนะ Lv.2 = ธุรกิจ A ระดับไดมอนด์ (เกมจบเมื่อมีคนถึง Lv.2 หรือกดจบเกม) · ตัวเลขหน้าชื่อคืออันดับความใกล้ชนะ (รายได้จากทรัพย์สิน ÷ รายจ่าย×2) · แตะเพื่อดูงบการเงินของคนนั้น</p>`;
 }
 function passiveDetail(p,k){const s=SKILLDB[k];if(!s)return '';const v=s.val;
@@ -3812,7 +3837,7 @@ function onTag(){let t=$('#roomTag');if(!ON.code){if(t)t.remove();return}
   if(!t){t=document.createElement('span');t.id='roomTag';t.className='roomtag';t.setAttribute('role','button');t.title='ดูข้อมูลห้อง';t.onclick=onRoomInfo;const h=document.querySelector('header .logo')?.parentElement||document.querySelector('header');h.appendChild(t)}
   t.textContent='ห้อง '+ON.code+' ⓘ'}
 /* เวอร์ชันของไฟล์เกม (เปลี่ยนทุกครั้งที่แก้ระบบออนไลน์) · ส่งไปกับสถานะออนไลน์ เพื่อดูว่าใครยังเปิดเวอร์ชันเก่า */
-const BUILD='2026-11-19.15';
+const BUILD='2026-11-19.16';
 /* ป้ายเลขห้อง → ข้อมูลห้อง: เจ้าของห้อง · เครื่องที่คุมรอบ · สถานะผู้เล่นแต่ละคน */
 function onRoomInfo(){const r=ON.room;if(!r||!ON.code)return;
   const seatName=u=>{const q=S&&S.players&&S.players.find(x=>x.uid===u);if(q)return q.name;const s=Object.values(r.seats||{}).find(x=>x&&x.uid===u);return s?(s.name||'ผู้เล่น'):'—'};
