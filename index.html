@@ -3014,10 +3014,10 @@ const CITYC_HTML=`<div class="gapt cityc" style="grid-area:4/4/11/11;--d:14" ari
 /* ขอบสวนรอบนอก (P043 · ภาพ img/bord-*.webp): ทุกช่องวงนอกมีแปลงสวนด้านนอก 1 ช่อง · แถบหญ้าอ่อน 30% ฝั่งติดช่อง = แปลงทาสีเจ้าของ (.plot)
    ภาพแถบติด: fr = ขอบหน้า-ขวา · fl = ขอบหน้า-ซ้าย · bl = ขอบหลัง-ซ้าย · --m -1 กลับซ้ายขวา (fr↔fl, bl↔br) */
 // ขอบสวน: ไม่มีทางเดิน (เจ้าของสั่ง 2026-11-20) · g = แถบหญ้าอ่อนขอบหน้า-ซ้าย · k = ขอบหลัง-ซ้าย · สร้างด้วย tools/bordshrub.py
-const BORD_B={g1:50,g2:50,g3:50,g4:50,k1:50,k2:50,k3:50,k4:50,c1:57,c2:50.2,c3:50.3,c4:58.7};
+const BORD_B={g1:50,g2:50,g3:50,g4:50,k1:50,k2:50,k3:50,k4:50,c2:50.2,c3:50.3,sea1:50.1,sea2:50.1,seac:50.1,seac2:50.1};
 /* c1–c4 = ป่าหัวมุม (P043-v4-c ไม่มีแถบ) วางที่แผ่นทแยง 4 มุมกระดาน */
-const BORD_CORNER={'-1,-1':['c3',1],'1,-1':['c2',1],'1,1':['c1',1],'-1,1':['c4',-1]};
-const BORD_POOL={b:[['g1',1],['g2',1],['g3',1],['g4',1]],r:[['g1',-1],['g2',-1],['g3',-1],['g4',-1]],t:[['k1',-1],['k2',-1],['k3',-1],['k4',-1]],l:[['k1',1],['k2',1],['k3',1],['k4',1]]};
+const BORD_CORNER={'-1,-1':['c3',1],'1,-1':['c2',1],'1,1':['seac',1],'-1,1':['seac2',1]};
+const BORD_POOL={b:[['g1',1],['g2',1],['g3',1],['g4',1]],r:[['g1',-1],['g2',-1],['g3',-1],['g4',-1]],t:[['sea1',1],['sea1',1],['sea2',-1],['sea1',1],['sea1',1]],l:[['k1',1],['k2',1],['k3',1],['k4',1]]};
 function bordTile(r,c,dx,dy,side,n,plot){const pool=BORD_POOL[side],[f,m]=(dx&&dy&&BORD_CORNER[dx+','+dy])||pool[n%pool.length],d=r+c+dx+dy;
   return `<div class="gapt bord" style="grid-row:${r};grid-column:${c};--tx:${dx*100}%;--ty:${dy*100}%;--d:${d}" aria-hidden="true"><img class="pimgc" style="--b:${BORD_B[f]}%;--s:${(1/BAND_R).toFixed(4)};--m:${m};--d:${d}" src="img/bord-${f}.webp" alt="">${plot||''}</div>`}
 function borderHTML(){if(!V3.on)return '';let h='',n=0;for(const k in SQ_MAP){if(k[0]!=='o')continue;const [r,c]=cellPos(k);const dx=c===1?-1:c===13?1:0,dy=r===1?-1:r===13?1:0;if(!dx&&!dy)continue;n++;
