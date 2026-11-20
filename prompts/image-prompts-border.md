@@ -1,0 +1,16 @@
+# คลัง Prompt — ขอบสวนรอบนอกกระดาน P043 · เพิ่ม 2026-11-20
+
+เจ้าของ: ขอบรอบนอกกระดาน (ด้านนอกช่องวงนอก) เป็นสวนไม้พุ่ม · แต่ละช่องมีแปลงสวนของตัวเอง · **30% ฝั่งติดช่อง = แปลงทาสีเจ้าของ** (ซื้ออสังหาแล้วเกมทาสีผู้เล่นทับ จะได้เห็นว่าใครซื้อ)
+- mockup โค้ด `borderHTML()` (ไฟล์ทดสอบ ยังไม่ push): `.bord` วางที่ grid ช่องวงนอก + translate ออกด้านนอก 1 ช่อง · หัวมุมวาง 3 ชิ้น · `.plot` 30% ฝั่งติดช่อง
+- ภาพร่าง (สคริปต์ `/home/claude/p/sketchBorder.py` · ฐาน P001 หญ้า): `sketch-border-f` แปลงหญ้าเรียบ v .70–1 (ขอบหน้า-ซ้าย) · `sketch-border-s` แปลง v 0–.30 (ขอบหลัง-ขวา) · `sketch-border-c` หัวมุม ไม่มีแปลง
+- การใช้ในเกม (ทิศเหมือน band-f/band-s): แถว 1 → f m=1 · คอลัมน์ 1 → f m=−1 · แถว 13 → s m=1 · คอลัมน์ 13 → s m=−1 · หัวมุม → c
+
+### P043-f / P043-s — แนบ `sketch-border-f.png` หรือ `sketch-border-s.png` · 1:1
+```
+Refine the attached sketch into a finished illustration. It is an isometric game board tile that is already laid out correctly. Keep EVERYTHING in the same place: the same square tile, same size, same angle, same position in the frame, the same thin brown soil base, the same sharp corners and white margin. The tile is a small PUBLIC PARK lawn with low garden bushes. Keep the long pale-green flat strip along one edge EXACTLY where it is and exactly the same width: it is a perfectly flat, plain, smooth mown lawn strip with a thin white stone curb along its inner side — leave it completely EMPTY: no bushes, no flowers, no objects, no shadows on it. On the rest of the tile, turn each green cluster into a low, round, neatly trimmed garden bush or flowering shrub (pink, yellow, purple flowers), exactly where it stands and the same size, on fresh green grass with tiny flowers. Everything stays LOW: no trees, no tall plants, nothing taller than a small bush. Colors must match a warm, bright, cheerful painted city-builder game board: vivid fresh green grass, soft sunlight with gentle shadows — not dull. Style: soft painted manhwa / webtoon illustration, gentle cel shading, hand-drawn clean ink outlines, painted textures. Pure white background, nothing outside the tile. No text, no letters, no numbers, no logos, no people, no vehicles, no utility poles, no wires.
+```
+
+### P043-c — แนบ `sketch-border-c.png` · 1:1
+```
+Refine the attached sketch into a finished illustration. It is an isometric game board tile that is already laid out correctly. Keep EVERYTHING in the same place: the same square tile, same size, same angle, same position in the frame, the same thin brown soil base, the same sharp corners and white margin. The tile is a small PUBLIC PARK lawn: turn each green cluster into a low, round, neatly trimmed garden bush or flowering shrub (pink, yellow, purple flowers), exactly where it stands and the same size, on fresh green grass with tiny flowers. Everything stays LOW: no trees, no tall plants, nothing taller than a small bush. Colors must match a warm, bright, cheerful painted city-builder game board: vivid fresh green grass, soft sunlight with gentle shadows — not dull. Style: soft painted manhwa / webtoon illustration, gentle cel shading, hand-drawn clean ink outlines, painted textures. Pure white background, nothing outside the tile. No text, no letters, no numbers, no logos, no people, no vehicles, no utility poles, no wires.
+```
